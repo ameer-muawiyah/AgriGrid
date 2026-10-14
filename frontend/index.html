@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Agri-Grid | Decentralized Food Security Portal</title>
+  
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            forest: '#1b4332',
+            emerald: {
+              DEFAULT: '#2d6a4f',
+              dark: '#1b4332',
+              light: '#40916c',
+            },
+            mint: '#d8f3dc',
+            slateBg: '#f8fafc',
+          }
+        }
+      }
+    }
+  </script>
+  
+  <!-- Custom Agro-Tech Stylesheet -->
+  <link rel="stylesheet" href="css/auth.css">
+</head>
+<body class="min-h-screen bg-grid-pattern flex flex-col justify-between relative overflow-x-hidden selection:bg-mint selection:text-forest">
+
+  <!-- Ambient Decorative Background Glows -->
+  <div class="ambient-glow -top-32 -left-32"></div>
+  <div class="ambient-glow -bottom-32 -right-32"></div>
+
+  <!-- Header / Navigation Bar -->
+  <header class="relative z-10 w-full px-6 py-4 flex items-center justify-between border-b border-emerald-900/10 bg-white/60 backdrop-blur-md">
+    <div class="flex items-center space-x-3">
+      <!-- Agri-Grid Logo Badge -->
+      <div class="w-10 h-10 rounded-xl bg-forest flex items-center justify-center text-white shadow-md shadow-forest/20">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path>
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-2 0-3 1.5-3 3.5 0 2.5 3 4.5 3 4.5s3-2 3-4.5c0-2-1-3.5-3-3.5z"></path>
+        </svg>
+      </div>
+      <div>
+        <span class="text-xl font-extrabold tracking-tight text-forest block leading-none">Agri-Grid</span>
+        <span class="text-xs font-semibold tracking-wider uppercase text-emerald-dark/70">Decentralized Food Security</span>
+      </div>
+    </div>
+
+    <!-- System Status Indicator -->
+    <div class="hidden sm:flex items-center space-x-2 bg-emerald-50 text-emerald-800 px-3 py-1 rounded-full text-xs font-medium border border-mint">
+      <span class="relative flex h-2 w-2">
+        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+        <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-600"></span>
+      </span>
+      <span>RBAC Gateway Increment 1</span>
+    </div>
+  </header>
+
+  <!-- Main Content: Centered Auth Card -->
+  <main class="relative z-10 flex-grow flex items-center justify-center px-4 py-8 sm:py-12">
+    <div class="w-full max-w-md">
+
+      <!-- Glassmorphic Card Container -->
+      <div class="glass-card p-6 sm:p-8">
+
+        <!-- Card Branding Header -->
+        <div class="text-center mb-6">
+          <div class="inline-flex items-center justify-center p-2.5 rounded-full bg-mint/50 text-forest mb-3">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path>
+            </svg>
+          </div>
+          <h1 class="text-2xl font-bold text-gray-900 tracking-tight" id="authPortalHeading">Welcome to Agri-Grid</h1>
+          <p class="text-sm text-gray-600 mt-1" id="authPortalSubheading">Access your decentralized farm telemetry and crop ledger</p>
+        </div>
+
+        <!-- Interactive Tab Switcher -->
+        <div class="grid grid-cols-2 gap-1 p-1 bg-gray-100/90 rounded-xl mb-6 border border-gray-200" role="tablist">
+          <button 
+            type="button" 
+            id="tabLoginBtn" 
+            role="tab" 
+            aria-selected="true" 
+            class="tab-pill active py-2.5 text-sm text-center transition-all duration-200">
+            Sign In
+          </button>
+          <button 
+            type="button" 
+            id="tabRegisterBtn" 
+            role="tab" 
+            aria-selected="false" 
+            class="tab-pill py-2.5 text-sm text-center transition-all duration-200">
+            Register as Farmer
+          </button>
+        </div>
+
+        <!-- In-Card Animated Alert Feedback Banners -->
+        <div id="alertBox" class="hidden mb-5">
+          <!-- Populated dynamically via auth.js -->
+        </div>
+
+        <!-- ==========================================
+             FORM 1: SIGN IN (LOGIN)
+             ========================================== -->
+        <form id="loginForm" class="space-y-4" novalidate>
+          <!-- Username Field -->
+          <div>
+            <label for="loginUsername" class="block text-xs font-semibold uppercase tracking-wider text-gray-700 mb-1.5">
+              Username
+            </label>
+            <div class="relative">
+              <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                </svg>
+              </div>
+              <input 
+                type="text" 
+                id="loginUsername" 
+                name="username" 
+                autocomplete="username" 
+                placeholder="e.g. tahir_greenacres" 
+                class="auth-input" 
+                required>
+            </div>
+          </div>
+
+          <!-- Password Field -->
+          <div>
+            <div class="flex items-center justify-between mb-1.5">
+              <label for="loginPassword" class="block text-xs font-semibold uppercase tracking-wider text-gray-700">
+                Password
+              </label>
+              <a href="javascript:void(0)" id="forgotPasswordLink" class="text-xs font-medium text-emerald hover:underline">
+                Forgot password?
+              </a>
+            </div>
+            <div class="relative">
+              <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
+                </svg>
+              </div>
+              <input 
+                type="password" 
+                id="loginPassword" 
+                name="password" 
+                autocomplete="current-password" 
+                placeholder="••••••••" 
+                class="auth-input pr-10" 
+                required>
+              <button 
+                type="button" 
+                id="toggleLoginPasswordBtn" 
+                class="toggle-password-btn absolute inset-y-0 right-0 pr-3 flex items-center" 
+                title="Toggle password visibility" 
+                tabindex="-1">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                </svg>
+              </button>
+            </div>
+          </div>
+
+          <!-- Remember Terminal Session -->
+          <div class="flex items-center">
+            <input 
+              id="rememberMe" 
+              name="remember" 
+              type="checkbox" 
+              class="h-4 w-4 rounded border-gray-300 text-forest focus:ring-emerald">
+            <label for="rememberMe" class="ml-2 block text-xs text-gray-600 select-none">
+              Keep terminal session active
+            </label>
+          </div>
+
+          <!-- Submit Button -->
+          <div class="pt-2">
+            <button 
+              type="submit" 
+              id="loginSubmitBtn" 
+              class="btn-primary w-full py-3 px-4 flex items-center justify-center space-x-2 text-sm">
+              <span id="loginBtnText">Sign In to Farm Node</span>
+              <span id="loginSpinner" class="spinner w-4 h-4 hidden"></span>
+            </button>
+          </div>
+        </form>
+
+        <!-- ==========================================
+             FORM 2: REGISTER AS FARMER
+             ========================================== -->
+        <form id="registerForm" class="space-y-4 hidden" novalidate>
+          <!-- Farm Name Field -->
+          <div>
+            <label for="regFarmName" class="block text-xs font-semibold uppercase tracking-wider text-gray-700 mb-1.5">
+              Farm / Facility Name <span class="text-emerald font-bold">*</span>
+            </label>
+            <div class="relative">
+              <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
+                </svg>
+              </div>
+              <input 
+                type="text" 
+                id="regFarmName" 
+                name="farm_name" 
+                placeholder="e.g. Green Acres Organic Field" 
+                class="auth-input" 
+                maxlength="100" 
+                required>
+            </div>
+          </div>
+
+          <!-- Farmer Username Field -->
+          <div>
+            <label for="regUsername" class="block text-xs font-semibold uppercase tracking-wider text-gray-700 mb-1.5">
+              Farmer Username <span class="text-emerald font-bold">*</span>
+            </label>
+            <div class="relative">
+              <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                </svg>
+              </div>
+              <input 
+                type="text" 
+                id="regUsername" 
+                name="username" 
+                autocomplete="username" 
+                placeholder="e.g. tahir_greenacres" 
+                class="auth-input" 
+                minlength="3" 
+                maxlength="50" 
+                required>
+            </div>
+            <p class="text-[11px] text-gray-500 mt-1">3–50 alphanumeric characters (unique)</p>
+          </div>
+
+          <!-- Password Field -->
+          <div>
+            <label for="regPassword" class="block text-xs font-semibold uppercase tracking-wider text-gray-700 mb-1.5">
+              Secure Password <span class="text-emerald font-bold">*</span>
+            </label>
+            <div class="relative">
+              <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
+                </svg>
+              </div>
+              <input 
+                type="password" 
+                id="regPassword" 
+                name="password" 
+                autocomplete="new-password" 
+                placeholder="At least 8 characters" 
+                class="auth-input pr-10" 
+                minlength="8" 
+                required>
+              <button 
+                type="button" 
+                id="toggleRegPasswordBtn" 
+                class="toggle-password-btn absolute inset-y-0 right-0 pr-3 flex items-center" 
+                title="Toggle password visibility" 
+                tabindex="-1">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                </svg>
+              </button>
+            </div>
+
+            <!-- Password Criteria Hint -->
+            <div class="mt-1.5 flex items-center space-x-2 text-[11px] text-gray-500">
+              <span id="pwdRuleLength" class="inline-flex items-center">
+                <span class="w-1.5 h-1.5 rounded-full bg-gray-400 mr-1 inline-block"></span> Min 8 chars
+              </span>
+              <span id="pwdRuleComplexity" class="inline-flex items-center">
+                <span class="w-1.5 h-1.5 rounded-full bg-gray-400 mr-1 inline-block"></span> Upper, lower, number
+              </span>
+            </div>
+          </div>
+
+          <!-- Role Assurance Badge (Preset to Farmer per Contract) -->
+          <div class="p-2.5 rounded-lg bg-mint/40 border border-mint flex items-center justify-between text-xs">
+            <span class="font-medium text-forest flex items-center">
+              <svg class="w-4 h-4 mr-1.5 text-emerald" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+              </svg>
+              Target Role: Verified Farmer (Producer)
+            </span>
+            <span class="text-[10px] bg-forest text-white px-2 py-0.5 rounded font-semibold tracking-wide uppercase">
+              Increment 1
+            </span>
+          </div>
+
+          <!-- Submit Button -->
+          <div class="pt-2">
+            <button 
+              type="submit" 
+              id="registerSubmitBtn" 
+              class="btn-primary w-full py-3 px-4 flex items-center justify-center space-x-2 text-sm">
+              <span id="registerBtnText">Register & Initialize Farm</span>
+              <span id="registerSpinner" class="spinner w-4 h-4 hidden"></span>
+            </button>
+          </div>
+        </form>
+
+        <!-- Toggle Switch Hint at Bottom -->
+        <div class="mt-6 pt-5 border-t border-gray-100 text-center">
+          <p id="bottomTogglePrompt" class="text-xs text-gray-600">
+            Don't have a farmer account yet? 
+            <button type="button" id="switchLinkToRegister" class="text-emerald font-semibold hover:underline ml-1">
+              Register as Farmer
+            </button>
+          </p>
+        </div>
+
+      </div>
+
+      <!-- Trust & Protocol Footnote -->
+      <div class="text-center mt-6 text-xs text-gray-500 space-y-1">
+        <p class="flex items-center justify-center space-x-1.5">
+          <svg class="w-3.5 h-3.5 text-emerald" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
+          </svg>
+          <span>End-to-End JWT Session Security • Zero-Trust Isolation</span>
+        </p>
+        <p class="text-[11px] text-gray-400">Agri-Grid Protocol © 2026 • Food Security & Traceability</p>
+      </div>
+
+    </div>
+  </main>
+
+  <!-- Notification Toast Container for extra polish if needed -->
+  <div id="toastContainer" class="fixed top-5 right-5 z-50 flex flex-col space-y-2 pointer-events-none"></div>
+
+  <!-- Vanilla JavaScript Auth Handler -->
+  <script src="js/auth.js"></script>
+</body>
+</html>

@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Farmer Dashboard | Agri-Grid</title>
+  
+  <!-- Immediate Auth Guard: Redirects before render if unauthenticated -->
+  <script>
+    if (!sessionStorage.getItem('agrigrid_token')) {
+      window.location.replace('index.html');
+    }
+  </script>
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            forest: '#1b4332',
+            emerald: {
+              DEFAULT: '#2d6a4f',
+              dark: '#1b4332',
+              light: '#40916c',
+            },
+            mint: '#d8f3dc',
+            slateBg: '#f8fafc',
+          }
+        }
+      }
+    }
+  </script>
+
+  <!-- Custom Agro-Tech Stylesheet -->
+  <link rel="stylesheet" href="css/dashboard.css">
+</head>
+<body class="min-h-screen bg-grid-pattern flex flex-col justify-between selection:bg-mint selection:text-forest">
+
+  <!-- =========================================================================
+       TOP NAVIGATION BAR
+       ========================================================================= -->
+  <header class="glass-header sticky top-0 z-30 w-full px-4 sm:px-8 py-3.5 flex items-center justify-between">
+    <!-- Brand / Logo -->
+    <div class="flex items-center space-x-3.5">
+      <div class="w-10 h-10 rounded-xl bg-forest flex items-center justify-center text-white shadow-md shadow-forest/20 flex-shrink-0">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path>
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-2 0-3 1.5-3 3.5 0 2.5 3 4.5 3 4.5s3-2 3-4.5c0-2-1-3.5-3-3.5z"></path>
+        </svg>
+      </div>
+      <div>
+        <div class="flex items-center space-x-2">
+          <span class="text-xl font-extrabold tracking-tight text-forest leading-none">Agri-Grid</span>
+          <span class="text-[10px] bg-emerald-100 text-emerald-800 font-bold px-2 py-0.5 rounded-full uppercase border border-mint">
+            Farmer Console
+          </span>
+        </div>
+        <p class="text-xs text-gray-500 font-medium" id="headerFarmNameDisplay">Loading farm credentials...</p>
+      </div>
+    </div>
+
+    <!-- User Profile & Session Controls -->
+    <div class="flex items-center space-x-3 sm:space-x-4">
+      <!-- Profile Widget -->
+      <div class="hidden md:flex items-center space-x-3 pl-3 pr-4 py-1.5 rounded-lg bg-gray-50 border border-gray-200">
+        <div class="w-8 h-8 rounded-full bg-emerald text-white flex items-center justify-center font-bold text-xs uppercase" id="userAvatar">
+          F
+        </div>
+        <div class="text-left">
+          <div class="text-xs font-semibold text-gray-800 flex items-center space-x-1">
+            <span id="headerUsername">Farmer</span>
+            <span class="text-[10px] bg-emerald/10 text-emerald font-semibold px-1.5 py-0.2 rounded border border-emerald/20">Farmer</span>
+          </div>
+          <span class="text-[11px] text-gray-500" id="headerFarmLocation">Pakistan (PK-Node)</span>
+        </div>
+      </div>
+
+      <!-- Logout Button -->
+      <button 
+        type="button" 
+        id="logoutBtn" 
+        class="inline-flex items-center space-x-1.5 px-3.5 py-2 text-xs font-semibold rounded-lg text-gray-700 bg-white border border-gray-300 hover:bg-gray-50 hover:text-red-700 hover:border-red-300 transition-colors shadow-sm"
+        title="Sign out of Agri-Grid">
+        <svg class="w-4 h-4 text-gray-500 group-hover:text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path>
+        </svg>
+        <span>Logout</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- =========================================================================
+       MAIN DASHBOARD WORKSPACE
+       ========================================================================= -->
+  <main class="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-8 py-6 space-y-6">
+
+    <!-- METRIC SUMMARY CARDS -->
+    <section aria-labelledby="metrics-heading">
+      <h2 id="metrics-heading" class="sr-only">Operational Metrics</h2>
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+        
+        <!-- Metric 1: Total Active Fields -->
+        <div class="metric-card p-5 flex items-center space-x-4">
+          <div class="w-12 h-12 rounded-xl bg-emerald-50 text-emerald border border-mint flex items-center justify-center flex-shrink-0">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+            </svg>
+          </div>
+          <div>
+            <p class="text-xs font-semibold uppercase tracking-wider text-gray-500">Total Active Fields</p>
+            <div class="flex items-baseline space-x-2 mt-0.5">
+              <span class="text-2xl font-bold text-gray-900" id="metricActiveFields">0</span>
+              <span class="text-xs text-emerald font-semibold">Active Plots</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Metric 2: Total Cultivated Acreage -->
+        <div class="metric-card p-5 flex items-center space-x-4">
+          <div class="w-12 h-12 rounded-xl bg-forest/5 text-forest border border-forest/10 flex items-center justify-center flex-shrink-0">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"></path>
+            </svg>
+          </div>
+          <div>
+            <p class="text-xs font-semibold uppercase tracking-wider text-gray-500">Total Acreage</p>
+            <div class="flex items-baseline space-x-2 mt-0.5">
+              <span class="text-2xl font-bold text-gray-900" id="metricTotalAcreage">0.0</span>
+              <span class="text-xs text-gray-500 font-medium">Acres Cultivated</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Metric 3: Projected Yield (Sum of kg) -->
+        <div class="metric-card p-5 flex items-center space-x-4 sm:col-span-2 lg:col-span-1">
+          <div class="w-12 h-12 rounded-xl bg-amber-50 text-amber-700 border border-amber-200 flex items-center justify-center flex-shrink-0">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path>
+            </svg>
+          </div>
+          <div>
+            <p class="text-xs font-semibold uppercase tracking-wider text-gray-500">Projected Yield</p>
+            <div class="flex items-baseline space-x-2 mt-0.5">
+              <span class="text-2xl font-bold text-gray-900" id="metricProjectedYield">0</span>
+              <span class="text-xs text-gray-500 font-medium">kg Estimated</span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- =========================================================================
+         ACTIVE CROP MANAGEMENT SECTION (CRUD)
+         ========================================================================= -->
+    <section class="glass-card p-5 sm:p-6 space-y-5" aria-labelledby="crops-heading">
+      
+      <!-- Action Bar: Title, Search, Filter & Register Button -->
+      <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-2 border-b border-gray-100">
+        <div>
+          <h2 id="crops-heading" class="text-lg font-bold text-gray-900 tracking-tight flex items-center space-x-2">
+            <span>Crop Ledger & Active Field Listings</span>
+            <span id="recordsBadge" class="text-xs font-medium bg-gray-100 text-gray-700 px-2 py-0.5 rounded-full">0 Records</span>
+          </h2>
+          <p class="text-xs text-gray-500 mt-0.5">Manage your registered crops, planting telemetry, and harvest projections.</p>
+        </div>
+
+        <div class="flex flex-wrap items-center gap-3">
+          <!-- Status Filter Dropdown -->
+          <div class="flex items-center space-x-2">
+            <label for="statusFilter" class="text-xs font-semibold text-gray-600">Status:</label>
+            <select id="statusFilter" class="dash-input py-1.5 px-3 text-xs w-36 bg-white cursor-pointer">
+              <option value="ALL">All Statuses</option>
+              <option value="Active" selected>Active</option>
+              <option value="Sold">Sold</option>
+              <option value="Withdrawn">Withdrawn</option>
+            </select>
+          </div>
+
+          <!-- Register New Crop CTA Button -->
+          <button 
+            type="button" 
+            id="openAddCropModalBtn" 
+            class="btn-primary py-2 px-4 text-xs flex items-center space-x-1.5 shadow-sm">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+            </svg>
+            <span>+ Register New Crop</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Table Container with Responsive Horizontal Scrolling -->
+      <div class="overflow-x-auto rounded-lg border border-gray-200 bg-white">
+        <table class="w-full text-left border-collapse data-table" id="cropsTable">
+          <thead>
+            <tr>
+              <th scope="col" class="w-16">ID</th>
+              <th scope="col">Crop Variety</th>
+              <th scope="col">Planting Date</th>
+              <th scope="col">Est. Harvest</th>
+              <th scope="col">Acreage</th>
+              <th scope="col">Est. Yield</th>
+              <th scope="col">Asking Price</th>
+              <th scope="col">Status</th>
+              <th scope="col" class="text-right pr-4">Actions</th>
+            </tr>
+          </thead>
+          <tbody id="cropsTableBody">
+            <!-- Populated dynamically via dashboard.js -->
+          </tbody>
+        </table>
+
+        <!-- Empty State Container -->
+        <div id="emptyState" class="hidden py-14 px-4 text-center">
+          <div class="w-16 h-16 mx-auto mb-4 rounded-full bg-mint/50 text-forest flex items-center justify-center">
+            <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+            </svg>
+          </div>
+          <h3 class="text-base font-bold text-gray-800">No crops registered yet</h3>
+          <p class="text-xs text-gray-500 max-w-sm mx-auto mt-1 mb-5">
+            Log your first field parcel to begin tracking yield estimates, weather analytics, and smart contracts.
+          </p>
+          <button 
+            type="button" 
+            id="emptyStateAddBtn" 
+            class="btn-primary py-2 px-4 text-xs inline-flex items-center space-x-1.5">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+            </svg>
+            <span>+ Register Your First Crop</span>
+          </button>
+        </div>
+
+        <!-- Table Loading Skeleton -->
+        <div id="tableLoadingState" class="hidden py-12 text-center">
+          <div class="spinner spinner-dark w-8 h-8 mx-auto mb-2"></div>
+          <p class="text-xs text-gray-500 font-medium">Fetching crop registry records...</p>
+        </div>
+      </div>
+
+      <!-- Pagination Controls -->
+      <div class="flex flex-col sm:flex-row items-center justify-between gap-3 pt-2 text-xs text-gray-600">
+        <div id="paginationInfo">Showing 0 to 0 of 0 crops</div>
+        <div class="flex items-center space-x-2">
+          <button 
+            type="button" 
+            id="prevPageBtn" 
+            class="btn-secondary px-3 py-1.5 disabled:opacity-50 disabled:cursor-not-allowed text-xs" 
+            disabled>
+            &larr; Previous
+          </button>
+          <span class="font-semibold text-gray-800 px-2" id="pageIndicator">Page 1 of 1</span>
+          <button 
+            type="button" 
+            id="nextPageBtn" 
+            class="btn-secondary px-3 py-1.5 disabled:opacity-50 disabled:cursor-not-allowed text-xs" 
+            disabled>
+            Next &rarr;
+          </button>
+        </div>
+      </div>
+
+    </section>
+  </main>
+
+  <!-- =========================================================================
+       ADD / EDIT CROP MODAL DIALOG
+       ========================================================================= -->
+  <div id="cropModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+    <div class="modal-content bg-white w-full max-w-lg p-6 relative max-h-[90vh] overflow-y-auto">
+      
+      <!-- Modal Header -->
+      <div class="flex items-center justify-between pb-4 border-b border-gray-100">
+        <div class="flex items-center space-x-2.5">
+          <div class="w-8 h-8 rounded-lg bg-mint text-forest flex items-center justify-center font-bold text-sm">
+            🌱
+          </div>
+          <div>
+            <h3 id="modalTitle" class="text-base font-bold text-gray-900 leading-tight">Register New Crop</h3>
+            <p class="text-xs text-gray-500">Enter field attributes and planting data</p>
+          </div>
+        </div>
+        <button type="button" id="closeCropModalBtn" class="text-gray-400 hover:text-gray-600 p-1 rounded-lg">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+          </svg>
+        </button>
+      </div>
+
+      <!-- In-Modal Alert Box -->
+      <div id="modalAlertBox" class="hidden mt-4 p-3 rounded-lg text-xs bg-red-50 text-red-800 border border-red-200"></div>
+
+      <!-- Crop Form -->
+      <form id="cropForm" class="space-y-4 mt-4" novalidate>
+        <input type="hidden" id="modalListingId" value="">
+
+        <!-- Crop Variety Selection -->
+        <div>
+          <label for="modalCropName" class="block text-xs font-semibold uppercase tracking-wider text-gray-700 mb-1">
+            Crop Variety <span class="text-emerald font-bold">*</span>
+          </label>
+          <select id="modalCropName" class="dash-input bg-white" required>
+            <option value="" disabled selected>Select crop type</option>
+            <option value="Wheat">Wheat</option>
+            <option value="Rice">Rice</option>
+            <option value="Tomato">Tomato</option>
+            <option value="Potato">Potato</option>
+            <option value="Cotton">Cotton</option>
+            <option value="Maize">Maize (Corn)</option>
+            <option value="Sugarcane">Sugarcane</option>
+            <option value="Other">Other</option>
+          </select>
+        </div>
+
+        <!-- Planting Date & Harvest Date Grid -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label for="modalPlantingDate" class="block text-xs font-semibold uppercase tracking-wider text-gray-700 mb-1">
+              Planting Date <span class="text-emerald font-bold">*</span>
+            </label>
+            <input type="date" id="modalPlantingDate" class="dash-input" required>
+          </div>
+          <div>
+            <label for="modalHarvestDate" class="block text-xs font-semibold uppercase tracking-wider text-gray-700 mb-1">
+              Est. Harvest Date <span class="text-emerald font-bold">*</span>
+            </label>
+            <input type="date" id="modalHarvestDate" class="dash-input" required>
+          </div>
+        </div>
+
+        <!-- Acreage & Yield Grid -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label for="modalAcreage" class="block text-xs font-semibold uppercase tracking-wider text-gray-700 mb-1">
+              Acreage (Acres) <span class="text-emerald font-bold">*</span>
+            </label>
+            <input type="number" id="modalAcreage" step="0.1" min="0.1" placeholder="e.g. 12.5" class="dash-input" required>
+          </div>
+          <div>
+            <label for="modalQuantityKg" class="block text-xs font-semibold uppercase tracking-wider text-gray-700 mb-1">
+              Est. Yield (kg) <span class="text-emerald font-bold">*</span>
+            </label>
+            <input type="number" id="modalQuantityKg" step="1" min="1" placeholder="e.g. 5000" class="dash-input" required>
+          </div>
+        </div>
+
+        <!-- Asking Price per kg -->
+        <div>
+          <label for="modalAskingPrice" class="block text-xs font-semibold uppercase tracking-wider text-gray-700 mb-1">
+            Asking Price ($/kg) <span class="text-gray-400 font-normal">(Optional)</span>
+          </label>
+          <input type="number" id="modalAskingPrice" step="0.01" min="0.01" placeholder="e.g. 1.25" class="dash-input">
+        </div>
+
+        <!-- Collapsible GPS Coordinates -->
+        <details class="text-xs border border-gray-200 rounded-lg p-3 bg-gray-50/50">
+          <summary class="font-semibold text-gray-700 cursor-pointer select-none">
+            Field GPS Coordinates (Optional / Auto-Set)
+          </summary>
+          <div class="grid grid-cols-2 gap-2 mt-2 pt-2 border-t border-gray-200">
+            <div>
+              <label for="modalGpsLat" class="block text-[11px] text-gray-600 mb-0.5">Latitude</label>
+              <input type="number" step="0.0001" id="modalGpsLat" class="dash-input py-1 text-xs" value="30.3753">
+            </div>
+            <div>
+              <label for="modalGpsLng" class="block text-[11px] text-gray-600 mb-0.5">Longitude</label>
+              <input type="number" step="0.0001" id="modalGpsLng" class="dash-input py-1 text-xs" value="69.3451">
+            </div>
+          </div>
+        </details>
+
+        <!-- Zero-Trust Compliance Notice -->
+        <div class="p-2.5 rounded bg-emerald-50/70 border border-emerald-100 flex items-center space-x-2 text-[11px] text-emerald-900">
+          <svg class="w-4 h-4 text-emerald flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path>
+          </svg>
+          <span>Zero-Trust: Tenant identification is extracted strictly from your signed JWT session.</span>
+        </div>
+
+        <!-- Form Action Buttons -->
+        <div class="flex items-center justify-end space-x-2.5 pt-3 border-t border-gray-100">
+          <button type="button" id="cancelCropModalBtn" class="btn-secondary px-4 py-2 text-xs">
+            Cancel
+          </button>
+          <button type="submit" id="saveCropSubmitBtn" class="btn-primary px-5 py-2 text-xs flex items-center space-x-2">
+            <span id="saveCropBtnText">Save Listing</span>
+            <span id="saveCropSpinner" class="spinner w-3.5 h-3.5 hidden"></span>
+          </button>
+        </div>
+      </form>
+
+    </div>
+  </div>
+
+  <!-- =========================================================================
+       CONFIRMATION DIALOG FOR SOFT-DELETE / WITHDRAWAL
+       ========================================================================= -->
+  <div id="deleteModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="deleteModalTitle">
+    <div class="modal-content bg-white w-full max-w-sm p-6 relative">
+      <div class="w-12 h-12 mx-auto mb-3 rounded-full bg-red-50 text-red-600 flex items-center justify-center">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+        </svg>
+      </div>
+      <h3 id="deleteModalTitle" class="text-center text-base font-bold text-gray-900">Withdraw Crop Listing</h3>
+      <p class="text-center text-xs text-gray-500 mt-1 mb-5" id="deleteModalMessage">
+        Are you sure you want to withdraw this crop listing? It will be marked as Withdrawn in the provenance ledger.
+      </p>
+
+      <div class="flex items-center justify-center space-x-3">
+        <button type="button" id="cancelDeleteBtn" class="btn-secondary px-4 py-2 text-xs w-1/2">
+          Keep Active
+        </button>
+        <button type="button" id="confirmDeleteBtn" class="btn-danger px-4 py-2 text-xs w-1/2 flex items-center justify-center space-x-1.5">
+          <span id="confirmDeleteBtnText">Withdraw</span>
+          <span id="confirmDeleteSpinner" class="spinner w-3.5 h-3.5 hidden"></span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- =========================================================================
+       TOAST FEEDBACK CONTAINER
+       ========================================================================= -->
+  <div id="toastContainer" class="fixed top-5 right-5 z-50 flex flex-col space-y-2 pointer-events-none max-w-sm w-full"></div>
+
+  <!-- Footer -->
+  <footer class="w-full py-4 text-center text-xs text-gray-500 border-t border-gray-200 bg-white/50">
+    <p>Agri-Grid Protocol • Increment 1: Farmer Dashboard & Supply-Side Provenance Ledger</p>
+  </footer>
+
+  <!-- Vanilla JavaScript Dashboard Controller -->
+  <script src="js/dashboard.js"></script>
+</body>
+</html>

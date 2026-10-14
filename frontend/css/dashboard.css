@@ -1,0 +1,241 @@
+/* ==========================================================================
+   Agri-Grid Farmer Dashboard Stylesheet
+   Theme: Agricultural Tech (Forest Green, Emerald Accent, Crisp Mint, Slate)
+   ========================================================================== */
+
+:root {
+  --color-forest: #1b4332;
+  --color-emerald: #2d6a4f;
+  --color-emerald-light: #40916c;
+  --color-mint: #d8f3dc;
+  --color-mint-light: #e8f7ec;
+  --color-slate-bg: #f8fafc;
+  --color-text-main: #0f172a;
+  --color-text-muted: #64748b;
+  --color-border: #e2e8f0;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  background-color: var(--color-slate-bg);
+  background-image: 
+    radial-gradient(at 0% 0%, rgba(216, 243, 220, 0.45) 0px, transparent 50%),
+    radial-gradient(at 100% 0%, rgba(45, 106, 79, 0.08) 0px, transparent 40%),
+    linear-gradient(to bottom, #f8fafc, #f1f5f9);
+  background-attachment: fixed;
+  color: var(--color-text-main);
+  min-height: 100vh;
+}
+
+/* Subtle Grid Background Pattern */
+.bg-grid-pattern {
+  background-size: 32px 32px;
+  background-image: 
+    linear-gradient(to right, rgba(45, 106, 79, 0.03) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(45, 106, 79, 0.03) 1px, transparent 1px);
+}
+
+/* Glassmorphic Surfaces */
+.glass-header {
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-bottom: 1px solid rgba(216, 243, 220, 0.8);
+}
+
+.glass-card {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(226, 232, 240, 0.85);
+  box-shadow: 0 4px 6px -1px rgba(27, 67, 50, 0.05), 0 2px 4px -2px rgba(27, 67, 50, 0.05);
+  border-radius: 12px;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.metric-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  transition: all 0.2s ease;
+}
+
+.metric-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 15px -3px rgba(27, 67, 50, 0.08);
+  border-color: rgba(45, 106, 79, 0.25);
+}
+
+/* Buttons */
+.btn-primary {
+  background: linear-gradient(135deg, #1b4332 0%, #2d6a4f 100%);
+  color: #ffffff;
+  border-radius: 8px;
+  font-weight: 600;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 4px 10px -2px rgba(27, 67, 50, 0.2);
+}
+
+.btn-primary:hover:not(:disabled) {
+  background: linear-gradient(135deg, #163628 0%, #245842 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 14px -2px rgba(27, 67, 50, 0.3);
+}
+
+.btn-primary:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.btn-secondary {
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  color: #334155;
+  border-radius: 8px;
+  font-weight: 500;
+  transition: all 0.15s ease;
+}
+
+.btn-secondary:hover:not(:disabled) {
+  background: #f8fafc;
+  border-color: #94a3b8;
+  color: #0f172a;
+}
+
+.btn-danger {
+  background: #ef4444;
+  color: #ffffff;
+  border-radius: 8px;
+  font-weight: 600;
+  transition: all 0.15s ease;
+}
+
+.btn-danger:hover:not(:disabled) {
+  background: #dc2626;
+  box-shadow: 0 4px 10px -2px rgba(239, 68, 68, 0.3);
+}
+
+/* Inputs & Form Controls with strict 8px radius */
+.dash-input {
+  border-radius: 8px !important;
+  border: 1.5px solid #cbd5e1;
+  background-color: #ffffff;
+  padding: 0.6rem 0.85rem;
+  font-size: 0.9rem;
+  width: 100%;
+  color: #1e293b;
+  transition: all 0.2s ease;
+}
+
+.dash-input:focus {
+  outline: none;
+  border-color: var(--color-emerald);
+  box-shadow: 0 0 0 3px rgba(45, 106, 79, 0.18);
+}
+
+/* Table Design */
+.data-table th {
+  background-color: #f8fafc;
+  color: #475569;
+  font-weight: 600;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 0.875rem 1rem;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.data-table td {
+  padding: 0.95rem 1rem;
+  border-bottom: 1px solid #f1f5f9;
+  font-size: 0.875rem;
+  color: #1e293b;
+  vertical-align: middle;
+}
+
+.data-table tr:hover td {
+  background-color: #f8fafc;
+}
+
+/* Status Badges */
+.badge-active {
+  background-color: #d8f3dc;
+  color: #1b4332;
+  border: 1px solid #b7e4c7;
+}
+
+.badge-withdrawn {
+  background-color: #fee2e2;
+  color: #991b1b;
+  border: 1px solid #fecaca;
+}
+
+.badge-sold {
+  background-color: #fef3c7;
+  color: #92400e;
+  border: 1px solid #fde68a;
+}
+
+/* Modal Styling */
+.modal-overlay {
+  background-color: rgba(15, 23, 42, 0.6);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  transition: opacity 0.2s ease;
+}
+
+.modal-content {
+  border-radius: 14px;
+  box-shadow: 0 25px 50px -12px rgba(15, 23, 42, 0.25);
+  animation: modalEnter 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes modalEnter {
+  0% {
+    opacity: 0;
+    transform: scale(0.96) translateY(-10px);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+/* Toast Notifications */
+.toast-banner {
+  border-radius: 8px;
+  animation: toastSlide 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1);
+}
+
+@keyframes toastSlide {
+  0% {
+    opacity: 0;
+    transform: translateX(20px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* Loading Spinner */
+.spinner {
+  border: 2.5px solid rgba(255, 255, 255, 0.3);
+  border-radius: 50%;
+  border-top-color: #ffffff;
+  animation: spin 0.75s linear infinite;
+  display: inline-block;
+}
+
+.spinner-dark {
+  border-color: rgba(27, 67, 50, 0.2);
+  border-top-color: var(--color-forest);
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}

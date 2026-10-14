@@ -1,0 +1,46 @@
+# =============================================================================
+# Agri-Grid: Git Ignore Policy
+# =============================================================================
+
+# 1. Database files (Never commit live databases or dynamic data)
+*.db
+*.sqlite
+*.sqlite3
+backend/database/*.db
+
+# 2. Python bytecode & runtime caches
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.pytest_cache/
+.coverage
+htmlcov/
+
+# 3. Environment variables & API credentials (Required for Increment 2)
+.env
+.env.*
+!.env.example
+
+# 4. Virtual environments
+venv/
+.venv/
+env/
+ENV/
+env.bak/
+venv.bak/
+
+# 5. IDE, Editor & OS metadata
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# 6. Large media / reference video assets
+*.mp4
+*.mov
+*.avi
+*.wmv
