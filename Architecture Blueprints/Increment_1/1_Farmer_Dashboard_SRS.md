@@ -465,6 +465,7 @@ Farmers (1) ── (0..*) Listings   [farmer_id FK]
 - A `Farmers` profile can have zero or more `Listings`.
 - Deactivating a `User` SHALL set `Users.is_active = FALSE` (soft-delete). The `Farmers` profile and all `Listings` records SHALL be retained for cross-increment provenance integrity. Physical cascading deletes are PROHIBITED.
 
+> *Operational Note: Database schema updates require deleting `agrigrid.db` (and any associated `-wal` / `-shm` files) and re-running `python backend/database/init_db.py`, as the database file is git-ignored, runtime-generated, and no automated migration tool is configured in Increment 1.*
 
 ---
 

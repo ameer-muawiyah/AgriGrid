@@ -79,10 +79,10 @@ CREATE TABLE IF NOT EXISTS farmers (
     id                  INTEGER     PRIMARY KEY AUTOINCREMENT,
 
     -- FK to users.id  — 1:1 relationship; UNIQUE prevents duplicate profiles
-    -- ON DELETE CASCADE: removing a user record purges the farmer profile
-    -- and all downstream listings (via the cascade on listings.farmer_id).
+    -- ON DELETE RESTRICT: physical user deletion is prohibited; account
+    -- deactivation must be performed using users.is_active = 0.
     user_id             INTEGER     NOT NULL UNIQUE
-                                    REFERENCES users(id) ON DELETE CASCADE,
+                                    REFERENCES users(id) ON DELETE RESTRICT,
 
     -- Human-readable farm identity (required at registration for farmers)
     farm_name           TEXT        NOT NULL
@@ -121,10 +121,10 @@ CREATE TABLE IF NOT EXISTS listings (
     id                      INTEGER     PRIMARY KEY AUTOINCREMENT,
 
     -- Tenant anchor — FK to farmers.id
-    -- ON DELETE CASCADE: if a farmer profile is removed, all their listings
-    -- are also purged (data hygiene; aligns with NFR-REL-003).
+    -- ON DELETE RESTRICT: physical deletion is prohibited to preserve
+    -- audit provenance and blockchain/QR trace integrity for Increments 2–5.
     farmer_id               INTEGER     NOT NULL
-                                        REFERENCES farmers(id) ON DELETE CASCADE,
+                                        REFERENCES farmers(id) ON DELETE RESTRICT,
 
     -- Crop taxonomy (enum, validated again at the API layer per AG-API-INC1-003 §4.1)
     crop_name               TEXT        NOT NULL

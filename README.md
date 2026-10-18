@@ -271,9 +271,11 @@ python backend/database/init_db.py
 [SEED]  Inserting farmer profiles …
 [SEED]  Inserting crop listings …
 [OK]    Seed transaction committed successfully.
-  Verification complete. agrigrid.db is ready for Run 2.
 ============================================================
 ```
+
+> [!NOTE]
+> Database schema changes require deleting `backend/database/agrigrid.db` (and any associated `-wal` / `-shm` files) and re-running `python backend/database/init_db.py`, as the SQLite database is runtime-generated, git-ignored, and has no automated migration runner in Increment 1.
 
 ### 5. Launch the Backend API Server (Port 5000)
 Start the Flask application server in your primary terminal:

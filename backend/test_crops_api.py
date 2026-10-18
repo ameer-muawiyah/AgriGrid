@@ -37,6 +37,9 @@ Test Coverage
     TC-21  Buyer token attempts POST /api/crops                     -> 403
     TC-22  No token on GET /api/crops                               -> 401
 
+  Metrics Aggregation
+    TC-23  GET /api/crops/stats: 200 for farmer, 403 for buyer, 401 unauth
+
 Usage
 -----
   python backend/test_crops_api.py       (from project root)
@@ -571,6 +574,37 @@ def tc22_no_token_on_get():
            f"status={r.status_code} error='{body.get('error')}'")
 
 
+def tc23_get_crop_stats():
+    global _farmer_a_token, _buyer_token
+    # 1. Farmer token -> 200 with active_fields, total_acreage, projected_yield_kg
+    r_farmer = requests.get(f"{BASE_URL}/api/crops/stats", headers=_auth(_farmer_a_token))
+    body = r_farmer.json()
+    data = body.get("data", {})
+    ok_farmer = (
+        r_farmer.status_code == 200
+        and body.get("success") is True
+        and "active_fields" in data
+        and "total_acreage" in data
+        and "projected_yield_kg" in data
+    )
+
+    # 2. Buyer token -> 403
+    r_buyer = requests.get(f"{BASE_URL}/api/crops/stats", headers=_auth(_buyer_token))
+    ok_buyer = r_buyer.status_code == 403
+
+    # 3. No token -> 401
+    r_no_token = requests.get(f"{BASE_URL}/api/crops/stats")
+    ok_no_token = r_no_token.status_code == 401
+
+    all_ok = ok_farmer and ok_buyer and ok_no_token
+    _check(
+        "TC-23",
+        "GET /api/crops/stats: 200 for farmer, 403 for buyer, 401 unauthenticated",
+        all_ok,
+        f"farmer_status={r_farmer.status_code} stats={data} buyer_status={r_buyer.status_code} no_token_status={r_no_token.status_code}"
+    )
+
+
 # ===========================================================================
 # MAIN RUNNER
 # ===========================================================================
@@ -627,6 +661,8 @@ def main():
         # RBAC guard
         tc21_buyer_blocked_from_create,
         tc22_no_token_on_get,
+        # Metrics Aggregation
+        tc23_get_crop_stats,
     ]
 
     for fn in tests:

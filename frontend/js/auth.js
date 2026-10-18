@@ -296,12 +296,14 @@ if (loginForm) {
           sessionStorage.setItem('agrigrid_user', JSON.stringify(responseData.user));
         }
 
-        showAlert('Authentication verified. Loading Farmer Dashboard...', 'success');
-
-        // Redirect to dashboard.html
-        setTimeout(() => {
-          window.location.href = 'dashboard.html';
-        }, 500);
+        const role = responseData.role || (responseData.user && responseData.user.role) || 'farmer';
+        if (role === 'farmer') {
+          showAlert('Authentication verified. Loading Farmer Dashboard...', 'success');
+          setTimeout(() => { window.location.href = 'dashboard.html'; }, 500);
+        } else {
+          showAlert(`Authenticated as ${role}. Redirecting to console...`, 'success');
+          setTimeout(() => { window.location.href = `dashboard.html?role=${encodeURIComponent(role)}`; }, 500);
+        }
       } else {
         const errorMsg = extractErrorMessage(responseData, 'Authentication failed. Please verify your credentials.');
         showAlert(errorMsg, 'error');

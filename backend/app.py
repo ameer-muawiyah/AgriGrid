@@ -360,6 +360,7 @@ def _register_auth_routes(app: Flask, get_db) -> None:
                 "user_id":   row["user_id"],
                 "farmer_id": row["farmer_id"],
                 "username":  row["username"],
+                "role":      row["role"],
             },
         }), 200
 

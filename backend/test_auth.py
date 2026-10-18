@@ -29,6 +29,7 @@ Test Cases
   TC-14  Register farmer without farm_name (expect 400)
   TC-15  Register with weak password (expect 400)
   TC-16  Access protected /api/auth/me with expired token (expect 401)
+  TC-17  Access role placeholder routes (buyer, transporter, agronomist, compliance)
 
 Usage
 -----
@@ -173,8 +174,9 @@ def tc04_login_valid():
            r.status_code == 200
            and body.get("success") is True
            and len(token) > 20
-           and body.get("role") == "farmer",
-           f"status={r.status_code} token_len={len(token)} role='{body.get('role')}'")
+           and body.get("role") == "farmer"
+           and body.get("user", {}).get("role") == "farmer",
+           f"status={r.status_code} token_len={len(token)} role='{body.get('role')}' user_role='{body.get('user', {}).get('role')}'")
 
 
 def tc05_login_wrong_password():
@@ -345,6 +347,49 @@ def tc16_expired_token():
            f"status={r.status_code} error='{body.get('error')}'")
 
 
+def tc17_role_placeholder_dashboards():
+    global _buyer_token, _farmer_token
+    # 1. Buyer token on /dashboard/buyer -> 200 + "Dashboard under construction"
+    r_buyer = requests.get(f"{BASE_URL}/dashboard/buyer", headers=auth_header(_buyer_token))
+    b_body = r_buyer.json()
+    ok_buyer = r_buyer.status_code == 200 and "under construction" in b_body.get("message", "").lower()
+
+    # 2. Transporter
+    u_trans = f"test_trans_{RUN_ID}"
+    requests.post(f"{BASE_URL}/api/auth/register", json={"username": u_trans, "password": "TransPass1A", "role": "transporter"})
+    r_tl = requests.post(f"{BASE_URL}/api/auth/login", json={"username": u_trans, "password": "TransPass1A"})
+    t_tok = r_tl.json().get("token", "")
+    r_trans = requests.get(f"{BASE_URL}/dashboard/transporter", headers=auth_header(t_tok))
+    t_body = r_trans.json()
+    ok_trans = r_trans.status_code == 200 and "under construction" in t_body.get("message", "").lower()
+
+    # 3. Agronomist
+    u_agro = f"test_agro_{RUN_ID}"
+    requests.post(f"{BASE_URL}/api/auth/register", json={"username": u_agro, "password": "AgroPass1A", "role": "agronomist"})
+    r_al = requests.post(f"{BASE_URL}/api/auth/login", json={"username": u_agro, "password": "AgroPass1A"})
+    a_tok = r_al.json().get("token", "")
+    r_agro = requests.get(f"{BASE_URL}/dashboard/agronomist", headers=auth_header(a_tok))
+    a_body = r_agro.json()
+    ok_agro = r_agro.status_code == 200 and "under construction" in a_body.get("message", "").lower()
+
+    # 4. Compliance Officer
+    u_comp = f"test_comp_{RUN_ID}"
+    requests.post(f"{BASE_URL}/api/auth/register", json={"username": u_comp, "password": "CompPass1A", "role": "compliance_officer"})
+    r_cl = requests.post(f"{BASE_URL}/api/auth/login", json={"username": u_comp, "password": "CompPass1A"})
+    c_tok = r_cl.json().get("token", "")
+    r_comp = requests.get(f"{BASE_URL}/dashboard/compliance", headers=auth_header(c_tok))
+    c_body = r_comp.json()
+    ok_comp = r_comp.status_code == 200 and "under construction" in c_body.get("message", "").lower()
+
+    # 5. Farmer token on /dashboard/buyer -> 403
+    r_fb = requests.get(f"{BASE_URL}/dashboard/buyer", headers=auth_header(_farmer_token))
+    ok_fb = r_fb.status_code == 403
+
+    all_ok = ok_buyer and ok_trans and ok_agro and ok_comp and ok_fb
+    _check("TC-17", "Role placeholder dashboard routes (TC-INT-006)", all_ok,
+           f"buyer={r_buyer.status_code} trans={r_trans.status_code} agro={r_agro.status_code} comp={r_comp.status_code} farmer_on_buyer={r_fb.status_code}")
+
+
 # ---------------------------------------------------------------------------
 # Main runner
 # ---------------------------------------------------------------------------
@@ -393,6 +438,7 @@ def main():
         tc14_register_farmer_without_farm_name,
         tc15_weak_password,
         tc16_expired_token,
+        tc17_role_placeholder_dashboards,
     ]
 
     for test_fn in tests:

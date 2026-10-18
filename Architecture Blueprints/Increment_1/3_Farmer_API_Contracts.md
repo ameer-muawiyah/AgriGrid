@@ -598,6 +598,61 @@ Safely archives a crop listing by setting `is_deleted = TRUE` and `status = 'Wit
 
 ---
 
+### 4.6 Get Active Crop Statistics (`GET /api/crops/stats`)
+Returns aggregated metrics across all active (non-withdrawn, non-deleted) crop listings belonging exclusively to the authenticated farmer.
+
+* **Method:** `GET`
+* **URL Route:** `/api/crops/stats`
+* **Authentication Required:** Yes (`Authorization: Bearer <jwt_token>`)
+* **RBAC Rule:** Role must be `farmer`.
+* **Zero-Trust Anchor:** `farmer_id` is extracted strictly from the validated JWT claims (`g.farmer_id`); never accepted from query parameters or request body.
+* **Database Query:**
+```sql
+SELECT
+    COUNT(*) AS active_fields,
+    COALESCE(SUM(acreage), 0.0) AS total_acreage,
+    COALESCE(SUM(quantity_kg), 0.0) AS total_yield
+FROM listings
+WHERE farmer_id = ? AND is_deleted = 0 AND status = 'Active'
+```
+
+#### Request Payload
+*None (HTTP GET request)*
+
+#### Response Payloads
+
+##### Success (`200 OK`)
+```json
+{
+  "success": true,
+  "data": {
+    "active_fields": 2,
+    "total_acreage": 16.5,
+    "projected_yield_kg": 6800
+  }
+}
+```
+
+##### Failure Scenarios
+
+* **`401 Unauthorized` — Missing / Expired JWT:**
+```json
+{
+  "success": false,
+  "error": "Authentication required. Please log in."
+}
+```
+
+* **`403 Forbidden` — Non-Farmer Role Access:**
+```json
+{
+  "success": false,
+  "error": "Access denied. You do not have permission to access this resource."
+}
+```
+
+---
+
 ## 5. Standard Error Envelope Specification
 
 To ensure seamless frontend error parsing and user feedback:

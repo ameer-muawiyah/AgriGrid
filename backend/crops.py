@@ -9,6 +9,7 @@ Endpoints
 ---------
   POST   /api/crops                   — Create crop listing
   GET    /api/crops                   — List all farmer's crops (paginated)
+  GET    /api/crops/stats             — Summary telemetry & metrics across active crops
   GET    /api/crops/<int:listing_id>  — Retrieve single crop
   PUT    /api/crops/<int:listing_id>  — Update crop fields
   DELETE /api/crops/<int:listing_id>  — Soft-delete (Withdraw) crop
@@ -349,6 +350,35 @@ def list_crops():
         "page":    page,
         "limit":   limit,
         "total":   total,
+    }), 200
+
+
+# ===========================================================================
+# ROUTE 2B — GET /api/crops/stats  (Summary Telemetry Metrics)
+# ===========================================================================
+@crops_bp.route("/stats", methods=["GET"])
+@token_required
+@role_required("farmer")
+def get_crop_stats():
+    db = _get_db()
+    row = db.execute(
+        """
+        SELECT
+            COUNT(*) AS active_fields,
+            COALESCE(SUM(acreage), 0.0) AS total_acreage,
+            COALESCE(SUM(quantity_kg), 0.0) AS total_yield
+        FROM listings
+        WHERE farmer_id = ? AND is_deleted = 0 AND status = 'Active'
+        """,
+        (g.farmer_id,),
+    ).fetchone()
+    return jsonify({
+        "success": True,
+        "data": {
+            "active_fields": row["active_fields"],
+            "total_acreage": round(row["total_acreage"], 1),
+            "projected_yield_kg": round(row["total_yield"]),
+        }
     }), 200
 
 

@@ -24,10 +24,14 @@ try {
   console.error('Failed to parse agrigrid_user session data:', e);
 }
 
+const storedRole = (currentUser && currentUser.role) || null;
+const urlParams = new URLSearchParams(window.location.search);
+const requestedRole = urlParams.get('role') || storedRole || 'farmer';
+
 // Global Dashboard State
 let currentCropsList = [];
 let currentPage = 1;
-const pageSize = 10;
+const pageSize = 20;
 let totalPages = 1;
 let currentFilterStatus = 'Active';
 let cropToDeleteId = null;
@@ -94,11 +98,28 @@ const toastContainer = document.getElementById('toastContainer');
 // 2. INITIALIZATION & HEADER POPULATION
 // =========================================================================
 document.addEventListener('DOMContentLoaded', () => {
+  if (requestedRole !== 'farmer') {
+    renderRolePlaceholder(requestedRole);
+    return;
+  }
   initUserProfile();
   initDateDefaults();
   setupEventListeners();
+  loadMetrics();
   loadCrops(1);
 });
+
+function renderRolePlaceholder(role) {
+  document.body.innerHTML = `
+    <div class="min-h-screen flex flex-col items-center justify-center p-6 text-center">
+      <div class="glass-card max-w-md p-8">
+        <div class="w-16 h-16 mx-auto mb-4 rounded-full flex items-center justify-center text-2xl">🚧</div>
+        <h1 class="text-xl font-bold text-gray-900 capitalize">${escapeHtml(role)} Console</h1>
+        <p class="text-sm text-gray-600 mt-2">Dashboard under construction — available in a future increment.</p>
+        <button onclick="handleLogout()" class="mt-6 px-4 py-2 rounded-lg text-sm font-semibold">Sign Out</button>
+      </div>
+    </div>`;
+}
 
 function initUserProfile() {
   if (currentUser) {
@@ -173,7 +194,11 @@ async function loadCrops(page = 1) {
   currentPage = page;
 
   try {
-    const response = await fetch(`${API_BASE_URL}/crops?page=${page}&limit=${pageSize}`, {
+    let url = `${API_BASE_URL}/crops?page=${page}&limit=${pageSize}`;
+    if (currentFilterStatus && currentFilterStatus !== 'ALL') {
+      url += `&status=${encodeURIComponent(currentFilterStatus)}`;
+    }
+    const response = await fetch(url, {
       method: 'GET',
       headers: getAuthHeaders()
     });
@@ -188,14 +213,13 @@ async function loadCrops(page = 1) {
     const data = await response.json();
 
     if (response.ok && data) {
-      // Backend contract: { success: true, data: [...], page: 1, limit: 10, total: 1 }
+      // Backend contract: { success: true, data: [...], page: 1, limit: 20, total: 1 }
       const crops = Array.isArray(data.data) ? data.data : (Array.isArray(data) ? data : []);
       const totalCount = typeof data.total === 'number' ? data.total : crops.length;
       
       currentCropsList = crops;
       totalPages = Math.max(1, Math.ceil(totalCount / pageSize));
 
-      updateMetrics(crops);
       renderCropsTable(crops, totalCount);
       updatePaginationControls(totalCount);
     } else {
@@ -212,17 +236,19 @@ async function loadCrops(page = 1) {
   }
 }
 
-function updateMetrics(crops) {
-  // Compute across currently available crops
-  const activeCrops = crops.filter(c => (c.status || 'Active').toLowerCase() === 'active');
-  const totalActive = activeCrops.length;
-  
-  const totalAcres = activeCrops.reduce((acc, c) => acc + (parseFloat(c.acreage) || 0), 0);
-  const totalYield = activeCrops.reduce((acc, c) => acc + (parseFloat(c.quantity_kg || c.estimated_yield_kg) || 0), 0);
-
-  if (metricActiveFields) metricActiveFields.textContent = totalActive;
-  if (metricTotalAcreage) metricTotalAcreage.textContent = totalAcres.toLocaleString('en-US', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
-  if (metricProjectedYield) metricProjectedYield.textContent = Math.round(totalYield).toLocaleString('en-US');
+async function loadMetrics() {
+  try {
+    const response = await fetch(`${API_BASE_URL}/crops/stats`, { headers: getAuthHeaders() });
+    const data = await response.json().catch(() => null);
+    if (response.ok && data && data.data) {
+      const m = data.data;
+      if (metricActiveFields) metricActiveFields.textContent = m.active_fields;
+      if (metricTotalAcreage) metricTotalAcreage.textContent = Number(m.total_acreage).toLocaleString('en-US', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+      if (metricProjectedYield) metricProjectedYield.textContent = Math.round(m.projected_yield_kg).toLocaleString('en-US');
+    }
+  } catch (err) {
+    console.error('Failed to load metrics:', err);
+  }
 }
 
 // =========================================================================
@@ -231,18 +257,11 @@ function updateMetrics(crops) {
 function renderCropsTable(crops, totalCount) {
   cropsTableBody.innerHTML = '';
 
-  // Apply client-side status filter if specified
-  const filtered = crops.filter(crop => {
-    if (currentFilterStatus === 'ALL') return true;
-    const status = (crop.status || 'Active').toLowerCase();
-    return status === currentFilterStatus.toLowerCase();
-  });
-
   if (recordsBadge) {
-    recordsBadge.textContent = `${filtered.length} of ${totalCount} Records`;
+    recordsBadge.textContent = `${crops.length} of ${totalCount} Records`;
   }
 
-  if (filtered.length === 0) {
+  if (crops.length === 0) {
     cropsTable.classList.add('hidden');
     emptyState.classList.remove('hidden');
     return;
@@ -251,7 +270,7 @@ function renderCropsTable(crops, totalCount) {
   cropsTable.classList.remove('hidden');
   emptyState.classList.add('hidden');
 
-  filtered.forEach(crop => {
+  crops.forEach(crop => {
     const listingId = crop.listing_id || crop.id;
     const cropName = crop.crop_name || crop.crop_type || 'Crop';
     const plantingDate = crop.planting_date || 'N/A';
@@ -524,6 +543,7 @@ if (cropForm) {
           ? (data?.message || 'Crop listing updated successfully.') 
           : (data?.message || 'Crop listing created successfully.');
         showToast(successMessage, 'success');
+        loadMetrics();
         loadCrops(currentPage);
       } else {
         const errorMsg = extractErrorMessage(data, 'Could not save crop listing.');
@@ -590,6 +610,7 @@ if (confirmDeleteBtn) {
       if (response.ok) {
         closeDeleteModal();
         showToast(data?.message || 'Listing withdrawn successfully.', 'success');
+        loadMetrics();
         loadCrops(currentPage);
       } else {
         const errorMsg = extractErrorMessage(data, 'Failed to withdraw listing.');
@@ -667,7 +688,7 @@ function setupEventListeners() {
   if (statusFilter) {
     statusFilter.addEventListener('change', (e) => {
       currentFilterStatus = e.target.value;
-      renderCropsTable(currentCropsList, currentCropsList.length);
+      loadCrops(1);
     });
   }
 
