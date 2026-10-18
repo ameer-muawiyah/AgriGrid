@@ -20,6 +20,7 @@ import sys
 import time
 import socket
 import subprocess
+import threading
 import webbrowser
 
 ROOT = os.path.dirname(os.path.abspath(__file__))
@@ -167,7 +168,7 @@ def main():
         sys.exit(1)
 
     print(">> Opening Agri-Grid in your browser...")
-    webbrowser.open(APP_URL)
+    threading.Thread(target=webbrowser.open, args=(APP_URL,), daemon=True).start()
 
     print()
     print(f"  App is running at {APP_URL}")
