@@ -2,27 +2,98 @@
 # Agri-Grid: Git Ignore Policy
 # =============================================================================
 
-# 1. Database files (Never commit live databases or dynamic data)
+# 1. Database & SQLite Storage (Never commit live data or transaction journals)
 *.db
+*.db-shm
+*.db-wal
+*.db-journal
 *.sqlite
 *.sqlite3
+*.sqlite3-shm
+*.sqlite3-wal
 backend/database/*.db
+backend/database/*.db-wal
+backend/database/*.db-shm
+backend/database/*.db-journal
+*.sql.dump
+*.dump
+*.bak
 
-# 2. Python bytecode & runtime caches
+# 2. Secrets, API Credentials & Environment Variables
+.env
+.env.*
+!.env.example
+*.key
+*.pem
+*.cert
+*.crt
+*.pfx
+*.p12
+*.pkcs12
+id_rsa*
+id_ed25519*
+id_ecdsa*
+secrets/
+secret.*
+*credential*.json
+*credentials*.json
+client_secret*.json
+service-account*.json
+serviceAccount*.json
+token.json
+tokens.json
+auth.json
+
+# 3. Cloud Provider & Infrastructure Credentials
+.aws/
+.gcp/
+.azure/
+gcloud/
+firebase-adminsdk*.json
+terraform.tfvars
+*.tfstate
+*.tfstate.*
+
+# 4. Local Runtime Logs & Crash Dumps
+logs/
+*.log
+*.log.*
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+pip-log.txt
+*.dmp
+*.crash
+
+# 5. Python Bytecode, Build Artifacts & Runtime Caches
 __pycache__/
 *.py[cod]
 *$py.class
 *.so
+dist/
+build/
+*.egg
+*.egg-info/
+develop-eggs/
+eggs/
+parts/
+var/
+sdist/
+
+# 6. Testing, Code Coverage & Profiling
 .pytest_cache/
 .coverage
+.coverage.*
+coverage/
 htmlcov/
+.tox/
+.nox/
+.hypothesis/
+prof/
+*.prof
 
-# 3. Environment variables & API credentials (Required for Increment 2)
-.env
-.env.*
-!.env.example
-
-# 4. Virtual environments
+# 7. Virtual Environments
 venv/
 .venv/
 env/
@@ -30,16 +101,36 @@ ENV/
 env.bak/
 venv.bak/
 
-# 5. IDE, Editor & OS metadata
+# 8. Temporary Files & Scratch Workspaces
+tmp/
+temp/
+*.tmp
+scratch/
+.cache/
+
+# 9. IDE, Code Editor & OS Metadata (Prevents path & personal configuration leaks)
 .vscode/
+!.vscode/extensions.json
 .idea/
+*.sublime-project
+*.sublime-workspace
 *.swp
 *.swo
+*~
 .DS_Store
+.AppleDouble
+.LSOverride
+._*
 Thumbs.db
 Desktop.ini
+ehthumbs.db
 
-# 6. Large media / reference video assets
+# 10. Node Dependencies & Package Caches (Future Increment Guard)
+node_modules/
+.npm/
+.yarn/
+
+# 11. Large Binary Media & Reference Video Assets
 *.mp4
 *.mov
 *.avi

@@ -230,6 +230,9 @@ AgriGrid/
 
 Follow these steps to run the complete Agri-Grid application on your local workstation.
 
+### ⚡ One-Click Launch (Recommended)
+> **One-click launch (recommended):** double-click `start-agri-grid.bat` (Windows) or run `./start-agri-grid.sh` (macOS/Linux). It installs dependencies and creates the database on first run, starts both servers, and opens the app in your browser. Close the launcher window to stop everything. The manual steps below remain available for development.
+
 ### 1. Prerequisites
 * **Python 3.10+** (Python 3.12 recommended)
 * **Git** installed on your system
