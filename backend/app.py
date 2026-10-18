@@ -66,6 +66,11 @@ def create_app() -> Flask:
         "AGRIGRID_JWT_SECRET",
         "agrigrid-dev-secret-CHANGE-IN-PRODUCTION-2026",
     )
+    try:
+        app.config["JWT_EXPIRY_MINUTES"] = int(os.environ.get("JWT_EXPIRY_MINUTES", 30))
+    except (TypeError, ValueError):
+        print("[WARN] Invalid JWT_EXPIRY_MINUTES; falling back to 30 minutes.")
+        app.config["JWT_EXPIRY_MINUTES"] = 30
     app.config["DB_PATH"] = DB_PATH
 
     # ------------------------------------------------------------------

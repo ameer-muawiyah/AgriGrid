@@ -406,7 +406,7 @@ The master authentication table. Stores credentials and role assignments for all
 
 | Column Name | Data Type | Constraints | Description |
 |---|---|---|---|
-| `user_id` | INTEGER | PRIMARY KEY, AUTO_INCREMENT | Unique identifier for each user. |
+| `id` | INTEGER | PRIMARY KEY, AUTO_INCREMENT | Unique identifier for each user. |
 | `username` | VARCHAR(50) | NOT NULL, UNIQUE | The user's login name. |
 | `password_hash` | VARCHAR(255) | NOT NULL | Bcrypt/Argon2 hashed password. NEVER plaintext. |
 | `role` | VARCHAR(30) | NOT NULL, CHECK (role IN ('farmer', 'buyer', 'transporter', 'agronomist', 'compliance_officer')) | The user's RBAC role. Determines dashboard routing. |
@@ -414,13 +414,15 @@ The master authentication table. Stores credentials and role assignments for all
 | `created_at` | TIMESTAMP | NOT NULL, DEFAULT CURRENT_TIMESTAMP | Account creation timestamp. |
 | `is_active` | BOOLEAN | NOT NULL, DEFAULT TRUE | Soft-delete / account deactivation flag. |
 
+> *Note: The physical SQLite column is `id` (surrogate primary key). The API/JSON presentation layer serializes this field as `user_id` / `farmer_id` / `listing_id` per `AG-API-INC1-003` (`crops.py` serializers and the auth response envelopes).*
+
 ### 7.2 `Farmers` Table
 
 Extended profile information for users with the `farmer` role. This table establishes the 1:1 relationship between a user account and a farmer profile.
 
 | Column Name | Data Type | Constraints | Description |
 |---|---|---|---|
-| `farmer_id` | INTEGER | PRIMARY KEY, AUTO_INCREMENT | Unique identifier for the farmer profile. |
+| `id` | INTEGER | PRIMARY KEY, AUTO_INCREMENT | Unique identifier for the farmer profile. |
 | `user_id` | INTEGER | NOT NULL, UNIQUE, FOREIGN KEY → `Users.user_id` | Links farmer profile to the user account. |
 | `farm_name` | VARCHAR(100) | NOT NULL | The name of the farmer's farm/operation. |
 | `farm_location` | VARCHAR(200) | | Human-readable farm address or region. |
@@ -428,13 +430,15 @@ Extended profile information for users with the `farmer` role. This table establ
 | `default_gps_longitude` | DECIMAL(9,6) | | Default GPS longitude for the farm. |
 | `created_at` | TIMESTAMP | NOT NULL, DEFAULT CURRENT_TIMESTAMP | Profile creation timestamp. |
 
+> *Note: The physical SQLite column is `id` (surrogate primary key). The API/JSON presentation layer serializes this field as `user_id` / `farmer_id` / `listing_id` per `AG-API-INC1-003` (`crops.py` serializers and the auth response envelopes).*
+
 ### 7.3 `Listings` Table
 
 The active crop ledger. Each row represents a single crop that a farmer is cultivating or has available. **Rows are NEVER physically deleted** — they are soft-deleted via the `is_deleted` flag.
 
 | Column Name | Data Type | Constraints | Description |
 |---|---|---|---|
-| `listing_id` | INTEGER | PRIMARY KEY, AUTO_INCREMENT | Unique identifier for the crop listing. |
+| `id` | INTEGER | PRIMARY KEY, AUTO_INCREMENT | Unique identifier for the crop listing. |
 | `farmer_id` | INTEGER | NOT NULL, FOREIGN KEY → `Farmers.farmer_id` | Links the listing to its owner. **Zero-Trust anchor.** |
 | `crop_name` | VARCHAR(100) | NOT NULL, CHECK (crop_name IN ('Wheat', 'Rice', 'Tomato', 'Potato', 'Cotton', 'Maize', 'Sugarcane', 'Other')) | Standardized crop type from the approved taxonomy list. |
 | `planting_date` | DATE | NOT NULL | Date the crop was planted. Must be ≤ CURRENT_DATE and within 365 days prior. |
@@ -443,10 +447,12 @@ The active crop ledger. Each row represents a single crop that a farmer is culti
 | `gps_latitude` | DECIMAL(9,6) | NOT NULL | Latitude of the crop's location. |
 | `gps_longitude` | DECIMAL(9,6) | NOT NULL | Longitude of the crop's location. |
 | `quantity_kg` | DECIMAL(12,2) | NOT NULL, CHECK (quantity_kg > 0) | Estimated or actual quantity in kilograms. |
-| `status` | VARCHAR(20) | NOT NULL, DEFAULT 'Active', CHECK (status IN ('Active', 'Sold', 'Expired', 'Withdrawn')) | Lifecycle status of the listing. |
+| `status` | VARCHAR(20) | NOT NULL, DEFAULT 'Active', CHECK (status IN ('Active', 'Sold', 'In Transit', 'Delivered', 'Withdrawn')) | Lifecycle status. In Increment 1, records are created as 'Active' and retired as 'Withdrawn'. 'Sold', 'In Transit', and 'Delivered' are reserved for Increments 2 and 3 forward compatibility. |
 | `is_deleted` | BOOLEAN | NOT NULL, DEFAULT FALSE | **Soft-delete flag.** Set to TRUE when farmer withdraws a listing. Physical row deletion is PROHIBITED. Active dashboard queries filter `WHERE is_deleted = FALSE`. |
 | `created_at` | TIMESTAMP | NOT NULL, DEFAULT CURRENT_TIMESTAMP | Listing creation timestamp. |
 | `updated_at` | TIMESTAMP | NOT NULL, DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP | Last modification timestamp. |
+
+> *Note: The physical SQLite column is `id` (surrogate primary key). The API/JSON presentation layer serializes this field as `user_id` / `farmer_id` / `listing_id` per `AG-API-INC1-003` (`crops.py` serializers and the auth response envelopes).*
 
 ### 7.4 Entity Relationships
 

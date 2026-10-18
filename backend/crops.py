@@ -56,20 +56,10 @@ MAX_PLANTING_AGE_DAYS = 365
 # ---------------------------------------------------------------------------
 def _get_db() -> sqlite3.Connection:
     """
-    Retrieve the per-request DB connection from Flask's g context.
-    The connection (with PRAGMA foreign_keys=ON and Row factory) is
-    opened by app.py's get_db() helper on first access per request.
+    Retrieve the per-request DB connection from Flask's g context
+    via the application factory's get_db() helper.
     """
-    from flask import g as _g, current_app as _app
-    if "db" not in _g:
-        _g.db = sqlite3.connect(
-            _app.config["DB_PATH"],
-            detect_types=sqlite3.PARSE_DECLTYPES,
-        )
-        _g.db.row_factory = sqlite3.Row
-        _g.db.execute("PRAGMA foreign_keys = ON;")
-        _g.db.execute("PRAGMA journal_mode = WAL;")
-    return _g.db
+    return current_app.get_db()
 
 
 # ---------------------------------------------------------------------------

@@ -45,9 +45,6 @@ VALID_ROLES = frozenset([
     "compliance_officer",
 ])
 
-# JWT expiry: 30 minutes (NFR-SEC-003)
-JWT_EXPIRY_SECONDS = 30 * 60
-
 # PBKDF2 scheme identifier written by init_db.py seed accounts
 _PBKDF2_PREFIX = "pbkdf2$"
 
@@ -163,17 +160,21 @@ def generate_token(user_id: int, farmer_id: int | None, role: str) -> str:
             "user_id":   <int>,
             "farmer_id": <int | null>,
             "role":      "<role_string>",
+            "iat":       <unix_timestamp>,
             "exp":       <unix_timestamp>
         }
 
     The secret key is read from Flask app config (JWT_SECRET_KEY).
-    Expiry: JWT_EXPIRY_SECONDS (default 30 min, NFR-SEC-003).
+    Expiry: JWT_EXPIRY_MINUTES (default 30 min, NFR-SEC-003).
     """
-    expiry = datetime.now(timezone.utc) + timedelta(seconds=JWT_EXPIRY_SECONDS)
+    expiry_minutes = current_app.config.get("JWT_EXPIRY_MINUTES", 30)
+    now = datetime.now(timezone.utc)
+    expiry = now + timedelta(minutes=expiry_minutes)
     payload = {
         "user_id":   user_id,
         "farmer_id": farmer_id,
         "role":      role,
+        "iat":       now,
         "exp":       expiry,
     }
     secret = current_app.config["JWT_SECRET_KEY"]

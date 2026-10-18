@@ -28,6 +28,7 @@ Test Cases
   TC-13  Logout with valid token (expect 200)
   TC-14  Register farmer without farm_name (expect 400)
   TC-15  Register with weak password (expect 400)
+  TC-16  Access protected /api/auth/me with expired token (expect 401)
 
 Usage
 -----
@@ -39,7 +40,9 @@ import sys
 import os
 import time
 import threading
+from datetime import datetime, timezone, timedelta
 import requests
+import jwt
 
 # ---------------------------------------------------------------------------
 # Path setup — allow imports from backend/ regardless of CWD
@@ -319,6 +322,29 @@ def tc15_weak_password():
            f"status={r.status_code} error='{body.get('error')}'")
 
 
+def tc16_expired_token():
+    now = datetime.now(timezone.utc)
+    expired_payload = {
+        "user_id":   1,
+        "farmer_id": 1,
+        "role":      "farmer",
+        "iat":       now - timedelta(minutes=60),
+        "exp":       now - timedelta(seconds=10),
+    }
+    secret = os.environ.get(
+        "AGRIGRID_JWT_SECRET",
+        "agrigrid-dev-secret-CHANGE-IN-PRODUCTION-2026",
+    )
+    expired_token = jwt.encode(expired_payload, secret, algorithm="HS256")
+    r = requests.get(f"{BASE_URL}/api/auth/me", headers=auth_header(expired_token))
+    body = r.json()
+    _check("TC-16", "Expired token returns 401 Unauthorized",
+           r.status_code == 401
+           and body.get("success") is False
+           and "expired" in body.get("error", "").lower(),
+           f"status={r.status_code} error='{body.get('error')}'")
+
+
 # ---------------------------------------------------------------------------
 # Main runner
 # ---------------------------------------------------------------------------
@@ -366,6 +392,7 @@ def main():
         tc13_logout,
         tc14_register_farmer_without_farm_name,
         tc15_weak_password,
+        tc16_expired_token,
     ]
 
     for test_fn in tests:
