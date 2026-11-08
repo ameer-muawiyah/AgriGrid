@@ -278,7 +278,7 @@ function renderCropsTable(crops, totalCount) {
     const acreage = parseFloat(crop.acreage) || 0;
     const quantityKg = parseFloat(crop.quantity_kg || crop.estimated_yield_kg) || 0;
     const askingPrice = crop.asking_price_per_kg || crop.asking_price || crop.price_per_kg;
-    const priceDisplay = askingPrice ? `$${parseFloat(askingPrice).toFixed(2)} / kg` : '<span class="text-gray-400">—</span>';
+    const priceDisplay = askingPrice ? `$${parseFloat(askingPrice).toFixed(2)} / kg` : '<span class="cell-price-na">—</span>';
     const status = crop.status || 'Active';
 
     let badgeClass = 'growing';
@@ -306,7 +306,7 @@ function renderCropsTable(crops, totalCount) {
           ${escapeHtml(status)}
         </span>
       </td>
-      <td class="cell-actions pr-4">
+      <td class="cell-actions">
         <div class="action-group">
           <button 
             type="button" 
@@ -350,8 +350,7 @@ function getCropEmoji(cropName) {
     'cotton': '🌱',
     'maize': '🌽',
     'corn': '🌽',
-    'sugarcane': '🎋',
-    'barley': '🌾'
+    'sugarcane': '🎋'
   };
   return map[(cropName || '').toLowerCase()] || '🌱';
 }
@@ -639,16 +638,16 @@ function showToast(message, type = 'info') {
 
   if (isSuccess) {
     toastTypeClass = 'toast-success';
-    iconSvg = `<svg width="20" height="20" class="flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    iconSvg = `<svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
     </svg>`;
   } else if (isError) {
     toastTypeClass = 'toast-error';
-    iconSvg = `<svg width="20" height="20" class="flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    iconSvg = `<svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
     </svg>`;
   } else {
-    iconSvg = `<svg width="20" height="20" class="flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    iconSvg = `<svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
     </svg>`;
   }
