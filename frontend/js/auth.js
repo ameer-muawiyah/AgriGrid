@@ -61,7 +61,7 @@ function switchTab(target) {
 
     // Bottom toggle prompt
     bottomTogglePrompt.innerHTML = `Don't have a farmer account yet? 
-      <button type="button" id="switchLinkToRegister" class="text-emerald font-semibold hover:underline ml-1">
+      <button type="button" id="switchLinkToRegister" class="toggle-link">
         Register as Farmer
       </button>`;
     
@@ -88,7 +88,7 @@ function switchTab(target) {
 
     // Bottom toggle prompt
     bottomTogglePrompt.innerHTML = `Already registered on Agri-Grid? 
-      <button type="button" id="switchLinkToLogin" class="text-emerald font-semibold hover:underline ml-1">
+      <button type="button" id="switchLinkToLogin" class="toggle-link">
         Sign in here
       </button>`;
     
@@ -123,6 +123,7 @@ function setupPasswordToggle(button, input) {
     const isPassword = input.getAttribute('type') === 'password';
     input.setAttribute('type', isPassword ? 'text' : 'password');
     button.classList.toggle('text-emerald', isPassword);
+    button.classList.toggle('pwd-visible', isPassword);
   });
 }
 
@@ -141,15 +142,15 @@ if (regPasswordInput) {
     // Update length indicator
     if (pwdRuleLength) {
       pwdRuleLength.className = hasMinLength 
-        ? 'inline-flex items-center text-emerald font-medium' 
-        : 'inline-flex items-center text-gray-500';
+        ? 'pwd-rule valid' 
+        : 'pwd-rule';
     }
 
     // Update complexity indicator
     if (pwdRuleComplexity) {
       pwdRuleComplexity.className = hasComplexity 
-        ? 'inline-flex items-center text-emerald font-medium' 
-        : 'inline-flex items-center text-gray-500';
+        ? 'pwd-rule valid' 
+        : 'pwd-rule';
     }
   });
 }
@@ -161,25 +162,24 @@ function showAlert(message, type = 'error') {
   if (!alertBox) return;
 
   const isSuccess = type === 'success';
-  const bgColor = isSuccess ? 'bg-mint/80 border-emerald/40 text-emerald-950' : 'bg-red-50 border-red-200 text-red-900';
-  const iconColor = isSuccess ? 'text-emerald-700' : 'text-red-600';
+  const alertClass = isSuccess ? 'alert-banner alert-success' : 'alert-banner alert-error';
 
   const iconSvg = isSuccess
-    ? `<svg class="w-5 h-5 ${iconColor} flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    ? `<svg width="20" height="20" class="flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
        </svg>`
-    : `<svg class="w-5 h-5 ${iconColor} flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    : `<svg width="20" height="20" class="flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
        </svg>`;
 
-  alertBox.className = `alert-banner p-3.5 rounded-lg border text-xs sm:text-sm flex items-start justify-between shadow-sm ${bgColor} mb-5`;
+  alertBox.className = `${alertClass} mb-5`;
   alertBox.innerHTML = `
-    <div class="flex items-start space-x-2.5">
+    <div class="alert-content">
       ${iconSvg}
-      <div class="font-medium leading-relaxed">${escapeHtml(message)}</div>
+      <div class="alert-text">${escapeHtml(message)}</div>
     </div>
-    <button type="button" class="ml-2 text-gray-400 hover:text-gray-700 focus:outline-none" onclick="document.getElementById('alertBox').classList.add('hidden')">
-      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <button type="button" class="alert-dismiss" onclick="document.getElementById('alertBox').classList.add('hidden')">
+      <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
       </svg>
     </button>

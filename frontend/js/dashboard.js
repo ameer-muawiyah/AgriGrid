@@ -111,12 +111,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
 function renderRolePlaceholder(role) {
   document.body.innerHTML = `
-    <div class="min-h-screen flex flex-col items-center justify-center p-6 text-center">
-      <div class="glass-card max-w-md p-8">
-        <div class="w-16 h-16 mx-auto mb-4 rounded-full flex items-center justify-center text-2xl">🚧</div>
-        <h1 class="text-xl font-bold text-gray-900 capitalize">${escapeHtml(role)} Console</h1>
-        <p class="text-sm text-gray-600 mt-2">Dashboard under construction — available in a future increment.</p>
-        <button onclick="handleLogout()" class="mt-6 px-4 py-2 rounded-lg text-sm font-semibold">Sign Out</button>
+    <div class="role-placeholder">
+      <div class="role-placeholder-card">
+        <div class="role-placeholder-icon" aria-hidden="true">🚧</div>
+        <h1>${escapeHtml(role)} Console</h1>
+        <p>Dashboard under construction — available in a future increment.</p>
+        <button onclick="handleLogout()" class="btn small">Sign Out</button>
       </div>
     </div>`;
 }
@@ -281,39 +281,39 @@ function renderCropsTable(crops, totalCount) {
     const priceDisplay = askingPrice ? `$${parseFloat(askingPrice).toFixed(2)} / kg` : '<span class="text-gray-400">—</span>';
     const status = crop.status || 'Active';
 
-    let badgeClass = 'badge-active';
-    if (status.toLowerCase() === 'withdrawn') badgeClass = 'badge-withdrawn';
-    if (status.toLowerCase() === 'sold') badgeClass = 'badge-sold';
+    let badgeClass = 'growing';
+    if (status.toLowerCase() === 'withdrawn') badgeClass = 'withdrawn';
+    if (status.toLowerCase() === 'sold') badgeClass = 'sold';
 
     const tr = document.createElement('tr');
     tr.innerHTML = `
-      <td class="font-mono text-xs text-gray-500 font-semibold">#${listingId}</td>
+      <td class="cell-id">#${listingId}</td>
       <td>
-        <div class="flex items-center space-x-2">
-          <span class="inline-flex items-center justify-center w-7 h-7 rounded-md bg-emerald-50 text-emerald-800 text-xs font-bold border border-mint">
+        <div class="cell-crop">
+          <span class="crop-icon">
             ${getCropEmoji(cropName)}
           </span>
-          <span class="font-semibold text-gray-900">${escapeHtml(cropName)}</span>
+          <span class="crop-name">${escapeHtml(cropName)}</span>
         </div>
       </td>
-      <td class="text-gray-600 text-xs">${escapeHtml(plantingDate)}</td>
-      <td class="text-gray-600 text-xs">${escapeHtml(harvestDate)}</td>
-      <td class="font-medium text-gray-800">${acreage.toFixed(1)} <span class="text-xs text-gray-400">ac</span></td>
-      <td class="font-semibold text-gray-900">${Math.round(quantityKg).toLocaleString()} <span class="text-xs text-gray-400">kg</span></td>
-      <td class="text-xs font-medium text-gray-700">${priceDisplay}</td>
+      <td class="cell-date">${escapeHtml(plantingDate)}</td>
+      <td class="cell-date">${escapeHtml(harvestDate)}</td>
+      <td class="cell-value">${acreage.toFixed(1)} <span class="cell-unit">ac</span></td>
+      <td class="cell-value">${Math.round(quantityKg).toLocaleString()} <span class="cell-unit">kg</span></td>
+      <td class="cell-price">${priceDisplay}</td>
       <td>
-        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold ${badgeClass}">
+        <span class="status ${badgeClass}">
           ${escapeHtml(status)}
         </span>
       </td>
-      <td class="text-right pr-4">
-        <div class="inline-flex items-center space-x-1.5">
+      <td class="cell-actions pr-4">
+        <div class="action-group">
           <button 
             type="button" 
             onclick="openEditModal(${listingId})"
-            class="p-1.5 text-gray-600 hover:text-emerald hover:bg-emerald-50 rounded transition-colors"
+            class="action-btn"
             title="Edit crop details">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
             </svg>
           </button>
@@ -321,15 +321,15 @@ function renderCropsTable(crops, totalCount) {
             <button 
               type="button" 
               onclick="openWithdrawModal(${listingId})"
-              class="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded transition-colors"
+              class="action-btn delete-btn"
               title="Withdraw / soft-delete listing">
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
               </svg>
             </button>
           ` : `
-            <span class="p-1.5 text-gray-300 cursor-not-allowed" title="Withdrawn records are archived">
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <span class="action-btn disabled-btn" title="Withdrawn records are archived">
+              <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"></path>
               </svg>
             </span>
@@ -634,34 +634,34 @@ function showToast(message, type = 'info') {
   const isSuccess = type === 'success';
   const isError = type === 'error';
 
-  let bgClass = 'bg-white border-gray-200 text-gray-800';
+  let toastTypeClass = '';
   let iconSvg = '';
 
   if (isSuccess) {
-    bgClass = 'bg-mint-light border-emerald/30 text-emerald-950';
-    iconSvg = `<svg class="w-5 h-5 text-emerald flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    toastTypeClass = 'toast-success';
+    iconSvg = `<svg width="20" height="20" class="flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
     </svg>`;
   } else if (isError) {
-    bgClass = 'bg-red-50 border-red-200 text-red-950';
-    iconSvg = `<svg class="w-5 h-5 text-red-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    toastTypeClass = 'toast-error';
+    iconSvg = `<svg width="20" height="20" class="flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
     </svg>`;
   } else {
-    iconSvg = `<svg class="w-5 h-5 text-gray-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    iconSvg = `<svg width="20" height="20" class="flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
     </svg>`;
   }
 
   const toast = document.createElement('div');
-  toast.className = `toast-banner pointer-events-auto p-3.5 rounded-lg border text-xs sm:text-sm flex items-start justify-between shadow-lg ${bgClass}`;
+  toast.className = `toast-banner ${toastTypeClass}`;
   toast.innerHTML = `
-    <div class="flex items-start space-x-2.5">
+    <div class="toast-content">
       ${iconSvg}
-      <div class="font-medium leading-relaxed">${escapeHtml(message)}</div>
+      <div class="toast-text">${escapeHtml(message)}</div>
     </div>
-    <button type="button" class="ml-2 text-gray-400 hover:text-gray-700 focus:outline-none" onclick="this.parentElement.remove()">
-      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <button type="button" class="toast-dismiss" onclick="this.parentElement.remove()">
+      <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
       </svg>
     </button>
