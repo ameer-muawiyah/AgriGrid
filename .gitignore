@@ -135,3 +135,5 @@ node_modules/
 *.mov
 *.avi
 *.wmv
+
+FRONTEND_RESKIN_AUDIT_REPORT.md
