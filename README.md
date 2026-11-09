@@ -4,8 +4,8 @@
 [![Flask 3.0.3](https://img.shields.io/badge/Framework-Flask_3.0.3-black.svg?logo=flask&logoColor=white)](https://flask.palletsprojects.com/)
 [![Database SQLite3](https://img.shields.io/badge/Database-SQLite3_WAL-003B57.svg?logo=sqlite&logoColor=white)](https://www.sqlite.org/)
 [![Security JWT](https://img.shields.io/badge/Security-HS256_JWT_%2B_Bcrypt-red.svg?logo=jsonwebtokens&logoColor=white)](https://jwt.io/)
-[![Tailwind CSS](https://img.shields.io/badge/Styling-Tailwind_CSS-38B2AC.svg?logo=tailwind-css&logoColor=white)](https://tailwindcss.com/)
-[![V-Model V&V](https://img.shields.io/badge/V--Model_V%26V-37%2F37_Pass_(100%25)-brightgreen.svg)]()
+[![Styling: CSS3](https://img.shields.io/badge/Styling-CSS3_Design_Tokens-1572B6.svg?logo=css3&logoColor=white)]()
+[![V-Model V&V](https://img.shields.io/badge/V--Model_V%26V-45%2F45_Pass_(100%25)-brightgreen.svg)]()
 [![Lifecycle Status](https://img.shields.io/badge/Increment_1-Certified_%26_Closed-success.svg)]()
 
 > **Agri-Grid** is an end-to-end decentralized smart agriculture and transparent food supply ecosystem. Developed as an advanced Software Engineering project, Agri-Grid integrates **IoT agricultural telemetry**, **predictive yield intelligence**, a **B2B digital escrow marketplace**, **cold-chain logistics monitoring**, **agronomist telemedicine**, and **consumer QR provenance tracking**.
@@ -89,7 +89,7 @@ Agri-Grid follows a disciplined **Agile-Incremental Hybrid Model** coupled with 
    * Core RBAC security gateway (stateless HS256 JWT, route decorators).
    * ACID-compliant 3NF SQL schema (`users`, `farmers`, `listings`).
    * Active Crop CRUD ledger with standardized taxonomy whitelists and temporal date boundary validations.
-   * Responsive glassmorphic Farmer Console UI.
+   * Responsive Terra × Terracotta Farmer Console UI.
 2. **Increment 2: Core Data Engine & Demand Side (B2B Marketplace)**  
    *Status: Active / Next Milestone*  
    * External Telemetry Integration: OpenWeatherMap (ambient weather) & SoilGrids (pH, organic carbon, soil moisture).
@@ -117,14 +117,14 @@ Agri-Grid utilizes a decoupled, modern multi-tier web architecture:
 ```
 ┌─────────────────────────────────────────────────────────────────────────┐
 │                           PRESENTATION LAYER                            │
-│           HTML5  •  CSS3  •  Vanilla JavaScript  •  Tailwind CSS        │
+│    HTML5  •  CSS3  •  Vanilla JavaScript  •  Custom CSS (Design Tokens)    │
 │          [index.html (Auth Portal)]   [dashboard.html (Farmer Console)]  │
 └────────────────────────────────────┬────────────────────────────────────┘
                                      │ HTTP / JSON (RESTful)
                                      │ Authorization: Bearer <JWT>
 ┌────────────────────────────────────▼────────────────────────────────────┐
 │                            APPLICATION LAYER                            │
-│                 Python 3.12+  •  Flask 3.0.3 Application Factory        │
+│                 Python 3.10+  •  Flask 3.0.3 Application Factory        │
 │    ┌───────────────────────────────┬───────────────────────────────┐    │
 │    │  auth.py (Security Core)      │  crops.py (Crop Blueprint)    │    │
 │    │  - Bcrypt / PBKDF2 hashing    │  - Zero-Trust validation      │    │
@@ -149,7 +149,7 @@ Agri-Grid utilizes a decoupled, modern multi-tier web architecture:
 | Layer | Technology | Version | Purpose |
 |---|---|---|---|
 | **Frontend** | HTML5 / CSS3 / ES6+ | — | Native DOM performance, Zero heavyweight JS frameworks |
-| **Styling** | Tailwind CSS CDN | Latest | Modern agro-tech glassmorphism & responsive grid |
+| **Styling** | Vanilla CSS3 (Custom Properties) | — | Terra × Terracotta hybrid design system; token-driven theming, no CSS framework |
 | **Backend** | Python Flask | 3.0.3 | Lightweight, deterministic RESTful application factory |
 | **CORS** | Flask-CORS | 4.0.1 | Controlled cross-origin access between ports 5500 & 5000 |
 | **Security** | PyJWT | 2.8.0 | Cryptographic HS256 stateless session tokens |
@@ -184,19 +184,26 @@ Agri-Grid utilizes a decoupled, modern multi-tier web architecture:
 AgriGrid/
 ├── .gitignore                                # Excludes databases, venv, caches, and raw videos
 ├── README.md                                 # Master project blueprint & documentation
+├── FRONTEND_CHANGE_CHECKLIST.md              # Standing checklist for frontend modifications
+├── FRONTEND_RESKIN_AUDIT_REPORT.md           # Reskin security, consistency & audit report
+├── launch_agrigrid.py                        # Unified one-click application launcher
+├── start-agri-grid.bat                       # One-click launch script (Windows)
+├── start-agri-grid.sh                        # One-click launch script (macOS/Linux)
 │
 ├── Architecture Blueprints/                  # Formal Software Engineering Blueprints
 │   └── Increment_1/
 │       ├── 1_Farmer_Dashboard_SRS.md         # IEEE 830 / ISO 29148 SRS Specification (v1.1)
 │       ├── 2_Farmer_Sequence_Diagrams.md     # UML 2.5 Sequence Diagrams (v1.1)
 │       ├── 3_Farmer_API_Contracts.md         # Strict JSON Interface Specifications (v1.0)
+│       ├── 4_Increment_1_QA_Test_Plan.md     # V-Model QA test plan
+│       ├── INCREMENT_1_INTEGRATION_REPORT.md # Integration & verification report
 │       └── SRS_AUDIT_LOG_v1.0_to_v1.1.md     # Traceability log of all architectural fixes
 │
 ├── Documentation/                            # Master Project Specification Documents
 │   ├── Project Document 1_ Project Foundation, Scope & SE Methodology.pdf
 │   ├── Project Document 2_ Team Matrix Organization & Work Distribution.pdf
-│   ├── Project Document 3_ System Architecture, Tech Stack & API Design.pdf
-│   ├── Project Document 4_ Role Based Access and Feature Specification.pdf
+│   ├── Project Document 3_ System Architecture, Tech Stack & API Integrations.pdf
+│   ├── Project Document 4_Role Based Access and Feature Specifications.pdf
 │   ├── Project Document 5_ End-to-End User Workflows & Data Lifecycle.pdf
 │   ├── Project Document 6_ Logical Incremental Breakdown Strategy.md
 │   └── Project Document 7_ Increment 1 Deep Dive - Foundation & Farmer Dashboard.md
@@ -208,6 +215,7 @@ AgriGrid/
 │   ├── requirements.txt                      # Locked Python dependencies
 │   ├── test_auth.py                          # Automated V&V test harness for Auth & RBAC
 │   ├── test_crops_api.py                     # Automated V&V test harness for Crop CRUD API
+│   ├── test_frontend_contract.py             # Frontend-backend contract & drift verification
 │   └── database/
 │       ├── schema.sql                        # ACID 3NF DDL with indexes, triggers, & CHECKs
 │       ├── init_db.py                        # Database initializer, seeder, & FK verifier
@@ -217,8 +225,10 @@ AgriGrid/
     ├── index.html                            # Auth portal (Sign In & Farmer Registration)
     ├── dashboard.html                        # Farmer Console with crop ledger & metrics
     ├── css/
-    │   ├── auth.css                          # Glassmorphic auth styles & animations
-    │   └── dashboard.css                     # Agro-tech dashboard styles & modal layouts
+    │   ├── auth.css                          # Auth styles — Terra × Terracotta design system
+    │   └── dashboard.css                     # Dashboard styles — Terra × Terracotta, tables & modal layouts
+    ├── img/
+    │   └── wheat-sunset.jpg                  # Hero photograph
     └── js/
         ├── auth.js                           # Form submission, validation, & JWT storage
         └── dashboard.js                      # Table rendering, metrics, & CRUD API handlers
@@ -240,7 +250,7 @@ Follow these steps to run the complete Agri-Grid application on your local works
 
 ### 2. Clone the Repository
 ```powershell
-git clone https://github.com/<your-username>/AgriGrid.git
+git clone https://github.com/ameer-muawiyah/AgriGrid.git
 cd AgriGrid
 ```
 
@@ -322,18 +332,25 @@ Exercises user registration, password complexity, duplicate rejections, PBKDF2 b
 ```powershell
 python backend/test_auth.py
 ```
-*Results: **15 / 15 Passed (100%)***
+*Results: **17 / 17 Passed (100%)***
 
 ### Test Harness 2: Active Crop CRUD Pipeline
 Exercises full crop lifecycle (Create, Read, Update, Withdraw), zero-trust tenant isolation, anti-enumeration 404s, agricultural taxonomies, and temporal validations:
 ```powershell
 python backend/test_crops_api.py
 ```
-*Results: **22 / 22 Passed (100%)***
+*Results: **23 / 23 Passed (100%)***
+
+### Test Harness 3: Frontend–Backend Contract
+Verifies the frontend cannot drift from the backend contract — crop taxonomy and status-filter options equal the backend whitelists (parsed from `crops.py`), every CSS class used in HTML/JS is defined, every JS element ID exists in the markup, and SRS-pinned copy is byte-exact. Standalone; needs no running server:
+```powershell
+python backend/test_frontend_contract.py
+```
+*Results: **5 / 5 Passed (100%)***
 
 ```text
 =================================================================
-  TOTAL AUTOMATED V&V COMPLIANCE: 37 / 37 TESTS PASS (100%)
+  TOTAL AUTOMATED V&V COMPLIANCE: 45 / 45 TESTS PASS (100%)
 =================================================================
 ```
 
@@ -351,6 +368,7 @@ All endpoints conform to the Standard JSON Envelope (`AG-API-INC1-003`). Protect
 | `GET` | `/api/auth/me` | Token | Any | Smoke-test route returning authenticated token claims from Flask context. |
 | `POST` | `/api/crops` | Token | `farmer` | Creates new crop listing with strict taxonomy & temporal validation. |
 | `GET` | `/api/crops` | Token | `farmer` | Retrieves paginated listings owned by caller (`?page=1&limit=20`). |
+| `GET` | `/api/crops/stats` | Token | `farmer` | Platform-wide aggregates behind the dashboard metrics (active fields, total acreage, projected yield). |
 | `GET` | `/api/crops/{id}` | Token | `farmer` | Retrieves full crop details including sub-meter GPS coordinates. |
 | `PUT` | `/api/crops/{id}` | Token | `farmer` | Updates mutable fields with ownership verification (unified 404). |
 | `DELETE` | `/api/crops/{id}` | Token | `farmer` | Soft-deletes listing (`is_deleted=1`, `status='Withdrawn'`). |
