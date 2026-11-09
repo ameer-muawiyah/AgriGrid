@@ -6,8 +6,8 @@
 | **Project Name**    | Agri-Grid: Smart Agriculture & Food Security Ecosystem              |
 | **Document ID**     | `AG-SSD-INC1-002`                                                   |
 | **Version**         | 1.1                                                                 |
-| **Prepared By**     | Requirements & Architecture Agent (Lead Software Architect)         |
-| **Reviewed By**     | Ameer Muawiyah (Project Manager & Lead Data Architect) — CTO Review |
+| **Prepared By**     | Iqra Fayaz (Software Architect and API Designer)                    |
+| **Reviewed By**     | Ameer Muawiyah (Scrum Master + Lead Data Architect)                 |
 | **Date**            | 2026-10-11                                                          |
 | **Source Document** | `AG-SRS-INC1-001 v1.1` — `./Architecture_Blueprints/Increment_1/1_Farmer_Dashboard_SRS.md` |
 
@@ -169,7 +169,7 @@ sequenceDiagram
 
 > **Key SRS Rules:** `FR-LGN-011` (sessionStorage retrieval) · `FR-LGN-022` (Bearer header + signature/expiry validation) · `FR-LGN-023` (401 on invalid/missing JWT) · `FR-LGN-013` (farmer dashboard only functional in Inc 1) · `NFR-SEC-002` (all protected endpoints require JWT) · `NFR-SEC-003` (JWT expiry) · `§6.1` (Route Matrix) · `§6.3` (violation responses) · `FR-CRP-011` (paginated response with `total`)
 >
-> **v1.1 Fixes:** (1) Fixed fall-through `alt` blocks. (2) Added explicit `COUNT(*)` companion query so the backend agent implements the `total` field mandated by `FR-CRP-011`.
+> **v1.1 Fixes:** (1) Fixed fall-through `alt` blocks. (2) Added explicit `COUNT(*)` companion query so the backend implements the `total` field mandated by `FR-CRP-011`.
 
 ```mermaid
 sequenceDiagram
@@ -679,8 +679,8 @@ sequenceDiagram
 
 | Version | Date | Author | Changes |
 |---|---|---|---|
-| 1.0 | 2026-10-11 | Requirements & Architecture Agent | Initial release. Five diagrams covering Flows 1A, 1B, 1C, 2A, 2B (monolithic). |
-| 1.1 | 2026-10-11 | Requirements & Architecture Agent — CTO Review Applied | **Critical Fixes:** (1) All `alt...end` fall-through blocks replaced with `alt...else...end` proper branching — errors now visually terminate execution. (2) Login (1B) optimized to single LEFT JOIN query (eliminates redundant DB round-trip, supports NFR-PERF-001). (3) Added COUNT(*) companion query in 1C for pagination `total` field (FR-CRP-011). (4) Split monolithic 2B into three isolated sub-flows: 2B-1 (RBAC rejection), 2B-2 (validation cascade), 2B-3 (DB failure). (5) Moved Buyer actor declaration to diagram top (fixes Mermaid layout rendering bug). **New Diagrams:** Added Diagram 3 (READ paginated list), Diagram 4A/4B (READ single detail + unified 404), Diagram 5 (UPDATE with pre-fill + ownership check), Diagram 6 (WITHDRAW soft-delete with confirmation dialog + SQL). Traceability matrix updated. |
+| 1.0 | 2026-10-11 | Iqra Fayaz | Initial release. Five diagrams covering Flows 1A, 1B, 1C, 2A, 2B (monolithic). |
+| 1.1 | 2026-10-11 | Iqra Fayaz | **Critical Fixes:** (1) All `alt...end` fall-through blocks replaced with `alt...else...end` proper branching — errors now visually terminate execution. (2) Login (1B) optimized to single LEFT JOIN query (eliminates redundant DB round-trip, supports NFR-PERF-001). (3) Added COUNT(*) companion query in 1C for pagination `total` field (FR-CRP-011). (4) Split monolithic 2B into three isolated sub-flows: 2B-1 (RBAC rejection), 2B-2 (validation cascade), 2B-3 (DB failure). (5) Moved Buyer actor declaration to diagram top (fixes Mermaid layout rendering bug). **New Diagrams:** Added Diagram 3 (READ paginated list), Diagram 4A/4B (READ single detail + unified 404), Diagram 5 (UPDATE with pre-fill + ownership check), Diagram 6 (WITHDRAW soft-delete with confirmation dialog + SQL). Traceability matrix updated. |
 
 ---
 

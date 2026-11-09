@@ -6,8 +6,8 @@
 | **Project Name** | Agri-Grid: Smart Agriculture & Food Security Ecosystem |
 | **Document ID** | `AG-API-INC1-003` |
 | **Version** | 1.0 |
-| **Prepared By** | Requirements & Architecture Agent (Lead Software Architect) |
-| **Reviewed By** | Ameer Muawiyah (Project Manager & Lead Data Architect) |
+| **Prepared By** | Iqra Fayaz (Software Architect and API Designer) |
+| **Reviewed By** | Ameer Muawiyah (Scrum Master + Lead Data Architect) |
 | **Date** | 2026-10-12 |
 | **Source Documents** | `AG-SRS-INC1-001 v1.1` & `AG-SSD-INC1-002 v1.1` |
 | **Location** | `./Architecture_Blueprints/Increment_1/3_Farmer_API_Contracts.md` |
@@ -34,7 +34,7 @@
 
 ## 1. Overview & Architectural Standards
 
-This document serves as the **formal interface specification and communication contract** between the **UI/UX Agent (Frontend)** and the **Database & Backend Agent (Backend/DBA)** for Increment 1.
+This document serves as the **formal interface specification and communication contract** between the **Frontend (UI/UX Designer)** and the **Backend (Core Backend Engineer & Database Administrator)** for Increment 1.
 
 ### Architectural Principles
 * **Stateless RESTful Design:** Communication occurs strictly over HTTPS/HTTP via JSON payloads.
@@ -672,14 +672,14 @@ To ensure seamless frontend error parsing and user feedback:
 
 | Actor | Action / Responsibility |
 |---|---|
-| **UI/UX Agent** | Enforces dropdown selection matching the taxonomy list on `crop_name`. |
-| **UI/UX Agent** | Never includes `farmer_id` or `user_id` inside CRUD POST/PUT request bodies. |
-| **UI/UX Agent** | Binds token from `sessionStorage.getItem('agrigrid_token')` to `Authorization: Bearer <token>`. |
-| **UI/UX Agent** | Interprets `DELETE` button as a **Withdraw** action with confirmation modal. |
-| **Backend Agent** | Uses `LEFT JOIN` on `/api/auth/login` to embed `farmer_id` into the JWT. |
-| **Backend Agent** | Enforces atomic transaction (`BEGIN` / `COMMIT` / `ROLLBACK`) on `/api/auth/register`. |
-| **Backend Agent** | Returns unified `404` for missing IDs and cross-tenant queries on `/api/crops/{id}`. |
-| **Backend Agent** | Prohibits physical `DELETE` queries on the `Listings` table; uses `UPDATE` soft-delete. |
+| **UI/UX Designer (Frontend)** | Enforces dropdown selection matching the taxonomy list on `crop_name`. |
+| **UI/UX Designer (Frontend)** | Never includes `farmer_id` or `user_id` inside CRUD POST/PUT request bodies. |
+| **UI/UX Designer (Frontend)** | Binds token from `sessionStorage.getItem('agrigrid_token')` to `Authorization: Bearer <token>`. |
+| **UI/UX Designer (Frontend)** | Interprets `DELETE` button as a **Withdraw** action with confirmation modal. |
+| **Core Backend Engineer** | Uses `LEFT JOIN` on `/api/auth/login` to embed `farmer_id` into the JWT. |
+| **Core Backend Engineer** | Enforces atomic transaction (`BEGIN` / `COMMIT` / `ROLLBACK`) on `/api/auth/register`. |
+| **Core Backend Engineer** | Returns unified `404` for missing IDs and cross-tenant queries on `/api/crops/{id}`. |
+| **Core Backend Engineer** | Prohibits physical `DELETE` queries on the `Listings` table; uses `UPDATE` soft-delete. |
 
 ---
 *End of Document — AG-API-INC1-003 v1.0*

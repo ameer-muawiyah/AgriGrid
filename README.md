@@ -372,12 +372,14 @@ All endpoints conform to the Standard JSON Envelope (`AG-API-INC1-003`). Protect
 * **Delivery Model:** Agile-Incremental Hybrid with V-Model Verification & Validation
 * **Single Source of Truth:** `./Documentation` & `./Architecture Blueprints`
 
-### Team Distribution Matrix
-* **Project Manager & Lead Data Architect:** Ameer Muawiyah
-* **Requirements & Architecture Agent:** System modeling, SRS, Sequence Diagrams, API Contracts
-* **Database Administrator & Backend Agent:** SQLite schema, WAL configuration, Flask API, JWT Middleware
-* **UI/UX & Frontend Agent:** Tailwind CSS implementation, Responsive Layouts, Client API integration
-* **Master Integration Hub & CTO:** Cross-domain architectural integrity, V-Model QA orchestration, codebase audits
+### Project / Development Team
+* **Scrum Master + Lead Data Architect:** Ameer Muawiyah
+* **Requirements Engineer:** Manahil Sohail
+* **Core Backend Engineer:** Hasnain Hamza
+* **Database Administrator:** Bareera Noor
+* **QA & DevOps Engineer:** Muhammad Hashir
+* **UI/UX Designer (Frontend):** Manahil Zardad
+* **Software Architect and API Designer:** Iqra Fayaz
 
 ---
 

@@ -3,7 +3,7 @@
 -- File:       schema.sql
 -- Version:    1.0  (Increment 1 — Foundation & Farmer Dashboard)
 -- Source:     AG-SRS-INC1-001 v1.1  |  AG-API-INC1-003 v1.0
--- Author:     Database & Backend Agent (DBA)
+-- Author:     Bareera Noor (Database Administrator)
 -- Date:       2026-10-12
 --
 -- Target DBMS : SQLite 3 (zero-config local prototype)

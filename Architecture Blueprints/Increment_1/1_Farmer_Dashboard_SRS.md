@@ -6,8 +6,8 @@
 | **Project Name**    | Agri-Grid: Smart Agriculture & Food Security Ecosystem       |
 | **Document ID**     | `AG-SRS-INC1-001`                                            |
 | **Version**         | 1.1                                                          |
-| **Prepared By**     | Requirements & Architecture Agent (Lead Requirements Engineer) |
-| **Reviewed By**     | Ameer Muawiyah (Project Manager & Lead Data Architect) — CTO Audit Pass |
+| **Prepared By**     | Manahil Sohail (Requirements Engineer)                      |
+| **Reviewed By**     | Ameer Muawiyah (Scrum Master + Lead Data Architect)          |
 | **Date**            | 2026-10-11                                                   |
 | **Methodology**     | Agile-Incremental Hybrid with V-Model V&V                    |
 | **Source Documents** | Master Documents 1–7 (`./Documentation/`)                   |
@@ -60,9 +60,9 @@ The scope of this SRS is strictly bounded to two system features:
 | Audience | Usage |
 |---|---|
 | **Project Manager** (Ameer Muawiyah) | Validate scope alignment with master documents; approve for development. |
-| **Database & Backend Agent** (DBA + Core Backend Engineer) | Implement the SQL schemas, backend API endpoints, and RBAC routing logic specified herein. |
-| **UI/UX Agent** (Frontend Developer) | Build the Login and Dashboard interfaces that transmit the JSON payloads defined in this document. |
-| **Main Workspace Agent** (QA Lead & Integration Hub) | Write V-Model test cases that map 1:1 to each `FR-` and `NFR-` identifier in this document. |
+| **Database Administrator & Core Backend Engineer** | Implement the SQL schemas, backend API endpoints, and RBAC routing logic specified herein. |
+| **UI/UX Designer (Frontend)** | Build the Login and Dashboard interfaces that transmit the JSON payloads defined in this document. |
+| **QA & DevOps Engineer** | Write V-Model test cases that map 1:1 to each `FR-` and `NFR-` identifier in this document. |
 
 ### 1.4 Product Scope
 
@@ -91,7 +91,7 @@ Agri-Grid is a distributed, networked, data-intensive web application designed t
 | Doc 4 | Role-Based Access and Feature Specifications | RBAC access levels for all 6 actors, feature specifications per role. |
 | Doc 5 | End-to-End User Workflows & Data Lifecycle | SQL data lifecycle for all 4 system workflows. |
 | Doc 6 | Logical Incremental Breakdown Strategy | 5-increment sequence and rationale. |
-| Doc 7 | Increment 1 Deep Dive — Foundation & Farmer Dashboard | Step-by-step execution plan, agent task delegation, JSON payload requirements. |
+| Doc 7 | Increment 1 Deep Dive — Foundation & Farmer Dashboard | Step-by-step execution plan, task delegation, JSON payload requirements. |
 
 ---
 
@@ -186,7 +186,7 @@ The RBAC Login Gateway is the single point of entry for all authenticated actors
 
 ### 3.3 JWT Contract Specification
 
-> **v1.1 Addition (CTO Blocker 2 Fix):** This section formally resolves the `HttpOnly cookie` vs. `Authorization: Bearer` ambiguity present in v1.0 and establishes the unambiguous JWT contract binding the frontend and backend agents.
+> **v1.1 Addition (CTO Blocker 2 Fix):** This section formally resolves the `HttpOnly cookie` vs. `Authorization: Bearer` ambiguity present in v1.0 and establishes the unambiguous JWT contract binding the frontend and backend implementations.
 
 **JWT Header:**
 ```json
@@ -520,8 +520,8 @@ This matrix maps each functional requirement back to its authoritative source do
 
 | Req ID | Master Document Source | Section/Context |
 |---|---|---|
-| FR-LGN-001 to FR-LGN-005 | Doc 7, §3.A (Architecture Agent tasks) & §3.B (UI/UX Agent tasks) | Login page and JSON payload structure |
-| FR-LGN-006 to FR-LGN-011 | Doc 7, §3.C (Backend Agent tasks); CTO Blocker 2 Fix | JWT generation, storage, and transport |
+| FR-LGN-001 to FR-LGN-005 | Doc 7, §3.A & §3.B | Login page and JSON payload structure |
+| FR-LGN-006 to FR-LGN-011 | Doc 7, §3.C; CTO Blocker 2 Fix | JWT generation, storage, and transport |
 | FR-LGN-012 to FR-LGN-013 | Doc 7, §3.C & Doc 6, §2 | Role-based routing, increment scoping |
 | FR-LGN-014 to FR-LGN-017 | Doc 7, §3.C (derived) | Error handling, security |
 | FR-LGN-018, FR-LGN-018A | Doc 7, §3.C; CTO Blocker 1 Fix | Farmer registration + atomic Farmers profile creation |
@@ -594,8 +594,8 @@ This matrix maps each functional requirement back to its authoritative source do
 
 | Version | Date | Author | Changes |
 |---|---|---|---|
-| 1.0 | 2026-10-10 | Requirements & Architecture Agent | Initial SRS for Increment 1. Covers RBAC Login Gateway (FR-LGN-001 to FR-LGN-024) and Active Crop CRUD (FR-CRP-001 to FR-CRP-027). |
-| 1.1 | 2026-10-11 | CTO Audit — Ameer Muawiyah (PM) | CTO review pass. Fixed 4 critical blockers and 5 engineering gaps. Added: FR-LGN-018A (atomic farmer registration), §3.3 (JWT contract), FR-CRP-004A (crop taxonomy), FR-CRP-006A (temporal validation), FR-CRP-014A (GET /api/crops/{id}). Replaced hard DELETE with soft-delete pattern (is_deleted flag). Unified 403→404 for cross-tenant ownership checks. Added `is_deleted` column to Listings schema. Quantified all NFR-PERF benchmarks (p95, 50 concurrent users). Added pagination to GET /api/crops. |
+| 1.0 | 2026-10-10 | Manahil Sohail | Initial SRS for Increment 1. Covers RBAC Login Gateway (FR-LGN-001 to FR-LGN-024) and Active Crop CRUD (FR-CRP-001 to FR-CRP-027). |
+| 1.1 | 2026-10-11 | Ameer Muawiyah (Scrum Master + Lead Data Architect) | Review pass. Fixed 4 critical blockers and 5 engineering gaps. Added: FR-LGN-018A (atomic farmer registration), §3.3 (JWT contract), FR-CRP-004A (crop taxonomy), FR-CRP-006A (temporal validation), FR-CRP-014A (GET /api/crops/{id}). Replaced hard DELETE with soft-delete pattern (is_deleted flag). Unified 403→404 for cross-tenant ownership checks. Added `is_deleted` column to Listings schema. Quantified all NFR-PERF benchmarks (p95, 50 concurrent users). Added pagination to GET /api/crops. |
 
 ---
 

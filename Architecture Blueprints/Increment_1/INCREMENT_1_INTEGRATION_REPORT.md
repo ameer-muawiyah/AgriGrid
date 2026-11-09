@@ -5,7 +5,7 @@
 |---|---|
 | Project | Agri-Grid: Smart Agriculture & Food Security Ecosystem |
 | Increment | Increment 1 - Foundation and Farmer Dashboard |
-| Role | Main Workspace Agent: CTO, Lead Integrator and QA Lead |
+| Role | Ameer Muawiyah — Scrum Master + Lead Data Architect (Integration & Verification) |
 | Report Date | 2026-10-13 |
 | Backend Command Verified | `python backend/app.py` |
 | Backend URL | `http://127.0.0.1:5000` |
@@ -40,7 +40,7 @@ The live server was exercised through real HTTP requests against `http://127.0.0
 | 10 | Active list after withdraw | Withdrawn listing excluded from normal active listings | HTTP 200, withdrawn listing ID absent from `GET /api/crops` | PASS |
 | 11 | Buyer RBAC negative test | Non-Farmer role blocked from crop create | HTTP 403, access denied error envelope | PASS |
 
-Live CTO pipeline result: **11/11 passed**.
+Live integration pipeline result: **11/11 passed**.
 
 ## 3. Existing Verification Harness Results
 

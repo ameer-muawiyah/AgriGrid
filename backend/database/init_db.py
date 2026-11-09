@@ -1,9 +1,9 @@
-﻿"""
+"""
 Agri-Grid: Smart Agriculture & Food Security Ecosystem
 File:    init_db.py
 Version: 1.0  (Increment 1 â€” Foundation & Farmer Dashboard)
 Source:  AG-SRS-INC1-001 v1.1  |  AG-API-INC1-003 v1.0
-Author:  Database & Backend Agent (DBA)
+Author:  Bareera Noor (Database Administrator)
 Date:    2026-10-12
 
 Purpose

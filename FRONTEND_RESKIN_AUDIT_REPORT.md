@@ -1,7 +1,7 @@
 # Agri-Grid Frontend Reskin — Security & Consistency Audit Report
 
 **Target Scope:** `AgriGrid/frontend/` (`index.html`, `dashboard.html`, `css/auth.css`, `css/dashboard.css`, `js/auth.js`, `js/dashboard.js`)  
-**Audit Standard:** Gravitas Verification Runtime (`review` / `security-review`)  
+**Audit Standard:** Agri-Grid Frontend Change Checklist (FRONTEND_CHANGE_CHECKLIST.md)  
 **Status:** **CONDITIONAL HOLD (1 Critical Schema Conflict, 2 Minor Visual/Responsive Deficiencies)**  
 **Verification Suite Status:**
 - Authentication Pipeline (`backend/test_auth.py`): **17 / 17 Passed (100%)**
