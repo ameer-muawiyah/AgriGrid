@@ -138,9 +138,9 @@ CREATE TABLE IF NOT EXISTS yield_forecasts (
 --    tahir_farmer.
 -- ---------------------------------------------------------------------------
 
--- Seed Sara Buyer profile if user exists and buyer record does not
+-- Seed Sara Buyer profile if user exists and buyer record does not (per SRS FR-BYR-006)
 INSERT OR IGNORE INTO buyers (user_id, company_name, contact_phone, warehouse_address, warehouse_gps_latitude, warehouse_gps_longitude)
-SELECT id, 'AgroBuyer Logistics Ltd.', '+92-300-1122334', 'Plot 42, Industrial Area, Lahore, Pakistan', 31.5204, 74.3587
+SELECT id, 'Metro Wholesale Foods', '+92-300-1234567', 'Metro Central Hub, Lahore', 31.5204, 74.3587
   FROM users
  WHERE username = 'sara_buyer' AND role = 'buyer';
 
