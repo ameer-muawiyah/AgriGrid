@@ -1,9 +1,11 @@
 """
 Agri-Grid: Smart Agriculture & Food Security Ecosystem
 File:    crops.py
-Module:  Active Crop Management — Flask Blueprint
-Version: 1.0  (Increment 1 - Foundation & Farmer Dashboard)
-Source:  AG-API-INC1-003 v1.0  Section 4 & 5 | AG-SRS-INC1-001 v1.1
+Module:  Active Crop Management — Flask Blueprint Controller
+Version: 2.0  (Increment 2 — Core Data Engine & Demand Side)
+Author:  Hasnain Hamza (Core Backend Engineer)
+Date:    2026-11-14
+Source:  AG-API-INC1-003 v1.0 Section 4 & 5 | AG-PLAN-INC2-001 §4.2
 
 Endpoints
 ---------
@@ -14,22 +16,23 @@ Endpoints
   PUT    /api/crops/<int:listing_id>  — Update crop fields
   DELETE /api/crops/<int:listing_id>  — Soft-delete (Withdraw) crop
 
-Zero-Trust Rules (AG-API-INC1-003 §1, §4)
-------------------------------------------
-  - farmer_id is ALWAYS extracted from g.farmer_id (JWT claim).
-  - farmer_id is NEVER accepted from the request body.
-  - Cross-tenant access returns HTTP 404 (not 403) to prevent
-    resource enumeration (CTO Gap 3 Fix, §1 Architectural Principles).
-  - Physical DELETE on the listings table is PROHIBITED.
-    Retirement = UPDATE SET is_deleted=1, status='Withdrawn'.
+Architectural Boundary (Package §B1):
+------------------------------------
+  - HTTP routing, JWT identity extraction, request parsing, response formatting,
+    and payload validation stay in this controller.
+  - VALID_CROP_NAMES and VALID_STATUSES stay in this file to satisfy AST-based
+    contract verification in test_frontend_contract.py.
+  - All database persistence, transaction management, and SQL execution are
+    delegated to services.crop_service. Zero direct SQL in this module.
 """
 
 import sqlite3
-from datetime import date, datetime, timezone, timedelta
+from datetime import date
 
 from flask import Blueprint, g, jsonify, request, current_app
 
 from auth import token_required, role_required
+from services import crop_service
 
 # ---------------------------------------------------------------------------
 # Blueprint registration
@@ -38,6 +41,7 @@ crops_bp = Blueprint("crops", __name__, url_prefix="/api/crops")
 
 # ---------------------------------------------------------------------------
 # Domain constants (mirror schema CHECK constraints + API taxonomy)
+# Pinned for AST inspection by backend/test_frontend_contract.py
 # ---------------------------------------------------------------------------
 VALID_CROP_NAMES = frozenset([
     "Wheat", "Rice", "Tomato", "Potato",
@@ -87,7 +91,7 @@ def _validate_crop_payload(data: dict) -> tuple[dict | None, str | None, int | N
 
     crop_name = str(data["crop_name"]).strip()
     planting_date_str = str(data["planting_date"]).strip()
-    harvest_date_str  = str(data["estimated_harvest_date"]).strip()
+    harvest_date_str = str(data["estimated_harvest_date"]).strip()
 
     # --- Crop taxonomy (AG-API-INC1-003 §4.1) ---
     if crop_name not in VALID_CROP_NAMES:
@@ -161,42 +165,6 @@ def _validate_crop_payload(data: dict) -> tuple[dict | None, str | None, int | N
     }, None, None
 
 
-# ---------------------------------------------------------------------------
-# Helper: serialise a sqlite3.Row listing into a clean dict
-# ---------------------------------------------------------------------------
-def _row_to_dict_summary(row) -> dict:
-    """List-view fields (AG-API-INC1-003 §4.2 response shape)."""
-    return {
-        "listing_id":             row["id"],
-        "crop_name":              row["crop_name"],
-        "planting_date":          row["planting_date"],
-        "estimated_harvest_date": row["estimated_harvest_date"],
-        "acreage":                row["acreage"],
-        "quantity_kg":            row["quantity_kg"],
-        "status":                 row["status"],
-        "created_at":             row["created_at"],
-    }
-
-
-def _row_to_dict_full(row) -> dict:
-    """Full detail fields (AG-API-INC1-003 §4.1 / §4.3 / §4.4 response shape)."""
-    return {
-        "listing_id":             row["id"],
-        "farmer_id":              row["farmer_id"],
-        "crop_name":              row["crop_name"],
-        "planting_date":          row["planting_date"],
-        "estimated_harvest_date": row["estimated_harvest_date"],
-        "acreage":                row["acreage"],
-        "gps_latitude":           row["gps_latitude"],
-        "gps_longitude":          row["gps_longitude"],
-        "quantity_kg":            row["quantity_kg"],
-        "status":                 row["status"],
-        "is_deleted":             bool(row["is_deleted"]),
-        "created_at":             row["created_at"],
-        "updated_at":             row["updated_at"],
-    }
-
-
 # ===========================================================================
 # ROUTE 1 — POST /api/crops  (Create)
 # AG-API-INC1-003 §4.1
@@ -207,9 +175,7 @@ def _row_to_dict_full(row) -> dict:
 def create_crop():
     """
     Create a new active crop listing for the authenticated farmer.
-
     Zero-Trust: farmer_id is read exclusively from g.farmer_id (JWT).
-    The request body MUST NOT contain farmer_id; any such key is silently ignored.
     """
     db = _get_db()
 
@@ -225,50 +191,23 @@ def create_crop():
     # Tenant identity — ONLY from JWT, never from body
     farmer_id = g.farmer_id
     if farmer_id is None:
-        # Farmer profile was not linked during login (data integrity issue)
         return jsonify({
             "success": False,
             "error": "An internal error occurred. Please try again later.",
         }), 500
 
     try:
-        cursor = db.execute(
-            """
-            INSERT INTO listings
-                (farmer_id, crop_name, planting_date, estimated_harvest_date,
-                 acreage, gps_latitude, gps_longitude, quantity_kg,
-                 status, is_deleted)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'Active', 0)
-            """,
-            (
-                farmer_id,
-                fields["crop_name"],
-                fields["planting_date"],
-                fields["estimated_harvest_date"],
-                fields["acreage"],
-                fields["gps_latitude"],
-                fields["gps_longitude"],
-                fields["quantity_kg"],
-            ),
-        )
-        db.commit()
-        listing_id = cursor.lastrowid
+        listing = crop_service.create_listing(db, farmer_id, fields)
     except sqlite3.Error:
-        db.rollback()
         return jsonify({
             "success": False,
             "error": "An internal error occurred. Please try again later.",
         }), 500
 
-    # Fetch the newly created row to return exact, DB-confirmed values
-    row = db.execute(
-        "SELECT * FROM listings WHERE id = ?", (listing_id,)
-    ).fetchone()
-
     return jsonify({
         "success": True,
         "message": "Crop listing created successfully.",
-        "data":    _row_to_dict_full(row),
+        "data":    listing,
     }), 201
 
 
@@ -282,11 +221,6 @@ def create_crop():
 def list_crops():
     """
     Return a paginated list of the authenticated farmer's non-deleted listings.
-
-    Query params:
-        page  (int, default=1,  min=1)
-        limit (int, default=20, min=1, max=100)
-        status (str, optional) — filter by lifecycle status
     """
     db = _get_db()
     farmer_id = g.farmer_id
@@ -302,8 +236,6 @@ def list_crops():
     except (TypeError, ValueError):
         limit = 20
 
-    offset = (page - 1) * limit
-
     # -- Optional status filter --
     status_filter = request.args.get("status", "").strip() or None
     if status_filter and status_filter not in VALID_STATUSES:
@@ -312,41 +244,11 @@ def list_crops():
             "error": f"Invalid status filter. Must be one of: {', '.join(sorted(VALID_STATUSES))}.",
         }), 400
 
-    # -- Build query (Zero-Trust: always AND farmer_id = ? AND is_deleted = 0) --
-    if status_filter:
-        count_row = db.execute(
-            "SELECT COUNT(*) FROM listings WHERE farmer_id=? AND is_deleted=0 AND status=?",
-            (farmer_id, status_filter),
-        ).fetchone()
-        rows = db.execute(
-            """
-            SELECT * FROM listings
-            WHERE farmer_id=? AND is_deleted=0 AND status=?
-            ORDER BY created_at DESC
-            LIMIT ? OFFSET ?
-            """,
-            (farmer_id, status_filter, limit, offset),
-        ).fetchall()
-    else:
-        count_row = db.execute(
-            "SELECT COUNT(*) FROM listings WHERE farmer_id=? AND is_deleted=0",
-            (farmer_id,),
-        ).fetchone()
-        rows = db.execute(
-            """
-            SELECT * FROM listings
-            WHERE farmer_id=? AND is_deleted=0
-            ORDER BY created_at DESC
-            LIMIT ? OFFSET ?
-            """,
-            (farmer_id, limit, offset),
-        ).fetchall()
-
-    total = count_row[0]
+    listings, total = crop_service.list_listings(db, farmer_id, status_filter, page, limit)
 
     return jsonify({
         "success": True,
-        "data":    [_row_to_dict_summary(r) for r in rows],
+        "data":    listings,
         "page":    page,
         "limit":   limit,
         "total":   total,
@@ -360,25 +262,12 @@ def list_crops():
 @token_required
 @role_required("farmer")
 def get_crop_stats():
+    """Return summary active acreage and projected yield for the farmer."""
     db = _get_db()
-    row = db.execute(
-        """
-        SELECT
-            COUNT(*) AS active_fields,
-            COALESCE(SUM(acreage), 0.0) AS total_acreage,
-            COALESCE(SUM(quantity_kg), 0.0) AS total_yield
-        FROM listings
-        WHERE farmer_id = ? AND is_deleted = 0 AND status = 'Active'
-        """,
-        (g.farmer_id,),
-    ).fetchone()
+    stats = crop_service.get_stats(db, g.farmer_id)
     return jsonify({
         "success": True,
-        "data": {
-            "active_fields": row["active_fields"],
-            "total_acreage": round(row["total_acreage"], 1),
-            "projected_yield_kg": round(row["total_yield"]),
-        }
+        "data":    stats,
     }), 200
 
 
@@ -392,27 +281,15 @@ def get_crop_stats():
 def get_crop(listing_id: int):
     """
     Retrieve full details for a single listing.
-
-    Enumeration defence (CTO Gap 3 Fix):
-      If the record does not exist OR belongs to another farmer,
-      return HTTP 404 — identical to non-existent ID.
-      HTTP 403 is deliberately NOT used here.
+    Enumeration defence: 404 returned if not found or cross-tenant.
     """
     db = _get_db()
+    listing = crop_service.get_listing(db, g.farmer_id, listing_id)
 
-    # Single query with farmer_id filter — prevents cross-tenant data leak
-    row = db.execute(
-        """
-        SELECT * FROM listings
-        WHERE id = ? AND farmer_id = ? AND is_deleted = 0
-        """,
-        (listing_id, g.farmer_id),
-    ).fetchone()
-
-    if row is None:
+    if listing is None:
         return jsonify({"success": False, "error": "Listing not found."}), 404
 
-    return jsonify({"success": True, "data": _row_to_dict_full(row)}), 200
+    return jsonify({"success": True, "data": listing}), 200
 
 
 # ===========================================================================
@@ -425,10 +302,7 @@ def get_crop(listing_id: int):
 def update_crop(listing_id: int):
     """
     Update mutable fields of an active listing.
-
-    Ownership verification is performed inside the UPDATE WHERE clause
-    (farmer_id = ? AND is_deleted = 0).  If 0 rows are affected, the
-    listing either doesn't exist or belongs to another tenant — unified 404.
+    Ownership verification is performed inside the service layer.
     """
     db = _get_db()
 
@@ -440,53 +314,21 @@ def update_crop(listing_id: int):
     if err:
         return jsonify({"success": False, "error": err}), code
 
-    # Update with ownership guard — no separate SELECT needed
     try:
-        cursor = db.execute(
-            """
-            UPDATE listings
-               SET crop_name              = ?,
-                   planting_date          = ?,
-                   estimated_harvest_date = ?,
-                   acreage                = ?,
-                   gps_latitude           = ?,
-                   gps_longitude          = ?,
-                   quantity_kg            = ?
-             WHERE id = ? AND farmer_id = ? AND is_deleted = 0
-            """,
-            (
-                fields["crop_name"],
-                fields["planting_date"],
-                fields["estimated_harvest_date"],
-                fields["acreage"],
-                fields["gps_latitude"],
-                fields["gps_longitude"],
-                fields["quantity_kg"],
-                listing_id,
-                g.farmer_id,
-            ),
-        )
-        db.commit()
+        updated = crop_service.update_listing(db, g.farmer_id, listing_id, fields)
     except sqlite3.Error:
-        db.rollback()
         return jsonify({
             "success": False,
             "error": "An internal error occurred. Please try again later.",
         }), 500
 
-    # If no rows were updated, the listing was not found or is cross-tenant
-    if cursor.rowcount == 0:
+    if updated is None:
         return jsonify({"success": False, "error": "Listing not found."}), 404
-
-    # Return the updated record (trigger will have refreshed updated_at)
-    row = db.execute(
-        "SELECT * FROM listings WHERE id = ?", (listing_id,)
-    ).fetchone()
 
     return jsonify({
         "success": True,
         "message": "Crop listing updated successfully.",
-        "data":    _row_to_dict_full(row),
+        "data":    updated,
     }), 200
 
 
@@ -500,38 +342,19 @@ def update_crop(listing_id: int):
 def withdraw_crop(listing_id: int):
     """
     Withdraw a crop listing via soft-delete.
-
-    CRITICAL: This endpoint NEVER issues a physical DELETE SQL statement.
-    The row is archived in-place:
-        is_deleted = 1
-        status     = 'Withdrawn'
-        updated_at = <current UTC timestamp>  (handled by schema trigger)
-
-    This preserves the provenance chain for the future Increment 5
-    Consumer QR storyboard (AG-API-INC1-003 §1 / CTO Blocker 3 Fix).
+    CRITICAL: Never issues a physical DELETE SQL statement.
     """
     db = _get_db()
 
     try:
-        cursor = db.execute(
-            """
-            UPDATE listings
-               SET is_deleted = 1,
-                   status     = 'Withdrawn'
-             WHERE id = ? AND farmer_id = ? AND is_deleted = 0
-            """,
-            (listing_id, g.farmer_id),
-        )
-        db.commit()
+        success = crop_service.withdraw_listing(db, g.farmer_id, listing_id)
     except sqlite3.Error:
-        db.rollback()
         return jsonify({
             "success": False,
             "error": "An internal error occurred. Please try again later.",
         }), 500
 
-    # 0 rows affected → listing not found, already withdrawn, or cross-tenant
-    if cursor.rowcount == 0:
+    if not success:
         return jsonify({"success": False, "error": "Listing not found."}), 404
 
     return jsonify({

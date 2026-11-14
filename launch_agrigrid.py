@@ -85,6 +85,16 @@ def ensure_database(py):
         )
 
 
+def ensure_migrated(py):
+    """Run migrate.py to apply any pending database migrations before startup."""
+    migrate_script = os.path.join(ROOT, "backend", "database", "migrate.py")
+    try:
+        subprocess.run([py, migrate_script], check=True, cwd=ROOT)
+    except (subprocess.CalledProcessError, Exception):
+        print(">> Migration failed — backend not started.")
+        sys.exit(1)
+
+
 def start_backend(py, log_file):
     """
     Run the Flask app WITHOUT the debug reloader so it stays a single
@@ -149,6 +159,7 @@ def main():
 
     ensure_dependencies(py)
     ensure_database(py)
+    ensure_migrated(py)
 
     print(">> Starting backend API (port 5000)...")
     backend = start_backend(py, backend_log)

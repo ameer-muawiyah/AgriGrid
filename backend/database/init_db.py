@@ -39,6 +39,7 @@ import sys
 import hashlib
 import hmac
 import base64
+import subprocess
 
 # ---------------------------------------------------------------------------
 # Path resolution â€” script is runnable from both project root AND its own dir
@@ -376,6 +377,11 @@ def main() -> None:
     finally:
         conn.close()
         print("\n[OK]    Database connection closed cleanly.")
+
+    # Invoke migration runner to ensure DB is migrated to current schema version
+    migrate_script = os.path.join(SCRIPT_DIR, "migrate.py")
+    subprocess.run([sys.executable, migrate_script], check=True)
+    print("Database migrated to current schema version.")
 
 
 if __name__ == "__main__":

@@ -2,8 +2,9 @@
 Agri-Grid: Smart Agriculture & Food Security Ecosystem
 File:    app.py
 Module:  Flask Application Factory & Authentication Endpoints
-Version: 1.1  (Increment 1 - Run 3: Crop CRUD Blueprint wired)
-Source:  AG-API-INC1-003 v1.0  Section 3 & 4 | AG-SRS-INC1-001 v1.1
+Version: 2.0  (Increment 2 - Phase 1: Service Layer & Startup Schema Check)
+Author:  Hasnain Hamza (Core Backend Engineer)
+Source:  AG-API-INC1-003 v1.0 Section 3 & 4 | AG-PLAN-INC2-001 §4.1, §4.2
 
 Endpoints (Run 2)
 -----------------
@@ -12,7 +13,7 @@ Endpoints (Run 2)
   POST /api/auth/logout     — Session termination acknowledgement
   GET  /api/auth/me         — Protected JWT/RBAC smoke-test route
 
-Blueprints registered (Run 3)
+Blueprints registered (Run 3+)
 ------------------------------
   crops_bp  — /api/crops  (POST, GET, GET/<id>, PUT/<id>, DELETE/<id>)
 
@@ -23,7 +24,10 @@ Run the server
 """
 
 import os
+import re
+import sys
 import sqlite3
+from pathlib import Path
 
 from flask import Flask, g, jsonify, request
 from flask_cors import CORS
@@ -42,7 +46,60 @@ from auth import (
 # Path resolution — runnable from project root OR backend/ directory
 # ---------------------------------------------------------------------------
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-DB_PATH  = os.path.join(BASE_DIR, "database", "agrigrid.db")
+DB_PATH  = os.environ.get(
+    "AGRIGRID_DB_PATH",
+    os.path.join(BASE_DIR, "database", "agrigrid.db"),
+)
+
+
+# ---------------------------------------------------------------------------
+# Startup Schema Verification (Plan v1.1 §4.1)
+# ---------------------------------------------------------------------------
+
+def _verify_schema_version(app: Flask) -> None:
+    """
+    Startup schema integrity check (Plan v1.1 §4.1).
+    Ensures the SQLite database is migrated to the latest version required
+    by the codebase before registering blueprints or serving requests.
+    """
+    migrations_dir = os.path.join(BASE_DIR, "database", "migrations")
+    expected_version = 0
+
+    if os.path.isdir(migrations_dir):
+        for fname in os.listdir(migrations_dir):
+            m = re.match(r"^(\d+)_.*\.sql$", fname)
+            if m:
+                expected_version = max(expected_version, int(m.group(1)))
+
+    if expected_version == 0:
+        return
+
+    db_path = app.config.get("DB_PATH", DB_PATH)
+    actual_version = 0
+
+    if os.path.isfile(db_path):
+        uri = Path(os.path.abspath(db_path)).as_uri() + "?mode=ro"
+        try:
+            conn = sqlite3.connect(uri, uri=True)
+            try:
+                tbl = conn.execute(
+                    "SELECT 1 FROM sqlite_master WHERE type='table' AND name='schema_versions'"
+                ).fetchone()
+                if tbl:
+                    row = conn.execute("SELECT MAX(version) FROM schema_versions").fetchone()
+                    if row and row[0] is not None:
+                        actual_version = int(row[0])
+            finally:
+                conn.close()
+        except sqlite3.Error:
+            actual_version = 0
+
+    if actual_version < expected_version:
+        print(
+            f"Database schema is at version {actual_version} but this code requires {expected_version}. "
+            f"Run: python backend/database/migrate.py"
+        )
+        sys.exit(1)
 
 
 # ---------------------------------------------------------------------------
@@ -72,6 +129,9 @@ def create_app() -> Flask:
         print("[WARN] Invalid JWT_EXPIRY_MINUTES; falling back to 30 minutes.")
         app.config["JWT_EXPIRY_MINUTES"] = 30
     app.config["DB_PATH"] = DB_PATH
+
+    # Startup schema integrity check (Plan v1.1 §4.1)
+    _verify_schema_version(app)
 
     # ------------------------------------------------------------------
     # CORS (NFR-SEC-007)
