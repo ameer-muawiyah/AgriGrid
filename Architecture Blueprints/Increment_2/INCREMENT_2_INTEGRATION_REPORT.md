@@ -354,8 +354,8 @@ Signature: `[Certified: Muhammad Hashir — 2026-11-15]`
 
 **Lead Reviewer & Scrum Master:**  
 Name: Ameer Muawiyah (Scrum Master & Lead Data Architect)  
-Date: ____________________  
-Signature: ____________________  
+Date: 2026-11-15  
+Signature: `[Signed & Approved: Ameer Muawiyah — 2026-11-15]`  
 
 
 
