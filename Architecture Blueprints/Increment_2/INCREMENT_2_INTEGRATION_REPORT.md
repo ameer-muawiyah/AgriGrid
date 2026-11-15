@@ -100,3 +100,135 @@ Delivered and certified: buyer onboarding (atomic users + buyers + wallet creati
 
 **Addendum (2026-11-15):** The Run 3 statement "Silent Workarounds: 0" was inaccurate. The Phase 2 build contained an undocumented username-prefix exemption from FR-BYR-002 that fabricated buyer profile data for legacy fixture usernames. It was found by Muse's independent verification of the pushed tree, removed under Scrum Master determination D-INC2-11 (all-or-nothing rule, SRS v1.3 / Contracts v1.2), and is pinned by TC-BYR-07. The frozen gate and the marketplace suite pass in full after the fix.
 
+---
+
+# Part III — Increment 2 Phase 3: Digital Escrow, Orders & Settlement
+
+| Field | Value |
+|---|---|
+| **Stage** | Increment 2 — Phase 3 |
+| **Lead / QA** | Muhammad Hashir (QA & DevOps Engineer) & Ameer Muawiyah (Scrum Master & Lead Data Architect) |
+| **Governing Documents** | Increment 2 Master Plan v1.1; SRS Addendum v1.3 (`AG-SRS-INC2-001`); API Contracts Delta v1.2 (`AG-API-INC2-003`); Scrum Master Determination D-INC2-11; Phase 3 Build Package (Endpoints 5–10) |
+| **Date** | 2026-11-15 |
+| **Overall Status** | **PASS (83/83 tests — 45 frozen Increment 1 regression + 20 Phase 2 marketplace suite + 18 Phase 3 escrow & orders suite)** |
+
+---
+
+## 1. Executive Summary
+
+Phase 3 delivers the transactional core of Increment 2: the Digital Escrow engine, Order lifecycle management, and multi-party financial settlement. This phase bridges the demand-side marketplace catalog (Phase 2) to supply-side fulfillment, guaranteeing that all financial flows remain stateful, verifiable, and protected by strict ACID guarantees without external payment gateway dependencies.
+
+All 6 Phase 3 endpoints (Endpoints 5–10), the 4 checkout business rules, cold-chain temperature validation, delivery confirmation with auto-release scheduling, mutual cancellation with catalog restoration, formal dispute freezing, and multi-tenant order history were implemented and certified.
+
+The full gate of 83 automated test cases across 5 test suites is 100% green. The 5 frozen files from Increment 1 and Phase 2 exhibit zero git diff against the pre-Phase-3 baseline (`e19f7ac`).
+
+---
+
+## 2. Delivered Capabilities & Architectural Verification
+
+### 2.1 Endpoints 5–10 Delivery
+1. **Endpoint 5: `POST /api/orders` (Digital Escrow Checkout):**
+   - Buyer creates an order from an active priced listing.
+   - Generates sequential order identifier format `ORD-{YYYY}-{ID:04d}` (e.g. `ORD-2026-0001`).
+   - Validates buyer wallet balance, locks `total_amount_pkr` into `escrow_holdings` as `HELD`, and debits `buyer_wallets` atomically.
+   - Transitions listing from `Active` to `Sold` to block concurrent checkout.
+
+2. **Endpoint 6: `POST /api/orders/<id>/confirm-delivery` (Delivery Confirmation & Escrow Release):**
+   - Buyer-initiated acceptance of delivered produce.
+   - Transitions order status to `Completed` and escrow status from `HELD` to `RELEASED`.
+   - Records `delivered_at` timestamp and computes exact 72-hour inspection window: `auto_release_at = delivered_at + 72 hours`.
+   - Credits farmer wallet with exact `total_amount_pkr` and stamps audit reference `TRIGGER:buyer_confirmation;REF:TX-<order_id>-SETTLE`.
+
+3. **Endpoint 7: `POST /api/orders/<id>/cancel` (Order Cancellation & Refund):**
+   - Authorized parties (buyer or farmer) may cancel an unfrozen, uncompleted order.
+   - Transitions order status to `Cancelled` and escrow status to `REFUNDED`.
+   - Automatically refunds buyer wallet (`balance_pkr += total_amount_pkr`).
+   - Restores listing status from `Sold` back to `Active` and clears `is_deleted = 0`, making the produce immediately visible in the marketplace catalog.
+   - Audit trail stamps `TRIGGER:buyer_cancellation;REF:TX-<order_id>-REFUND` or `TRIGGER:farmer_cancellation;REF:TX-<order_id>-REFUND`.
+
+4. **Endpoint 8: `POST /api/orders/<id>/dispute` (Formal Dispute Registration):**
+   - Either counterparty can flag an active order for administrative mediation.
+   - Transitions order status to `Disputed` and escrow status to `DISPUTED`.
+   - Strictly freezes all funds: zero wallet movements, preserving the exact held balance for arbitration.
+   - Enforces state-machine terminal boundaries per `FR-STM-006`: once disputed, orders cannot be re-disputed (HTTP 400), delivery-confirmed (HTTP 400), or cancelled (HTTP 400).
+
+5. **Endpoint 9: `GET /api/orders/buyer` (Buyer Procurement Order History):**
+   - Multi-tenant isolated order history for authenticated buyers (tenant isolation verified).
+   - Envelope: `{"success": true, "data": [...], "page": 1, "limit": 20, "total": N}`.
+   - Includes nested produce summary, `farm_name`, `escrow_status`, and `max_temperature_celsius`.
+   - Validates query filters (`Escrow_Funded`, `In_Transit`, `Delivered`, `Completed`, `Cancelled`, `Disputed`); non-standard parameter values (such as `Pending`) return HTTP 400 (`PD-1`).
+
+6. **Endpoint 10: `GET /api/orders/farmer` (Farmer Inbound Sales Ledger):**
+   - Multi-tenant inbound sales history for authenticated farmers (derived strictly from JWT `farmer_id`).
+   - Surfaces `buyer_company_name`, destination warehouse address, agreed price per kg, total revenue, and fulfillment lifecycle status.
+   - Role-guarded: buyers, transporters, and unauthenticated callers receive HTTP 403 / 401.
+
+### 2.2 The 4 Checkout Business Rules
+- **Rule 1: Whole-Quantity Purchasing (`FR-ORD-002`):** `ordered_quantity_kg == listing.quantity_kg`. Partial quantity purchases rejected with HTTP 400 `"Partial quantity purchasing is not supported in Increment 2."`.
+- **Rule 2: Cold-Chain Storage Range (`FR-ORD-003`):** `-25.0°C <= max_temperature_celsius <= +30.0°C`. Out-of-range temperatures (-25.1°C, +30.1°C) rejected with HTTP 400 `"Max storage temperature must be between -25.0°C and +30.0°C."`. Extreme boundary -25.0°C accepted with HTTP 201.
+- **Rule 3: Atomic Escrow Lock & Wallet Debit (`FR-ORD-004`):** Debits buyer wallet and locks escrow funds inside an ACID transaction (`BEGIN IMMEDIATE ... COMMIT`). Insufficient wallet balance rejected with HTTP 400 `"Insufficient wallet balance."`.
+- **Rule 4: Concurrency Lock & Catalog Exclusion (`FR-ORD-001`, `FR-ORD-005`):** Listing marked `Sold` immediately upon order creation. Subsequent checkout attempts return HTTP 409 `"Listing has already been sold."`. Unpriced or soft-deleted listings return HTTP 404 `"Listing not found."`.
+
+### 2.3 Financial Invariant Verification
+Across all lifecycle paths (Checkout $\rightarrow$ Delivery $\rightarrow$ Settlement; Checkout $\rightarrow$ Cancellation $\rightarrow$ Refund; Checkout $\rightarrow$ Dispute $\rightarrow$ Freeze), the conservation of simulated funds holds invariant:
+$$\Delta \text{Buyer Wallet} + \Delta \text{Escrow Holdings} + \Delta \text{Farmer Wallet} = 0.00\text{ PKR}$$
+Live testing confirmed exact wallet movements:
+- **Sara Checkout Listing 1** (5,000 kg @ 45.00 PKR = 225,000.00 PKR): Sara wallet debited from 500,000.00 PKR to 275,000.00 PKR; escrow held 225,000.00 PKR; Tahir wallet remains 0.00 PKR.
+- **Delivery Confirmation:** Escrow released from 225,000.00 PKR to 0.00 PKR; Tahir wallet credited from 0.00 PKR to 225,000.00 PKR.
+- **Order Cancellation:** Escrow refunded from 40,000.00 PKR to 0.00 PKR; Buyer wallet credited from 460,000.00 PKR back to 500,000.00 PKR; Listing restored to `Active`.
+- **Dispute:** Escrow frozen at 40,000.00 PKR; Buyer and Farmer wallets unchanged (zero movement).
+
+### 2.4 Frontend Delivery
+- **Buyer Portal (`frontend/buyer_dashboard.html`, `frontend/js/buyer.js`, `frontend/css/buyer.css`):**
+  - Integrated "Checkout Order" modal with real-time total calculation, destination warehouse pre-fill, and cold-chain temperature selector.
+  - "My Orders" tab with status filter pills (`ALL`, `Escrow_Funded`, `In_Transit`, `Delivered`, `Completed`, `Cancelled`, `Disputed`), responsive order cards, action buttons for "Confirm Delivery", "Raise Dispute", and "Cancel Order".
+- **Farmer Portal (`frontend/dashboard.html`, `frontend/js/dashboard.js`, `frontend/css/dashboard.css`):**
+  - Integrated "Inbound Sales" tab with live fulfillment badges, buyer company identity, warehouse destination, and order cancellation triggers.
+
+---
+
+## 3. Test Execution & Regression Gate Summary
+
+| Suite | File | Tests | Passed | Failed | Status |
+|---|---|:---:|:---:|:---:|:---:|
+| Frontend-Backend Contracts (Inc-1) | `backend/test_frontend_contract.py` | 5 | 5 | 0 | **PASS** |
+| Authentication & RBAC (Inc-1) | `backend/test_auth.py` | 17 | 17 | 0 | **PASS** |
+| Crop CRUD & Tenant Isolation (Inc-1) | `backend/test_crops_api.py` | 23 | 23 | 0 | **PASS** |
+| B2B Marketplace & Commercial Pricing (Inc-2 Phase 2) | `backend/test_marketplace_api.py` | 20 | 20 | 0 | **PASS** |
+| Digital Escrow & Orders (Inc-2 Phase 3) | `backend/test_escrow_orders.py` | 18 | 18 | 0 | **PASS** |
+| **Total** | **All 5 Suites** | **83** | **83** | **0** | **PASS (100%)** |
+
+### 3.1 Frozen Files Audit
+Verification against pre-Phase-3 HEAD (`e19f7ac`):
+`git diff e19f7ac -- backend/test_auth.py backend/test_crops_api.py backend/test_frontend_contract.py backend/database/schema.sql backend/test_marketplace_api.py`
+**Result: 0 diff lines (100% frozen, completely untouched).**
+
+---
+
+## 4. Plan v1.1 Phase 3 Definitions of Done (Line-by-Line Confirmation)
+
+| Task | Plan Definition of Done | Verification Evidence | Status |
+|---|---|---|:---:|
+| **Task 3.1** (Escrow & Order Service Layer) | `backend/services/order_service.py` & `backend/services/escrow_service.py` implement Endpoints 5–10 with ACID transactions, wallet debits/credits, escrow states, and auto-release timestamping. | Fully implemented; verified in `TC-ORD-*`, `TC-SET-*`, `TC-CAN-*`, `TC-DSP-*`. | **CONFIRMED** |
+| **Task 3.2** (Order Controllers & Routing) | `backend/orders.py` exposes Endpoints 5–10 with JWT authentication, role guards (Buyer for 5/9, Farmer for 10, Party for 6/7/8), and input validation. | Blueprint registered in `app.py`; RBAC guards verified in `TC-ORD-08`, `TC-SET-02`, `TC-CAN-03`, `TC-HIST-03`. | **CONFIRMED** |
+| **Task 3.3** (Buyer & Farmer Order UI) | Buyer dashboard features checkout modal & orders tab; Farmer dashboard features inbound sales tab; modals and actions functional. | HTML/CSS/JS updated across `buyer_dashboard.html`, `buyer.js`, `dashboard.html`, `dashboard.js`. | **CONFIRMED** |
+| **Task 3.4** (Escrow & Orders Certification Suite) | `backend/test_escrow_orders.py` implements all 18 test cases (TC-ORD 1–8, TC-SET 1–2, TC-CAN 1–3, TC-DSP 1–2, TC-HIST 1–3); 100% pass rate. | Executed and confirmed 18/18 green (100% pass rate). | **CONFIRMED** |
+
+---
+
+## 5. Deviations & Observations
+
+- **Deviations: none.**
+  - Zero specification violations.
+  - Zero silent workarounds or undocumented exemptions.
+  - Zero regressions on Increment 1 and Phase 2 baselines.
+- **Clarification PD-1 Alignment:** API Contracts Delta v1.2 table had an errant entry listing `Pending` as a query filter parameter for `GET /api/orders/buyer`. The canonical lifecycle enum defines `Escrow_Funded` as the initial order state. Non-standard query values (such as `Pending`) correctly return HTTP 400 `"Invalid filter parameters."`. This behavior is pinned by `TC-HIST-02`.
+- **Database Idempotency Baseline:** Because the test suites share `backend/database/agrigrid.db`, `backend/test_escrow_orders.py` includes a clean teardown handler (`_teardown_baseline()`) that resets listing 1 and wallet balances upon completion. This guarantees that all 5 test suites can run in any sequence repeatedly with 100% test independence without modifying any frozen files.
+
+---
+
+## 6. Phase 3 Sign-Off
+
+Phase 3 is certified complete and green across all functional, architectural, and security dimensions. The Digital Escrow, Orders & Settlement subsystem is fully integrated, verified against all governing contracts, and ready for deployment.
+
+
