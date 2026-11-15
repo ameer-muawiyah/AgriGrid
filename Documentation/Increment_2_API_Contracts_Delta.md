@@ -470,7 +470,7 @@ Atomic B2B procurement checkout, locking funds in escrow and transitioning the l
 | B2B Buyer (`buyer`) | Non-existent listing | `404 Not Found` | Listing not found (`"Listing not found."`). |
 | B2B Buyer (`buyer`) | Unpriced listing (`asking_price_per_kg IS NULL`) | `404 Not Found` | Unified 404 anti-enumeration (`"Listing not found."`). |
 | B2B Buyer (`buyer`) | Listing already `status = 'Sold'` | `409 Conflict` | Double-spend concurrency block (`"Listing has already been sold."`). |
-| B2B Buyer (`buyer`) | Withdrawn listing (`status = 'Withdrawn'` or `is_deleted = 1`) | `409 Conflict` | Availability race block (`"Listing has already been sold."` per Diagram 3). |
+| B2B Buyer (`buyer`) | Withdrawn listing (`status = 'Withdrawn'`) | `409 Conflict` | Availability race block (`"Listing has already been sold."` per Diagram 3). |
 | Farmer / Other Roles | Any | `403 Forbidden` | Access denied. |
 | Unauthenticated | Any | `401 Unauthorized` | Authentication required. |
 
@@ -1212,6 +1212,7 @@ The following matrix documents the authoritative HTTP status response for every 
 |---|---|---|---|
 | **v1.0** | 2026-11-14 | Iqra Fayaz (Architect) & Manahil Sohail (RE) | Initial release of Increment 2 API Contracts Delta (`AG-API-INC2-003`) specifying all 13 required endpoints across Authentication, Marketplace, Escrow Orders, Environmental Telemetry, Predictive Yield, and Commercial Pricing. |
 | **v1.1** | 2026-11-14 | Iqra Fayaz (Architect) & Manahil Sohail (RE) | Fact-check fix release addressing Muse review findings F1–F6:<br>• **F1**: Corrected §2.4 to document the verified single uniform listing-404 string (`"Listing not found."`) across legacy and new endpoints, backed by `test_crops_api.py`.<br>• **F2**: Removed ungrounded `reason` body field from Endpoint 8 (`/dispute`) and dropped unbacked `disputed_at` response field.<br>• **F3**: Removed ungrounded `max 100` cap on `limit` in Endpoints 3, 9, 10, restoring pure `min 1, default 20` semantics.<br>• **F4**: Added explicit handling in Endpoint 5 (`/orders`) for Withdrawn listings (`409 Conflict`) and unpriced listings (`404 Not Found`).<br>• **F5**: Extended `status` filter validation enum in Endpoints 9 & 10 to include all six valid order statuses (`Pending`, `Escrow_Funded`, `In Transit`, `Completed`, `Cancelled`, `Disputed`).<br>• **F6**: Added formal §11 *Open Questions for the Scrum Master* section.<br>• Preserved blank Scrum Master approval block pending spot-check. |
+| **v1.1 Erratum** | 2026-11-15 | Iqra Fayaz (Architect) & Manahil Sohail (RE) | Struck errant `or is_deleted = 1` clause from Endpoint 5 outcome matrix row for Withdrawn listings: soft-deleted listings return `404 Listing not found.` for consistency with the Endpoint 5 Error Catalogue, Sequence Diagram 3, and anti-enumeration doctrine (`NFR-SEC-002`, `FR-MKT-007`). Document version remains v1.1. |
 
 ### 12.2 Verification & Validation Sign-Off Block
 
