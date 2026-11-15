@@ -272,11 +272,6 @@ def _register_auth_routes(app: Flask, get_db) -> None:
                 "error": "Invalid role. Must be one of: farmer, buyer, transporter, agronomist, compliance_officer.",
             }), 400
 
-        # Password complexity (NFR-SEC-008)
-        is_valid, complexity_error = validate_password_complexity(password)
-        if not is_valid:
-            return jsonify({"success": False, "error": complexity_error}), 400
-
         # Farmer-specific: farm_name is mandatory
         if role == "farmer" and not farm_name:
             return jsonify({
@@ -284,29 +279,31 @@ def _register_auth_routes(app: Flask, get_db) -> None:
                 "error": "Farm name is required when registering as a farmer.",
             }), 400
 
-        # Buyer-specific validation (Increment 2, Package Part A & FR-BYR-001/002)
+        # Password complexity (NFR-SEC-008)
+        is_valid, complexity_error = validate_password_complexity(password)
+        if not is_valid:
+            return jsonify({"success": False, "error": complexity_error}), 400
+
+        # Buyer-specific validation (Increment 2, Package Part A, FR-BYR-001/002 & D-INC2-11)
         if role == "buyer":
-            is_legacy_test = (
-                username.startswith(("test_buyer_", "crop_test_"))
-                and not any(k in data for k in ("company_name", "contact_phone", "warehouse_address"))
-            )
-            if is_legacy_test:
-                company_name = f"{username} Corp"
-                contact_phone = "+92-300-0000000"
-                warehouse_address = "Default Test Warehouse, Hub"
+            company_name = (data.get("company_name") or "").strip()
+            contact_phone = (data.get("contact_phone") or "").strip()
+            warehouse_address = (data.get("warehouse_address") or "").strip()
+
+            n = sum(1 for v in (company_name, contact_phone, warehouse_address) if v != "")
+
+            if n == 0:
+                company_name = ""
+                contact_phone = ""
+                warehouse_address = ""
                 gps_lat = None
                 gps_lon = None
-            else:
-                company_name = (data.get("company_name") or "").strip()
-                contact_phone = (data.get("contact_phone") or "").strip()
-                warehouse_address = (data.get("warehouse_address") or "").strip()
-
-                if not company_name or not contact_phone or not warehouse_address:
-                    return jsonify({
-                        "success": False,
-                        "error": "Company name, phone, and warehouse address are required.",
-                    }), 400
-
+            elif 1 <= n <= 2:
+                return jsonify({
+                    "success": False,
+                    "error": "Company name, phone, and warehouse address are required.",
+                }), 400
+            else:  # n == 3
                 if (
                     len(company_name) < 2
                     or len(company_name) > 100
@@ -390,7 +387,6 @@ def _register_auth_routes(app: Flask, get_db) -> None:
                     return jsonify({"success": False, "error": "Username already exists."}), 409
                 return jsonify({"success": False, "error": "Registration failed. Please try again."}), 500
             except Exception:
-                return jsonify({"success": False, "error": "Registration failed. Please try again."}), 500
                 return jsonify({"success": False, "error": "Registration failed. Please try again."}), 500
 
         # Non-buyer roles (Farmer, etc.)
@@ -520,7 +516,7 @@ def _register_auth_routes(app: Flask, get_db) -> None:
             wallet_bal = (
                 float(row["buyer_wallet_balance"])
                 if row["buyer_wallet_balance"] is not None
-                else 500000.00
+                else 0.0
             )
             return jsonify({
                 "success": True,

@@ -5,10 +5,10 @@
 |---|---|
 | **Project Name** | Agri-Grid: Smart Agriculture & Food Security Ecosystem |
 | **Document ID** | `AG-SRS-INC2-001` |
-| **Version** | 1.2 (SRS Addendum — Pre-Sequence Diagram Baseline Pass) |
+| **Version** | 1.3 (SRS Addendum — D-INC2-11 Amendment) |
 | **Prepared By** | Manahil Sohail (Requirements Engineer — RE Track Lead) |
 | **Reviewed By** | Ameer Muawiyah (Scrum Master + Lead Data Architect) |
-| **Date** | 2026-11-14 |
+| **Date** | 2026-11-15 |
 | **Governing Document** | Increment 2 Master Plan v1.1 (`AG-PLAN-INC2-001`, approved 2026-11-13) |
 | **Baseline Reference** | Increment 1 SRS (`AG-SRS-INC1-001 v1.1`), API Contracts (`AG-API-INC1-003 v1.0`) |
 | **Location** | `./Documentation/Increment_2_SRS_Addendum.md` |
@@ -197,7 +197,7 @@ To prevent breaking changes and structural rewrites in future stages, Increment 
 | Req ID | Requirement Statement | Priority | Plan Trace | Executable Proof |
 |---|---|:---:|:---:|---|
 | **FR-BYR-001** | The user registration endpoint (`POST /api/auth/register`) SHALL accept registration requests with `role = 'buyer'`. | SHALL | Plan §2.1, §6.4 | `test_marketplace_api.py::TC-BYR-01`: Register user with role buyer returns HTTP 201. |
-| **FR-BYR-002** | When `role = 'buyer'`, the registration payload SHALL require the following additional fields: `company_name` (string, 2–100 characters), `contact_phone` (string, 7–20 characters), and `warehouse_address` (string, minimum 5 characters). Optional fields: `warehouse_gps_latitude` (-90.0 to 90.0) and `warehouse_gps_longitude` (-180.0 to 180.0). | SHALL | Plan §5.2, §6.4 | `test_marketplace_api.py::TC-BYR-02`: Submit buyer registration omitting `company_name`; assert HTTP 400 Bad Request. |
+| **FR-BYR-002 (amended by D-INC2-11)** | The buyer company fields `company_name`, `contact_phone`, and `warehouse_address` are ALL-OR-NOTHING. (a) If NONE of the three fields carries a non-empty value — the legacy Increment 1 registration payload shape — the registration SHALL proceed, and the buyer profile SHALL be created with all three fields stored as empty strings and GPS coordinates NULL. No placeholder, default, or inferred values may be stored. (b) If ANY field carries a non-empty value, ALL three SHALL be required; an incomplete set SHALL be rejected with `400` and error `"Company name, phone, and warehouse address are required."` (c) When all three are supplied, malformed values SHALL be rejected with `400` and error `"Invalid buyer company details."` The Increment 2 web UI always submits all three fields; the all-absent path exists solely for legacy and programmatic callers, including the frozen Increment 1 regression fixtures. | SHALL | Plan §5.2, §6.4, D-INC2-11 | `test_marketplace_api.py::TC-BYR-02`: Incomplete company fields rejected with HTTP 400; `TC-BYR-07`: All-absent legacy registration creates empty profile with HTTP 201. |
 | **FR-BYR-003** | Upon valid buyer registration, the backend SHALL atomically execute the following actions within a single database transaction: (1) insert record into `users` table; (2) insert record into `buyers` table with user foreign key; (3) insert record into `buyer_wallets` table initialized with balance `500000.00` PKR (`SIMULATED_BUYER_STARTING_BALANCE_PKR`). | SHALL | Plan §5.2, §6.4 | Database inspection verifies linked rows in `users`, `buyers`, and `buyer_wallets` with 500,000.00 balance. |
 | **FR-BYR-004** | If any constraint validation or SQL insert fails during buyer registration, the entire transaction SHALL roll back immediately, leaving no orphaned user or wallet records, and return HTTP 400 with a descriptive error message. | SHALL | Plan §6.4 | Unit test: Force duplicate company error or constraint fail; verify `users` table count is unchanged. |
 | **FR-BYR-005** | Upon successful login (`POST /api/auth/login`) with buyer credentials, the backend SHALL return a signed JWT carrying claims: `user_id`, `role = 'buyer'`, `farmer_id = null`, and `exp`. The response body SHALL include user object and buyer profile metadata. | SHALL | Plan §3.1, §6.4 | `test_auth.py` extension: Login `sara_buyer`; decode JWT; assert `role == 'buyer'` and `farmer_id is None`. |
@@ -399,7 +399,7 @@ To prevent breaking changes and structural rewrites in future stages, Increment 
 | `FR-SRV-003` | `crop_service.py` pure business ops | FEAT-INC2-11 | Plan §4.2 | Gap 2 Closure | Unit tests for `crop_service.py` CRUD methods |
 | `FR-SRV-004` | 45/45 Inc 1 regression preserved | FEAT-INC2-11 | Plan §4.2.4, §10.1 | Gap 2 Closure | `python backend/test_auth.py`, `test_crops_api.py`, `test_frontend_contract.py` (45/45 pass) |
 | `FR-BYR-001` | Buyer registration role support | FEAT-INC2-02 | Plan §2.1, §6.4 | Doc 4 §2.2; Doc 5 §2 | `test_marketplace_api.py::TC-BYR-01` |
-| `FR-BYR-002` | Mandatory buyer company fields | FEAT-INC2-02 | Plan §5.2, §6.4 | Doc 4 §2.2 | `test_marketplace_api.py::TC-BYR-02` |
+| `FR-BYR-002` | Buyer company fields all-or-nothing (D-INC2-11) | FEAT-INC2-02 | Plan §5.2, §6.4, D-INC2-11 | Doc 4 §2.2 | `test_marketplace_api.py::TC-BYR-02, TC-BYR-07` |
 | `FR-BYR-003` | Atomic User + Buyer + Wallet insert | FEAT-INC2-02 | Plan §5.2, §6.4 | Doc 5 §2 Step 2 | Database inspection verifying 3 linked records |
 | `FR-BYR-004` | Registration rollback on error | FEAT-INC2-02 | Plan §6.4 | System Integrity | Constraint failure test; verify zero orphaned rows |
 | `FR-BYR-005` | Buyer JWT claims & login payload | FEAT-INC2-02 | Plan §3.1, §6.4 | Doc 7 §3.C | Token inspection; role `buyer`, `farmer_id` null |
@@ -472,7 +472,7 @@ To prevent breaking changes and structural rewrites in future stages, Increment 
 
 ## 10. Scrum Master Decision List (Determinations Recorded)
 
-The technical choices formulated during the RE phase have been officially adjudicated and signed off by the Scrum Master. All four determinations stand **DECIDED**:
+The technical choices formulated during the RE phase have been officially adjudicated and signed off by the Scrum Master. All five determinations stand **DECIDED**:
 
 ---
 
@@ -528,6 +528,13 @@ The technical choices formulated during the RE phase have been officially adjudi
 
 ---
 
+### Decision D-INC2-11: Buyer Company Fields All-Or-Nothing Specification (Amends FR-BYR-002)
+- **Context**: The frozen Increment 1 suites register buyer accounts with the legacy payload shape (`test_auth.py` TC-03 fixture `test_buyer_tc03_*`; `test_crops_api.py` fixture `crop_test_buyer`). Under a strict absent-fields rejection, the frozen gate falls to 14/17 (auth TC-03, TC-12, TC-17) and 21/23 (crops TC-21, TC-23) — measured by Muse on a scratch build, 2026-11-15.
+- **Scrum Master Determination**:
+  > **D-INC2-11 — Buyer company fields are all-or-nothing (amends FR-BYR-002).** DECIDED by the Scrum Master, 2026-11-15. Evidence: the frozen Increment 1 suites register buyer accounts with the legacy payload shape (test_auth.py TC-03 fixture `test_buyer_tc03_*`; test_crops_api.py fixture `crop_test_buyer`); under a strict absent-fields rejection the frozen gate falls to 14/17 (auth TC-03, TC-12, TC-17) and 21/23 (crops TC-21, TC-23) — measured by Muse on a scratch build, 2026-11-15. The first Phase 2 build resolved this collision with an undocumented username-prefix exemption that fabricated profile data; that exemption is removed by this determination and the Phase 2 fix round. Rejected alternatives: (1) the prefix exemption — silent, fabricates data, name-dependent; (2) strict enforcement with retirement of the five affected frozen tests — breaks the frozen-gate rule. The all-absent path stores empty strings — visible, queryable, and honest — and is pinned by test TC-BYR-07.
+
+---
+
 ## 11. Discrepancy & Finding Report (Plan vs. Docs vs. Code)
 
 During baseline analysis and document alignment, the Requirements Agent identified five specific discrepancies between briefing notes, documentation artifacts, and physical repository code:
@@ -579,6 +586,7 @@ During baseline analysis and document alignment, the Requirements Agent identifi
 | **v1.0** | 2026-11-14 | Manahil Sohail (Requirements Engineer) | Initial formal release of Increment 2 SRS Addendum (`AG-SRS-INC2-001`) covering FEAT-INC2-01 through FEAT-INC2-12, migration infrastructure, service extraction boundary, status state machine, telemetry caching, and ungrounded decision list. |
 | **v1.1** | 2026-11-14 | Manahil Sohail (Requirements Engineer) | Fact-check fix release: corrected status vocabulary in FR-TAX-003 (`backend/crops.py` alignment); aligned 403 vs 404 RBAC/ownership semantics in FR-SET-001, FR-SET-005, FR-STM-005 per NFR-SEC-002; aligned seed specs in FR-BYR-006, FR-WLT-002, FR-PRC-005 with Phase 1 build spec and migration 002 seed path; incorporated §10 determinations (D-INC2-07 through D-INC2-10 marked DECIDED) including full crop-code table in FR-PRC-003; corrected Plan Trace for `GET /api/wallets/me` in FR-WLT-005; aligned `order_number` scheme to deterministic `ORD-{YYYY}-{ORDER_ID:04d}` in FR-ORD-005; downgraded NFR-PERF-001/002/004 to SHOULD and replaced Locust with local timing assertions; corrected proof checks in FR-SRV-001, FR-SRV-004, FR-MIG-007; annotated marketplace 404 message in FR-MKT-007. |
 | **v1.2** | 2026-11-14 | Ameer Muawiyah (Lead Data Architect & Scrum Master) | Pre-Sequence Diagram Baseline Pass: added missing order retrieval requirements FR-ORD-008 (`GET /api/orders/buyer`) and FR-ORD-009 (`GET /api/orders/farmer`); refined FR-PRC-001 to resolve SQLite `ALTER TABLE ADD COLUMN UNIQUE` restriction via unique index; disambiguated telemetry cache key prefix in FR-CCH-002; recorded findings 6–8 in Section 11; approved and signed off for sequence diagrams. |
+| **v1.3** | 2026-11-15 | Manahil Sohail (Lead Requirements Engineer) | FR-BYR-002 amended and D-INC2-11 added per Scrum Master determination: buyer company fields are all-or-nothing, legacy all-absent payload shape accepted with empty profile strings and NULL GPS coordinates; no other requirement changed. |
 
 ### 12.2 Verification & Validation Sign-Off
 
@@ -586,23 +594,23 @@ During baseline analysis and document alignment, the Requirements Agent identifi
 ================================================================================
 AGRI-GRID SOFTWARE ENGINEERING V&V ACCEPTANCE GATE
 Stage: Increment 2 Requirements Engineering Track (Deliverable 1 of 3)
-Document ID: AG-SRS-INC2-001 v1.2
+Document ID: AG-SRS-INC2-001 v1.3
 ================================================================================
 
 [X] Requirements Engineer:
     Name:      Manahil Sohail
     Role:      Lead Requirements Engineer
     Signature: M. Sohail
-    Date:      2026-11-14
-    Status:    SPECIFICATION COMPLETE & LOCKED
+    Date:      2026-11-15
+    Status:    AMENDMENT D-INC2-11 APPLIED — SUBMITTED FOR REVIEW
 
-[X] Scrum Master & Lead Data Architect:
+[ ] Scrum Master & Lead Data Architect:
     Name:      Ameer Muawiyah
     Role:      Project Manager, Scrum Master & Lead Data Architect
-    Signature: A. Muawiyah (Verified against Project Docs, Inc 1 & SQLite DDL)
-    Date:      2026-11-14
-    Status:    FORMALLY APPROVED & PASS SIGNATURE GRANTED (GREEN LIGHT)
+    Signature: __________________________________
+    Date:      __________________________________
+    Status:    PENDING REVIEW & APPROVAL
 ================================================================================
 ```
 
-*End of Increment 2 SRS Addendum — Document ID: AG-SRS-INC2-001 v1.2*
+*End of Increment 2 SRS Addendum — Document ID: AG-SRS-INC2-001 v1.3*

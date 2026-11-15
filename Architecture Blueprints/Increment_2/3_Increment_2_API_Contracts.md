@@ -5,11 +5,11 @@
 |---|---|
 | **Project Name** | Agri-Grid: Smart Agriculture & Food Security Ecosystem |
 | **Document ID** | `AG-API-INC2-003` |
-| **Version** | 1.1 (Formal Deliverable — Fact-Check Fix Release) |
+| **Version** | 1.2 (Formal Deliverable — D-INC2-11 Amendment) |
 | **Prepared By** | Iqra Fayaz (Software Architect & API Designer — author of Increment 1 API Contracts) |
 | **Reviewed By** | Manahil Sohail (Lead Requirements Engineer) & Ameer Muawiyah (Scrum Master + Lead Data Architect) |
-| **Date** | 2026-11-14 |
-| **Baseline Source** | `AG-SRS-INC2-001 v1.2`, `AG-SSD-INC2-002 v1.1`, `0_Increment_2_Master_Plan.md v1.1` |
+| **Date** | 2026-11-15 |
+| **Baseline Source** | `AG-SRS-INC2-001 v1.3`, `AG-SSD-INC2-002 v1.1`, `0_Increment_2_Master_Plan.md v1.1` |
 | **Increment 1 Base Reference** | `AG-API-INC1-003 v1.0` (`3_Farmer_API_Contracts.md`) |
 | **Primary Location** | `./Documentation/Increment_2_API_Contracts_Delta.md` |
 | **Mirror Location** | `./Architecture Blueprints/Increment_2/3_Increment_2_API_Contracts.md` |
@@ -45,7 +45,7 @@
 8. [Module 5: Active Crop Commercial Pricing Delta](#8-module-5-active-crop-commercial-pricing-delta)
    - 8.1 [Endpoint 13: Commercial Pricing & Batch Publication Delta (`PUT /api/crops/<id>`)](#81-endpoint-13-commercial-pricing--batch-publication-delta-put-apicropsid)
 9. [Master Role × Outcome Authorization Matrix](#9-master-role--outcome-authorization-matrix)
-10. [Traceability Matrix (Contracts to SRS v1.2 & Sequence Diagrams v1.1)](#10-traceability-matrix-contracts-to-srs-v12--sequence-diagrams-v11)
+10. [Traceability Matrix (Contracts to SRS v1.3 & Sequence Diagrams v1.1)](#10-traceability-matrix-contracts-to-srs-v13--sequence-diagrams-v11)
 11. [Open Questions for the Scrum Master](#11-open-questions-for-the-scrum-master)
 12. [Revision History & Verification Sign-Off Block](#12-revision-history--verification-sign-off-block)
 
@@ -53,7 +53,7 @@
 
 ## 1. Overview & Delta Specification Scope
 
-This document serves as the formal **Increment 2 API Contracts Delta (`AG-API-INC2-003 v1.1`)**, defining the precise interface specifications, role authorization boundaries, JSON request/response envelopes, field validation taxonomies, and exact error strings between the **Frontend Presentation Layer** and the **Flask/SQLite Backend Engine**.
+This document serves as the formal **Increment 2 API Contracts Delta (`AG-API-INC2-003 v1.2`)**, defining the precise interface specifications, role authorization boundaries, JSON request/response envelopes, field validation taxonomies, and exact error strings between the **Frontend Presentation Layer** and the **Flask/SQLite Backend Engine**.
 
 ### Relationship to Baseline Contracts (`AG-API-INC1-003`)
 * This is a **strict delta companion document**. It specifies ONLY the 13 endpoints added, extended, or mutated in Increment 2.
@@ -169,7 +169,8 @@ Atomic onboarding for B2B buyers, creating linked `users`, `buyers`, and `buyer_
 | Caller Role / State | Expected Status | Outcome Description |
 |---|:---:|---|
 | Public / Unauthenticated (Valid Buyer Payload) | `201 Created` | User, buyer profile, and Rs. 500k wallet created atomically. |
-| Public (Missing Company / Phone / Address) | `400 Bad Request` | Transaction aborted, validation error returned. |
+| Public / Buyer (Partial company fields: some supplied, some missing/empty) | `400 Bad Request` | Transaction aborted (`"Company name, phone, and warehouse address are required."`). |
+| Public / Buyer (All company fields absent: legacy Increment 1 payload shape) | `201 Created` | Profile created with empty-string fields (`""`) and NULL GPS coordinates per D-INC2-11; response envelope unchanged (`company_name: ""`). |
 | Public (Password Complexity Violation) | `400 Bad Request` | Password complexity enforced. |
 | Public (Duplicate Username) | `409 Conflict` | Conflict returned, zero records created. |
 | Database Insert / Rollback Failure | `500 Internal Server Error` | Atomic rollback, zero orphaned records. |
@@ -183,9 +184,9 @@ Atomic onboarding for B2B buyers, creating linked `users`, `buyers`, and `buyer_
 | `username` | string | Yes | 3–50 characters, alphanumeric and underscores, unique. |
 | `password` | string | Yes | Min 8 characters, at least 1 uppercase, 1 lowercase, 1 digit. |
 | `role` | string | Yes | Must be `"buyer"`. |
-| `company_name` | string | Yes | Required for buyer. 2–100 characters. |
-| `contact_phone` | string | Yes | Required for buyer. 7–20 characters. |
-| `warehouse_address` | string | Yes | Required for buyer. Minimum 5 characters. |
+| `company_name` | string | Conditionally Required | Conditionally required — all-or-nothing per D-INC2-11. When provided: 2–100 characters. When all company fields absent: stored as `""`. |
+| `contact_phone` | string | Conditionally Required | Conditionally required — all-or-nothing per D-INC2-11. When provided: 7–20 characters. When all company fields absent: stored as `""`. |
+| `warehouse_address` | string | Conditionally Required | Conditionally required — all-or-nothing per D-INC2-11. When provided: minimum 5 characters. When all company fields absent: stored as `""`. |
 | `warehouse_gps_latitude` | number | No | Optional float between `-90.0` and `90.0`. |
 | `warehouse_gps_longitude` | number | No | Optional float between `-180.0` and `180.0`. |
 
@@ -1171,11 +1172,11 @@ The following matrix documents the authoritative HTTP status response for every 
 
 ---
 
-## 10. Traceability Matrix (Contracts to SRS v1.2 & Sequence Diagrams v1.1)
+## 10. Traceability Matrix (Contracts to SRS v1.3 & Sequence Diagrams v1.1)
 
-| # | Endpoint / Route | HTTP Method | Governing SRS v1.2 Requirements | Sequence Diagram Reference | Phase 3 Test Suite Binding |
+| # | Endpoint / Route | HTTP Method | Governing SRS v1.3 Requirements | Sequence Diagram Reference | Phase 3 Test Suite Binding |
 |:---:|---|:---:|---|---|---|
-| **1** | `/api/auth/register` (Buyer) | `POST` | `FR-BYR-001`, `FR-BYR-002`, `FR-BYR-003`, `FR-BYR-004`, `FR-WLT-003`, `NFR-SEC-003` | Diagram 1 (§3) | `test_marketplace_api.py::TC-BYR-01..02` |
+| **1** | `/api/auth/register` (Buyer) | `POST` | `FR-BYR-001`, `FR-BYR-002`, `FR-BYR-003`, `FR-BYR-004`, `FR-WLT-003`, `NFR-SEC-003` | Diagram 1 (§3) | `test_marketplace_api.py::TC-BYR-01..02, TC-BYR-07` |
 | **2** | `/api/auth/login` (Claims) | `POST` | `FR-BYR-005`, `NFR-SEC-001`, `Pinned Decision 3` | Diagram 1 / Inc 1 Base | `test_auth.py` extension |
 | **3** | `/api/marketplace/listings` | `GET` | `FR-MKT-001`, `FR-MKT-002`, `FR-MKT-003`, `FR-MKT-004`, `FR-MKT-005`, `NFR-PERF-001` | Diagram 2 (§4) | `test_marketplace_api.py::TC-MKT-01..03` |
 | **4** | `/api/marketplace/listings/<id>` | `GET` | `FR-MKT-006`, `FR-MKT-007`, `NFR-SEC-002` | Diagram 2 (§4) | `test_marketplace_api.py::TC-MKT-04..05` |
@@ -1193,14 +1194,15 @@ The following matrix documents the authoritative HTTP status response for every 
 
 ## 11. Open Questions for the Scrum Master
 
-| # | Question / Topic | Status | Architectural Resolution in Delta v1.1 |
+| # | Question / Topic | Status | Architectural Resolution in Delta v1.2 |
 |:---:|---|:---:|---|
 | **1** | **Dispute Request Payload & Body Structure** | **RESOLVED (Closed)** | Per Fact-Check Finding F2, `POST /api/orders/<id>/dispute` accepts an empty/omitted JSON body `{}`. Schema v2 maintains no dispute reason column, and `FR-STM-005` specifies no body fields. The success response returns `order_status: "Disputed"` and `escrow_status: "DISPUTED"`. Reason tracking and dispute arbitration are formally deferred to Increment 4 (Compliance Officer). |
 | **2** | **Uniform Listing 404 String** | **RESOLVED (Closed)** | Per Fact-Check Finding F1, verified directly against `backend/crops.py` and `backend/test_crops_api.py::TC-10, TC-12, TC-13, TC-14`, there is zero divergence between legacy crop 404s and Increment 2 listing 404s. Both return identical payload `{"success": false, "error": "Listing not found."}`. |
 | **3** | **Zero Standalone Wallet Endpoint** | **RESOLVED (Closed)** | Confirmed that no standalone `/api/wallets/*` endpoint exists in Increment 2. Balances surface within registration (`/api/auth/register`), login (`/api/auth/login`), and checkout confirmation (`/api/orders`) responses. |
 | **4** | **Pagination Upper Limit** | **RESOLVED (Closed)** | Per Fact-Check Finding F3, pagination parameter `limit` enforces `min 1, default 20` with no arbitrary upper cap, preserving Increment 1 pagination semantics. |
+| **5** | **Buyer Company Fields All-Or-Nothing Specification** | **RESOLVED (Closed)** | D-INC2-11 — buyer company fields all-or-nothing; legacy all-absent payloads accepted with empty profiles. Resolved by Scrum Master determination, 2026-11-15. |
 
-*Currently, there are **no open blocking questions** for the Scrum Master. All 13 endpoint specifications are fully grounded in `AG-SRS-INC2-001 v1.2`, `AG-SSD-INC2-002 v1.1`, and `0_Increment_2_Master_Plan.md v1.1`.*
+*Currently, there are **no open blocking questions** for the Scrum Master. All 13 endpoint specifications are fully grounded in `AG-SRS-INC2-001 v1.3`, `AG-SSD-INC2-002 v1.1`, and `0_Increment_2_Master_Plan.md v1.1`.*
 
 ---
 
@@ -1213,6 +1215,7 @@ The following matrix documents the authoritative HTTP status response for every 
 | **v1.0** | 2026-11-14 | Iqra Fayaz (Architect) & Manahil Sohail (RE) | Initial release of Increment 2 API Contracts Delta (`AG-API-INC2-003`) specifying all 13 required endpoints across Authentication, Marketplace, Escrow Orders, Environmental Telemetry, Predictive Yield, and Commercial Pricing. |
 | **v1.1** | 2026-11-14 | Iqra Fayaz (Architect) & Manahil Sohail (RE) | Fact-check fix release addressing Muse review findings F1–F6:<br>• **F1**: Corrected §2.4 to document the verified single uniform listing-404 string (`"Listing not found."`) across legacy and new endpoints, backed by `test_crops_api.py`.<br>• **F2**: Removed ungrounded `reason` body field from Endpoint 8 (`/dispute`) and dropped unbacked `disputed_at` response field.<br>• **F3**: Removed ungrounded `max 100` cap on `limit` in Endpoints 3, 9, 10, restoring pure `min 1, default 20` semantics.<br>• **F4**: Added explicit handling in Endpoint 5 (`/orders`) for Withdrawn listings (`409 Conflict`) and unpriced listings (`404 Not Found`).<br>• **F5**: Extended `status` filter validation enum in Endpoints 9 & 10 to include all six valid order statuses (`Pending`, `Escrow_Funded`, `In Transit`, `Completed`, `Cancelled`, `Disputed`).<br>• **F6**: Added formal §11 *Open Questions for the Scrum Master* section.<br>• Preserved blank Scrum Master approval block pending spot-check. |
 | **v1.1 Erratum** | 2026-11-15 | Iqra Fayaz (Architect) & Manahil Sohail (RE) | Struck errant `or is_deleted = 1` clause from Endpoint 5 outcome matrix row for Withdrawn listings: soft-deleted listings return `404 Listing not found.` for consistency with the Endpoint 5 Error Catalogue, Sequence Diagram 3, and anti-enumeration doctrine (`NFR-SEC-002`, `FR-MKT-007`). Document version remains v1.1. |
+| **v1.2** | 2026-11-15 | Iqra Fayaz (Architect) & Manahil Sohail (RE) | Amended Endpoint 1 (`POST /api/auth/register`) per Scrum Master determination D-INC2-11: buyer company fields are all-or-nothing; legacy all-absent registration payloads create buyer profiles with empty strings and NULL GPS coordinates (HTTP 201), partial company field payloads rejected with HTTP 400; updated request fields and outcome matrix; recorded D-INC2-11 resolution in §11. Version becomes v1.2. |
 
 ### 12.2 Verification & Validation Sign-Off Block
 
@@ -1220,30 +1223,30 @@ The following matrix documents the authoritative HTTP status response for every 
 ================================================================================
 AGRI-GRID SOFTWARE ENGINEERING V&V ACCEPTANCE GATE
 Stage: Increment 2 Requirements Engineering Track (Deliverable 3 of 3)
-Document ID: AG-API-INC2-003 v1.1
+Document ID: AG-API-INC2-003 v1.2
 ================================================================================
 
 [X] Software Architect & API Designer:
     Name:      Iqra Fayaz
     Role:      System Architect & Increment 1 API Author
     Signature: I. Fayaz
-    Date:      2026-11-14
-    Status:    FIXES APPLIED — COMPLIANT WITH CODE OF RECORD & FACT-CHECK REVIEW
+    Date:      2026-11-15
+    Status:    AMENDMENT D-INC2-11 APPLIED — COMPLIANT WITH CODE OF RECORD
 
 [X] Lead Requirements Engineer:
     Name:      Manahil Sohail
     Role:      Requirements Engineering Track Lead
     Signature: M. Sohail
-    Date:      2026-11-14
-    Status:    TRACEABILITY CERTIFIED AGAINST SRS v1.2 & SSD v1.1
+    Date:      2026-11-15
+    Status:    TRACEABILITY CERTIFIED AGAINST SRS v1.3 & SSD v1.1
 
-[X] Scrum Master & Lead Data Architect:
+[ ] Scrum Master & Lead Data Architect:
     Name:      Ameer Muawiyah
     Role:      Project Manager, Scrum Master & Lead Data Architect
-    Signature: A. Muawiyah (Verified against SRS v1.2, Plan v1.1 & Database DDL)
-    Date:      2026-11-14
-    Status:    FORMALLY APPROVED & PASS SIGNATURE GRANTED (GREEN LIGHT)
+    Signature: __________________________________
+    Date:      __________________________________
+    Status:    PENDING REVIEW & APPROVAL
 ================================================================================
 ```
 
-*End of Increment 2 API Contracts Delta — Document ID: AG-API-INC2-003 v1.1*
+*End of Increment 2 API Contracts Delta — Document ID: AG-API-INC2-003 v1.2*

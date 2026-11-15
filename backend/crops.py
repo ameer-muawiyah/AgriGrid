@@ -167,20 +167,15 @@ def _validate_crop_payload(data: dict) -> tuple[dict | None, str | None, int | N
     # Optional commercial pricing (Increment 2, Package Part C)
     if "asking_price_per_kg" in data:
         raw_price = data["asking_price_per_kg"]
-        if raw_price is None or isinstance(raw_price, bool):
+        if (
+            raw_price is None
+            or isinstance(raw_price, bool)
+            or not isinstance(raw_price, (int, float))
+            or raw_price <= 0
+        ):
             return None, "Asking price per kg must be greater than 0.", 400
-        try:
-            if isinstance(raw_price, (int, float)):
-                price_val = float(raw_price)
-            elif isinstance(raw_price, str) and raw_price.strip():
-                price_val = float(raw_price.strip())
-            else:
-                return None, "Asking price per kg must be greater than 0.", 400
-            if price_val <= 0:
-                return None, "Asking price per kg must be greater than 0.", 400
-            clean_dict["asking_price_per_kg"] = round(price_val, 2)
-        except (ValueError, TypeError):
-            return None, "Asking price per kg must be greater than 0.", 400
+
+        clean_dict["asking_price_per_kg"] = round(float(raw_price), 2)
 
     return clean_dict, None, None
 
