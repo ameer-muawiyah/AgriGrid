@@ -144,7 +144,7 @@ def _resolve_fresh_weather(lat: float, lon: float) -> Tuple[dict[str, Any], str]
 
         clouds = [item.get("clouds", {}).get("all", 0) for item in items if "clouds" in item]
         avg_clouds = sum(clouds) / len(clouds) if clouds else 0.0
-        solar_index = round(max(0.0, min(1.0, 1.0 - (avg_clouds / 100.0) * 0.75)), 2)
+        solar_index = round(max(0.0, min(1.0, 1.0 - (avg_clouds / 100.0) * 0.6)), 2)
 
         descriptions = []
         for item in items:
@@ -223,16 +223,14 @@ def _resolve_fresh_soil(lat: float, lon: float) -> Tuple[dict[str, Any], str]:
 
         if clay >= 40.0:
             texture = "Clay"
-        elif clay >= 27.0 and sand <= 20.0:
-            texture = "Silty Clay Loam"
         elif clay >= 27.0 and sand <= 45.0:
             texture = "Clay Loam"
         elif sand >= 70.0:
             texture = "Sandy Loam"
         elif silt >= 80.0:
-            texture = "Silt"
+            texture = "Silt Loam"
         else:
-            texture = "Clay Loam"
+            texture = "Loam"
 
         data = {
             "topsoil_moisture_vol_pct": topsoil_moisture,
