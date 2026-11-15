@@ -372,6 +372,90 @@
     </div>
   </div>
 
+  <!-- =========================================================================
+       PREDICTIVE YIELD FORECAST MODAL (Increment 2 Phase 4)
+       ========================================================================= -->
+  <div id="forecastModal" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="forecastModalCropName">
+    <div class="modal-card forecast-modal-card">
+      
+      <!-- Modal Header -->
+      <div class="modal-header">
+        <div>
+          <div class="forecast-badge-pill">⚡ Predictive Yield Forecast</div>
+          <h3 id="forecastModalCropName">Wheat Yield Projection</h3>
+          <p class="forecast-meta-sub" id="forecastModalAcreage">12.5 Acres · Provenance Field Model</p>
+        </div>
+        <button type="button" id="closeForecastModalBtn" class="modal-close" title="Close dialog">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+          </svg>
+        </button>
+      </div>
+
+      <!-- Modal Body -->
+      <div class="modal-body">
+        
+        <!-- Hero Metrics Grid: Yield & Confidence -->
+        <div class="forecast-hero-grid">
+          <div class="forecast-hero-card">
+            <div class="forecast-hero-label">Estimated Projected Yield</div>
+            <div class="forecast-hero-value" id="forecastEstimatedYield">—</div>
+            <div class="forecast-hero-sub">Deterministic Agronomic Engine</div>
+          </div>
+          <div class="forecast-hero-card">
+            <div class="forecast-hero-label">Confidence Score</div>
+            <div class="forecast-badge-wrap">
+              <span class="confidence-badge conf-high" id="forecastConfidenceBadge">--% Confidence</span>
+            </div>
+            <div class="forecast-hero-sub" id="forecastConfidenceTier">Agronomic certainty tier</div>
+          </div>
+        </div>
+
+        <!-- Secondary Details Grid: Harvest Date & Environmental Index -->
+        <div class="forecast-details-grid">
+          <div class="forecast-detail-item">
+            <span class="f-lbl">Predicted Harvest Date</span>
+            <span class="f-val" id="forecastHarvestDate">—</span>
+          </div>
+          <div class="forecast-detail-item">
+            <span class="f-lbl">Environmental Index</span>
+            <span class="f-val mono" id="forecastEnvIndex">—</span>
+          </div>
+        </div>
+
+        <!-- Irrigation Advisory Block -->
+        <div class="forecast-advisory-block">
+          <div class="advisory-header">
+            <span class="advisory-icon" aria-hidden="true">💧</span>
+            <span class="advisory-title">Irrigation Advisory</span>
+          </div>
+          <p class="advisory-body" id="forecastIrrigationAdvice">Loading advisory telemetry...</p>
+        </div>
+
+        <!-- Telemetry Context Section -->
+        <div class="forecast-telemetry-section">
+          <div class="telemetry-section-head">
+            <span class="telemetry-section-title">Telemetry Context</span>
+            <span class="telemetry-gps-tag mono" id="forecastGpsCoords">GPS: --, --</span>
+          </div>
+          
+          <div id="forecastTelemetryContainer" class="telemetry-grid">
+            <div class="telemetry-unavailable">Telemetry context unavailable</div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Modal Footer -->
+      <div class="modal-footer">
+        <button type="button" id="closeForecastModalFooterBtn" class="btn small">
+          Close Forecast
+        </button>
+      </div>
+
+    </div>
+  </div>
+
   <!-- Notification Toast Container -->
   <div id="toastContainer" class="toast-container" aria-live="polite"></div>
 

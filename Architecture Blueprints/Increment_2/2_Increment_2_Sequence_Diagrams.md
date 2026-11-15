@@ -647,7 +647,7 @@ sequenceDiagram
     FE->>BE: POST /api/yield/predict<br/>{ "listing_id": 101 }<br/>[Header: Authorization: Bearer <farmer_jwt>]
 
     alt Caller is not a Farmer (e.g. Buyer token)
-        BE-->>FE: HTTP 403 Forbidden {"success": false, "error": "Access denied. Only farmers can forecast yield."}
+        BE-->>FE: HTTP 403 Forbidden {"success": false, "error": "Access denied."}
         FE-->>Farmer: ⛔ Action prohibited
     else Authenticated Farmer
         BE->>BE: Extract farmer_id = jwt.farmer_id
@@ -868,6 +868,7 @@ sequenceDiagram
 |---|---|---|---|
 | **v1.0** | 2026-11-14 | Iqra Fayaz (Architect) & Manahil Sohail (RE) | Initial release of Increment 2 System Sequence Diagrams (`AG-SSD-INC2-002`) depicting all 11 core architectural flows across Demand Side, Escrow Engine, Migration Infrastructure, Environmental Telemetry, Predictive Yield, and Commercial Pricing, grounded strictly in `AG-SRS-INC2-001 v1.2`. |
 | **v1.1** | 2026-11-14 | Iqra Fayaz (Architect) & Manahil Sohail (RE) | Fact-check fix release: moved precondition checks inside `BEGIN IMMEDIATE` transaction blocks in Diagrams 4, 5, 6 (F1); corrected worked formula arithmetic to 18,367.65 kg in Diagram 9 (F2); aligned telemetry source discriminator to `offline_fixture` and added cache write on API failure in Diagram 8 (F3); added explicit temperature validation branch (-25°C to +30°C) in Diagram 3 (F4); removed ungrounded 'Active' status assertion from Diagram 9 ownership note (F5); removed stray `FR-WLT-003` reference from Diagram 3 header (F6); preserved blank Scrum Master approval block pending spot-check. |
+| **v1.1 Erratum** | 2026-11-15 | Iqra Fayaz (Architect) & Manahil Sohail (RE) | Diagram 9's non-farmer 403 string aligned to the API Contracts Delta v1.2 Endpoint 12 catalogue — the uniform `"Access denied."` — per build package delta D-1. No other content changed. |
 
 ### 15.2 Verification & Validation Sign-Off
 

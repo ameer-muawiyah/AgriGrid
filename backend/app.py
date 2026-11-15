@@ -201,12 +201,27 @@ def create_app() -> Flask:
     # ------------------------------------------------------------------
     # Register Blueprints (Run 3+)
     # ------------------------------------------------------------------
+    import importlib
     from crops import crops_bp          # noqa: E402 (import inside factory)
     from marketplace import marketplace_bp
     from orders import orders_bp
+    from telemetry import telemetry_bp
+    yield_bp = importlib.import_module("yield").yield_bp
+
     app.register_blueprint(crops_bp)
     app.register_blueprint(marketplace_bp)
     app.register_blueprint(orders_bp)
+    app.register_blueprint(telemetry_bp)
+    app.register_blueprint(yield_bp)
+
+    # ------------------------------------------------------------------
+    # Telemetry Cache Startup Purge (PD-9)
+    # ------------------------------------------------------------------
+    try:
+        from services.telemetry_service import purge_expired_cache
+        purge_expired_cache()
+    except Exception as exc:
+        app.logger.warning("Telemetry cache startup purge failed: %s", exc)
 
     return app
 

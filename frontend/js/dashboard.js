@@ -91,6 +91,21 @@ const confirmDeleteBtn = document.getElementById('confirmDeleteBtn');
 const confirmDeleteBtnText = document.getElementById('confirmDeleteBtnText');
 const confirmDeleteSpinner = document.getElementById('confirmDeleteSpinner');
 
+// DOM Elements: Predictive Yield Forecast Modal (Increment 2 Phase 4)
+const forecastModal = document.getElementById('forecastModal');
+const forecastModalCropName = document.getElementById('forecastModalCropName');
+const forecastModalAcreage = document.getElementById('forecastModalAcreage');
+const closeForecastModalBtn = document.getElementById('closeForecastModalBtn');
+const closeForecastModalFooterBtn = document.getElementById('closeForecastModalFooterBtn');
+const forecastEstimatedYield = document.getElementById('forecastEstimatedYield');
+const forecastConfidenceBadge = document.getElementById('forecastConfidenceBadge');
+const forecastConfidenceTier = document.getElementById('forecastConfidenceTier');
+const forecastHarvestDate = document.getElementById('forecastHarvestDate');
+const forecastEnvIndex = document.getElementById('forecastEnvIndex');
+const forecastIrrigationAdvice = document.getElementById('forecastIrrigationAdvice');
+const forecastGpsCoords = document.getElementById('forecastGpsCoords');
+const forecastTelemetryContainer = document.getElementById('forecastTelemetryContainer');
+
 // DOM Elements: Toast Notification
 const toastContainer = document.getElementById('toastContainer');
 
@@ -337,6 +352,15 @@ function renderCropsTable(crops, totalCount) {
       </td>
       <td class="cell-actions">
         <div class="action-group">
+          ${status.toLowerCase() === 'active' ? `
+            <button 
+              type="button" 
+              onclick="handleForecastYield(event, ${listingId})"
+              class="btn-forecast"
+              title="Forecast Yield">
+              ⚡ Forecast Yield
+            </button>
+          ` : ''}
           <button 
             type="button" 
             onclick="openEditModal(${listingId})"
@@ -662,6 +686,225 @@ if (confirmDeleteBtn) {
       closeDeleteModal();
     }
   });
+}
+
+// =========================================================================
+// 7B. PREDICTIVE YIELD FORECAST & TELEMETRY ENGINE (Increment 2 Phase 4)
+// =========================================================================
+
+function closeForecastModal() {
+  if (forecastModal) {
+    forecastModal.classList.add('hidden');
+  }
+}
+
+if (closeForecastModalBtn) {
+  closeForecastModalBtn.addEventListener('click', closeForecastModal);
+}
+if (closeForecastModalFooterBtn) {
+  closeForecastModalFooterBtn.addEventListener('click', closeForecastModal);
+}
+if (forecastModal) {
+  forecastModal.addEventListener('click', (e) => {
+    if (e.target === forecastModal) {
+      closeForecastModal();
+    }
+  });
+}
+
+/**
+ * Handle Forecast Yield click on active crop rows (FR-YLD-007)
+ */
+window.handleForecastYield = async function(event, listingId) {
+  const btn = event ? event.currentTarget : null;
+  const originalHtml = btn ? btn.innerHTML : '⚡ Forecast Yield';
+
+  if (btn) {
+    btn.disabled = true;
+    btn.innerHTML = '<span class="forecast-spinner"></span> Forecasting...';
+  }
+
+  try {
+    const response = await fetch(`${API_BASE_URL}/yield/predict`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...getAuthHeaders()
+      },
+      body: JSON.stringify({ listing_id: Number(listingId) })
+    });
+
+    const data = await response.json().catch(() => null);
+
+    if (response.ok && data && data.success && data.data) {
+      await openForecastModal(data.data, listingId);
+    } else {
+      const errorMsg = (data && data.error) ? data.error : extractErrorMessage(data, 'Failed to generate yield forecast.');
+      showToast(errorMsg, 'error');
+    }
+  } catch (err) {
+    console.error('Yield prediction error:', err);
+    showToast(`Network error reaching Agri-Grid API at ${API_BASE_URL}. Ensure backend is running.`, 'error');
+  } finally {
+    if (btn) {
+      btn.disabled = false;
+      btn.innerHTML = originalHtml;
+    }
+  }
+};
+
+/**
+ * Populate and display the forecast modal
+ */
+async function openForecastModal(forecast, listingId) {
+  if (!forecastModal) return;
+
+  const cropName = forecast.crop_name || 'Crop';
+  const acreage = Number(forecast.acreage || 0);
+
+  if (forecastModalCropName) {
+    forecastModalCropName.textContent = `${cropName} Yield Projection`;
+  }
+  if (forecastModalAcreage) {
+    forecastModalAcreage.textContent = `${acreage.toFixed(1)} Acres · Provenance Field Model`;
+  }
+
+  // Estimated yield: formatted kg + tonnes in parentheses (2 decimals)
+  const yieldKg = Number(forecast.predicted_yield_kg) || 0;
+  const tonnes = (yieldKg / 1000).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  const kgFormatted = yieldKg.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  if (forecastEstimatedYield) {
+    forecastEstimatedYield.textContent = `${kgFormatted} kg (${tonnes} t)`;
+  }
+
+  // Confidence badge: color tiers: >= 85 high (Terra green), 70-84 medium (clay accent), < 70 low (muted red)
+  const confidence = Number(forecast.confidence_score_pct) || 0;
+  let tierClass = 'conf-low';
+  let tierText = 'Low Confidence (<70%)';
+  if (confidence >= 85) {
+    tierClass = 'conf-high';
+    tierText = 'High Agronomic Certainty (≥85%)';
+  } else if (confidence >= 70) {
+    tierClass = 'conf-medium';
+    tierText = 'Moderate Certainty (70–84%)';
+  }
+
+  if (forecastConfidenceBadge) {
+    forecastConfidenceBadge.className = `confidence-badge ${tierClass}`;
+    forecastConfidenceBadge.textContent = `${confidence}% Confidence`;
+  }
+  if (forecastConfidenceTier) {
+    forecastConfidenceTier.textContent = tierText;
+  }
+
+  // Predicted harvest date
+  if (forecastHarvestDate) {
+    forecastHarvestDate.textContent = forecast.predicted_harvest_date || 'N/A';
+  }
+
+  // Environmental index (2 decimals)
+  const envIndex = Number(forecast.environmental_index);
+  if (forecastEnvIndex) {
+    forecastEnvIndex.textContent = !isNaN(envIndex) ? envIndex.toFixed(2) : '—';
+  }
+
+  // Irrigation advice
+  if (forecastIrrigationAdvice) {
+    forecastIrrigationAdvice.textContent = forecast.irrigation_advice || 'Maintain standard irrigation schedule.';
+  }
+
+  // Telemetry context (Weather & Soil)
+  const crop = currentCropsList.find(c => Number(c.listing_id || c.id) === Number(listingId));
+  const lat = crop ? crop.gps_latitude : null;
+  const lon = crop ? crop.gps_longitude : null;
+
+  if (forecastGpsCoords) {
+    if (lat !== null && lat !== undefined && lon !== null && lon !== undefined && !isNaN(Number(lat)) && !isNaN(Number(lon))) {
+      forecastGpsCoords.textContent = `GPS: ${Number(lat).toFixed(4)}, ${Number(lon).toFixed(4)}`;
+    } else {
+      forecastGpsCoords.textContent = 'GPS: Not specified';
+    }
+  }
+
+  await loadTelemetryContext(lat, lon);
+
+  forecastModal.classList.remove('hidden');
+}
+
+/**
+ * Load telemetry context (Weather + Soil)
+ */
+async function loadTelemetryContext(lat, lon) {
+  if (!forecastTelemetryContainer) return;
+
+  if (lat === null || lat === undefined || lon === null || lon === undefined || isNaN(Number(lat)) || isNaN(Number(lon))) {
+    forecastTelemetryContainer.innerHTML = '<div class="telemetry-unavailable">Telemetry context unavailable</div>';
+    return;
+  }
+
+  try {
+    const latNum = Number(lat);
+    const lonNum = Number(lon);
+
+    const [weatherRes, soilRes] = await Promise.allSettled([
+      fetch(`${API_BASE_URL}/telemetry/weather?lat=${latNum}&lon=${lonNum}`, { headers: getAuthHeaders() }),
+      fetch(`${API_BASE_URL}/telemetry/soil?lat=${latNum}&lon=${lonNum}`, { headers: getAuthHeaders() })
+    ]);
+
+    let weatherData = null;
+    let weatherSource = null;
+    let soilData = null;
+    let soilSource = null;
+
+    if (weatherRes.status === 'fulfilled' && weatherRes.value && weatherRes.value.ok) {
+      const wJson = await weatherRes.value.json().catch(() => null);
+      if (wJson && wJson.success && wJson.data) {
+        weatherData = wJson.data;
+        weatherSource = wJson.source || 'cache';
+      }
+    }
+
+    if (soilRes.status === 'fulfilled' && soilRes.value && soilRes.value.ok) {
+      const sJson = await soilRes.value.json().catch(() => null);
+      if (sJson && sJson.success && sJson.data) {
+        soilData = sJson.data;
+        soilSource = sJson.source || 'live_api';
+      }
+    }
+
+    if (!weatherData || !soilData) {
+      forecastTelemetryContainer.innerHTML = '<div class="telemetry-unavailable">Telemetry context unavailable</div>';
+      return;
+    }
+
+    let html = `
+      <div class="telemetry-card">
+        <span class="telemetry-label">Temperature</span>
+        <span class="telemetry-value">${escapeHtml(String(weatherData.temperature_c))} °C</span>
+        <span class="telemetry-source">source: ${escapeHtml(String(weatherSource))}</span>
+      </div>
+      <div class="telemetry-card">
+        <span class="telemetry-label">Relative Humidity</span>
+        <span class="telemetry-value">${escapeHtml(String(weatherData.relative_humidity_pct))}%</span>
+        <span class="telemetry-source">source: ${escapeHtml(String(weatherSource))}</span>
+      </div>
+      <div class="telemetry-card">
+        <span class="telemetry-label">Topsoil Moisture</span>
+        <span class="telemetry-value">${escapeHtml(String(soilData.topsoil_moisture_vol_pct))} vol %</span>
+        <span class="telemetry-source">source: ${escapeHtml(String(soilSource))}</span>
+      </div>
+      <div class="telemetry-card">
+        <span class="telemetry-label">Soil pH</span>
+        <span class="telemetry-value">${escapeHtml(String(soilData.soil_ph))}</span>
+        <span class="telemetry-source">source: ${escapeHtml(String(soilSource))}</span>
+      </div>
+    `;
+
+    forecastTelemetryContainer.innerHTML = html;
+  } catch (err) {
+    console.error('Telemetry fetch error:', err);
+    forecastTelemetryContainer.innerHTML = '<div class="telemetry-unavailable">Telemetry context unavailable</div>';
+  }
 }
 
 // =========================================================================
