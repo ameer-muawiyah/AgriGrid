@@ -203,8 +203,10 @@ def create_app() -> Flask:
     # ------------------------------------------------------------------
     from crops import crops_bp          # noqa: E402 (import inside factory)
     from marketplace import marketplace_bp
+    from orders import orders_bp
     app.register_blueprint(crops_bp)
     app.register_blueprint(marketplace_bp)
+    app.register_blueprint(orders_bp)
 
     return app
 

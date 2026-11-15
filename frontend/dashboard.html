@@ -167,6 +167,78 @@
       </div>
 
     </section>
+
+    <!-- =========================================================================
+         INCOMING ORDERS SECTION (Increment 2 Phase 3)
+         ========================================================================= -->
+    <section id="incomingOrdersSection" aria-labelledby="incomingOrdersHeading" style="margin-top: 48px; padding-top: 32px; border-top: 1px solid var(--line);">
+      <div class="dash-head" style="margin-bottom: 12px;">
+        <div>
+          <h2 id="incomingOrdersHeading" class="serif" style="font-size: 24px; margin: 0;">Inbound Sales Orders &amp; <em>Escrow Settlement</em></h2>
+          <p style="margin: 4px 0 0; color: var(--ink-soft); font-size: 13px;">Manage procurement orders placed by verified B2B buyers across the AgriGrid network.</p>
+        </div>
+      </div>
+
+      <!-- Status Filter Chips -->
+      <div class="order-chips-bar" role="group" aria-label="Inbound order status filter">
+        <span class="chip-label">Filter Status:</span>
+        <button type="button" class="chip active" id="farmerChipAll" data-status="">All</button>
+        <button type="button" class="chip" id="farmerChipEscrowFunded" data-status="Escrow_Funded">Escrow_Funded</button>
+        <button type="button" class="chip" id="farmerChipInTransit" data-status="In_Transit">In_Transit</button>
+        <button type="button" class="chip" id="farmerChipDelivered" data-status="Delivered">Delivered</button>
+        <button type="button" class="chip" id="farmerChipCompleted" data-status="Completed">Completed</button>
+        <button type="button" class="chip" id="farmerChipCancelled" data-status="Cancelled">Cancelled</button>
+        <button type="button" class="chip" id="farmerChipDisputed" data-status="Disputed">Disputed</button>
+        <span id="farmerOrdersCountBadge" class="records-badge" style="margin-left: auto;">0 Orders</span>
+      </div>
+
+      <!-- Table Container -->
+      <div class="table-scroll" style="margin-top: 14px;">
+        <table class="crop-table" id="farmerOrdersTable">
+          <thead>
+            <tr>
+              <th scope="col" style="width: 130px;">Order #</th>
+              <th scope="col">Buyer</th>
+              <th scope="col">Crop &amp; Batch</th>
+              <th scope="col">Quantity</th>
+              <th scope="col">Price/kg</th>
+              <th scope="col">Total (PKR)</th>
+              <th scope="col">Destination</th>
+              <th scope="col">Max Temp</th>
+              <th scope="col">Status</th>
+              <th scope="col">Created</th>
+              <th scope="col" style="text-align: right; padding-right: 16px;">Actions</th>
+            </tr>
+          </thead>
+          <tbody id="farmerOrdersTableBody">
+            <!-- Populated dynamically via dashboard.js -->
+          </tbody>
+        </table>
+
+        <!-- Empty State -->
+        <div id="farmerOrdersEmpty" class="empty-state hidden">
+          <div class="empty-icon" aria-hidden="true">📋</div>
+          <h3 class="serif">No inbound orders found.</h3>
+          <p>You have no inbound purchase orders matching the selected status.</p>
+        </div>
+
+        <!-- Loading State -->
+        <div id="farmerOrdersLoading" class="table-loading hidden">
+          <div class="loading-spinner"></div>
+          <p>Fetching inbound orders from settlement ledger...</p>
+        </div>
+      </div>
+
+      <!-- Pagination -->
+      <div class="pagination">
+        <div id="farmerOrdersPaginationInfo" class="pagination-info">Showing 0 to 0 of 0 orders</div>
+        <div class="pagination-controls">
+          <button type="button" id="farmerOrdersPrevBtn" class="page-btn" disabled>&larr; Previous</button>
+          <span class="page-indicator" id="farmerOrdersPageIndicator">Page 1 of 1</span>
+          <button type="button" id="farmerOrdersNextBtn" class="page-btn" disabled>Next &rarr;</button>
+        </div>
+      </div>
+    </section>
   </main>
 
   <!-- =========================================================================

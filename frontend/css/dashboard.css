@@ -258,12 +258,12 @@ input, select, textarea { font: inherit; }
   border-radius: 16px; overflow: hidden;
 }
 .crop-table th {
-  text-align: left; font-family: "IBM Plex Mono", monospace; font-size: 11.5px;
-  letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink-soft); font-weight: 500;
-  padding: 12px 16px; border-bottom: 2px solid var(--ink); background: var(--surface);
+  text-align: left; font-family: "IBM Plex Mono", monospace; font-size: 11px;
+  letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-soft); font-weight: 500;
+  padding: 10px 10px; border-bottom: 2px solid var(--ink); background: var(--surface);
 }
 .crop-table td {
-  padding: 14px 16px; border-bottom: 1px solid var(--line); vertical-align: middle;
+  padding: 12px 10px; border-bottom: 1px solid var(--line); vertical-align: middle;
 }
 .crop-table tr:last-child td { border-bottom: none; }
 
@@ -327,7 +327,106 @@ input, select, textarea { font: inherit; }
 .status.sold { background: var(--neutral-soft); color: var(--ink-soft); }
 .status.withdrawn { background: var(--clay-soft); color: var(--clay-deep); }
 .status.ready { background: var(--gold-soft); color: #7c5a10; }
-@media (prefers-color-scheme: dark) { .status.ready { color: var(--gold); } }
+.status.escrow-funded { background: var(--gold-soft); color: #7c5a10; }
+.status.in-transit { background: var(--surface-2); color: var(--ink); border: 1px solid var(--line); }
+.status.delivered { background: var(--field-soft); color: var(--field); }
+.status.completed { background: var(--field-soft); color: var(--field); }
+.status.cancelled { background: var(--neutral-soft); color: var(--ink-soft); }
+.status.disputed { background: var(--danger-soft); color: var(--danger); }
+@media (prefers-color-scheme: dark) { 
+  .status.ready, .status.escrow-funded { color: var(--gold); } 
+}
+
+/* ── Order Filter Chips & Action Controls ── */
+.order-chips-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 14px;
+}
+.chip-label {
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 11.5px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+  font-weight: 600;
+  margin-right: 4px;
+}
+.chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1.5px solid var(--line);
+  background: var(--surface);
+  color: var(--ink);
+  border-radius: 999px;
+  padding: 5px 14px;
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  font-family: "Public Sans", sans-serif;
+}
+.chip:hover {
+  border-color: var(--clay);
+  color: var(--clay-deep);
+  background: var(--clay-soft);
+}
+.chip.active {
+  background: var(--clay);
+  color: #fff8ec;
+  border-color: var(--clay);
+}
+.btn-order-action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 5px 12px;
+  border-radius: 8px;
+  font-size: 11.5px;
+  font-weight: 600;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  color: var(--ink);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  font-family: "Public Sans", sans-serif;
+}
+.btn-order-action:hover {
+  border-color: var(--clay);
+  color: var(--clay-deep);
+  background: var(--clay-soft);
+}
+.btn-order-action.cancel {
+  border-color: rgba(166, 50, 32, 0.3);
+  color: var(--danger);
+}
+.btn-order-action.cancel:hover {
+  background: var(--danger-soft);
+  color: var(--danger);
+  border-color: var(--danger);
+}
+.btn-order-action.dispute {
+  border-color: rgba(192, 145, 47, 0.4);
+  color: #7c5a10;
+}
+.btn-order-action.dispute:hover {
+  background: var(--gold-soft);
+  color: #7c5a10;
+  border-color: var(--gold);
+}
+.btn-order-action.confirm {
+  background: var(--field-soft);
+  color: var(--field);
+  border-color: var(--field);
+}
+.btn-order-action.confirm:hover {
+  background: var(--field);
+  color: #fff8ec;
+}
 
 /* ── Empty State ── */
 .empty-state {

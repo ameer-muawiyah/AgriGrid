@@ -170,7 +170,7 @@
     </section>
 
     <!-- =========================================================================
-         ORDERS SECTION (Increment 2 Phase 3 Placeholder)
+         ORDERS SECTION (Increment 2 Phase 3: My Orders)
          ========================================================================= -->
     <section id="ordersSection" class="orders-section" aria-labelledby="ordersHeading">
       <div class="dash-head" style="margin: 0 0 10px;">
@@ -180,13 +180,64 @@
         </div>
       </div>
 
-      <div class="orders-placeholder-card">
-        <div class="p-icon" aria-hidden="true">📦</div>
-        <h3>Orders arrive in the next increment</h3>
-        <p>
-          Automated funds locking in escrow, multi-actor delivery state machine, and transporter assignment are scheduled for Increment 2 Phase 3.
-        </p>
-        <span class="inc-pill">Increment 2 · Phase 3 Preview</span>
+      <!-- Status Filter Chips -->
+      <div class="order-chips-bar" role="group" aria-label="Buyer order status filter">
+        <span class="chip-label">Filter Status:</span>
+        <button type="button" class="chip active" id="buyerChipAll" data-status="">All</button>
+        <button type="button" class="chip" id="buyerChipEscrowFunded" data-status="Escrow_Funded">Escrow_Funded</button>
+        <button type="button" class="chip" id="buyerChipInTransit" data-status="In_Transit">In_Transit</button>
+        <button type="button" class="chip" id="buyerChipDelivered" data-status="Delivered">Delivered</button>
+        <button type="button" class="chip" id="buyerChipCompleted" data-status="Completed">Completed</button>
+        <button type="button" class="chip" id="buyerChipCancelled" data-status="Cancelled">Cancelled</button>
+        <button type="button" class="chip" id="buyerChipDisputed" data-status="Disputed">Disputed</button>
+        <span id="buyerOrdersCountBadge" class="records-badge" style="margin-left: auto;">0 Orders</span>
+      </div>
+
+      <!-- Table Container -->
+      <div class="table-scroll" style="margin-top: 14px;">
+        <table class="crop-table" id="buyerOrdersTable">
+          <thead>
+            <tr>
+              <th scope="col" style="width: 130px;">Order #</th>
+              <th scope="col">Crop &amp; Batch</th>
+              <th scope="col">Farm Origin</th>
+              <th scope="col">Quantity</th>
+              <th scope="col">Price/kg</th>
+              <th scope="col">Total (PKR)</th>
+              <th scope="col">Destination</th>
+              <th scope="col">Max Temp</th>
+              <th scope="col">Status</th>
+              <th scope="col">Created</th>
+              <th scope="col" style="text-align: right; padding-right: 16px;">Actions</th>
+            </tr>
+          </thead>
+          <tbody id="buyerOrdersTableBody">
+            <!-- Populated dynamically via buyer.js -->
+          </tbody>
+        </table>
+
+        <!-- Empty State -->
+        <div id="buyerOrdersEmpty" class="empty-state hidden">
+          <div class="empty-icon" aria-hidden="true">📦</div>
+          <h3 class="serif">No procurement orders found.</h3>
+          <p>You have no procurement orders matching the selected status filter.</p>
+        </div>
+
+        <!-- Loading State -->
+        <div id="buyerOrdersLoading" class="table-loading hidden">
+          <div class="loading-spinner"></div>
+          <p>Fetching procurement orders from settlement ledger...</p>
+        </div>
+      </div>
+
+      <!-- Pagination -->
+      <div class="pagination">
+        <div id="buyerOrdersPaginationInfo" class="pagination-info">Showing 0 to 0 of 0 orders</div>
+        <div class="pagination-controls">
+          <button type="button" id="buyerOrdersPrevBtn" class="page-btn" disabled>&larr; Previous</button>
+          <span class="page-indicator" id="buyerOrdersPageIndicator">Page 1 of 1</span>
+          <button type="button" id="buyerOrdersNextBtn" class="page-btn" disabled>Next &rarr;</button>
+        </div>
       </div>
     </section>
 
@@ -268,6 +319,77 @@
             <div class="detail-item">
               <div class="d-lbl">Listing ID &amp; Created</div>
               <div class="d-val mono" id="modalListingMeta" style="font-size: 12px; color: var(--ink-soft);">#1 · 2026-10-12</div>
+            </div>
+          </div>
+
+          <!-- Checkout Section (Increment 2 Phase 3) -->
+          <div id="checkoutSection" class="checkout-section">
+            <h4 class="checkout-heading">Procurement Escrow Checkout</h4>
+            <p class="checkout-sub">Whole-listing procurement locked in virtual escrow under zero-trust authorization.</p>
+
+            <!-- Inline checkout error / alert banner (Rendered inline verbatim) -->
+            <div id="checkoutAlert" class="checkout-alert hidden"></div>
+
+            <form id="checkoutForm" novalidate>
+              <div class="checkout-form-grid">
+                <!-- Locked Quantity (Whole-listing invariant) -->
+                <div class="checkout-field">
+                  <label for="checkoutLockedQuantity">Ordered Quantity (Locked) <span class="lock-icon" aria-hidden="true">🔒</span></label>
+                  <input type="text" id="checkoutLockedQuantity" class="checkout-input locked" readonly disabled value="0 kg">
+                  <span class="field-hint">Whole-listing procurement rule (not editable)</span>
+                </div>
+
+                <!-- Destination Warehouse (Required) -->
+                <div class="checkout-field">
+                  <label for="checkoutDestination">Destination Warehouse <span class="required-star">*</span></label>
+                  <input type="text" id="checkoutDestination" class="checkout-input" placeholder="e.g. Metro Central Hub, Industrial Area, Lahore" required>
+                  <span class="field-hint">Minimum 5 characters delivery address</span>
+                </div>
+
+                <!-- Max Temperature Celsius (Required) -->
+                <div class="checkout-field">
+                  <label for="checkoutMaxTemp">Max Cold-Chain Temp (°C) <span class="required-star">*</span></label>
+                  <input type="number" id="checkoutMaxTemp" class="checkout-input" step="0.1" min="-25.0" max="30.0" placeholder="e.g. 6.0" required>
+                  <span class="field-hint">Cold-chain threshold (-25.0°C to 30.0°C)</span>
+                </div>
+
+                <!-- Total Escrow Commitment -->
+                <div class="checkout-field">
+                  <label>Total Escrow Commitment</label>
+                  <div id="checkoutTotalCommitment" class="checkout-total-val">Rs 0</div>
+                  <span class="field-hint">Deducted from Escrow Wallet upon confirmation</span>
+                </div>
+              </div>
+
+              <!-- Checkout Actions -->
+              <div class="checkout-actions">
+                <button type="submit" id="checkoutSubmitBtn" class="btn checkout-btn">
+                  <span id="checkoutSubmitBtnText">Lock Escrow &amp; Place Order</span>
+                  <span id="checkoutSpinner" class="spinner hidden"></span>
+                </button>
+              </div>
+            </form>
+
+            <!-- Order Success State View (Revealed on 201) -->
+            <div id="checkoutSuccessState" class="checkout-success hidden">
+              <div class="success-icon" aria-hidden="true">✓</div>
+              <h4>Order Created Successfully</h4>
+              <p>Escrow funds locked in AgriGrid settlement ledger.</p>
+              <div class="success-details">
+                <div class="s-row">
+                  <span class="s-lbl">Order Number:</span>
+                  <span class="s-val mono" id="successOrderNumber">ORD-2026-XXXX</span>
+                </div>
+                <div class="s-row">
+                  <span class="s-lbl">Total Escrow Locked:</span>
+                  <span class="s-val mono" id="successOrderTotal">Rs 0</span>
+                </div>
+                <div class="s-row">
+                  <span class="s-lbl">Remaining Balance:</span>
+                  <span class="s-val mono" id="successRemainingBalance">Rs 0</span>
+                </div>
+              </div>
+              <button type="button" id="closeSuccessModalBtn" class="btn small" style="margin-top: 14px;">Done</button>
             </div>
           </div>
         </div>

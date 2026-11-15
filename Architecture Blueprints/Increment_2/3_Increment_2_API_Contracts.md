@@ -761,7 +761,7 @@ Paginated retrieval of procurement orders placed by the authenticated buyer.
 
 | Parameter | Type | Required | Default | Validation / Filtering Rules |
 |---|---|:---:|:---:|---|
-| `status` | string | No | `null` | Enum of valid order statuses: `['Pending', 'Escrow_Funded', 'In Transit', 'Completed', 'Cancelled', 'Disputed']`. |
+| `status` | string | No | `null` | Enum of valid order statuses: `['Escrow_Funded', 'In_Transit', 'Delivered', 'Completed', 'Cancelled', 'Disputed']`. |
 | `page` | integer | No | `1` | Integer, minimum value `1`. |
 | `limit` | integer | No | `20` | Integer, minimum value `1` (unconstrained upper limit per Inc 1 semantics). |
 
@@ -834,7 +834,7 @@ Paginated retrieval of inbound sales orders for crops cultivated by the authenti
 
 | Parameter | Type | Required | Default | Validation / Filtering Rules |
 |---|---|:---:|:---:|---|
-| `status` | string | No | `null` | Enum of valid order statuses: `['Pending', 'Escrow_Funded', 'In Transit', 'Completed', 'Cancelled', 'Disputed']`. |
+| `status` | string | No | `null` | Enum of valid order statuses: `['Escrow_Funded', 'In_Transit', 'Delivered', 'Completed', 'Cancelled', 'Disputed']`. |
 | `page` | integer | No | `1` | Integer, minimum value `1`. |
 | `limit` | integer | No | `20` | Integer, minimum value `1` (unconstrained upper limit per Inc 1 semantics). |
 
@@ -1216,6 +1216,7 @@ The following matrix documents the authoritative HTTP status response for every 
 | **v1.1** | 2026-11-14 | Iqra Fayaz (Architect) & Manahil Sohail (RE) | Fact-check fix release addressing Muse review findings F1–F6:<br>• **F1**: Corrected §2.4 to document the verified single uniform listing-404 string (`"Listing not found."`) across legacy and new endpoints, backed by `test_crops_api.py`.<br>• **F2**: Removed ungrounded `reason` body field from Endpoint 8 (`/dispute`) and dropped unbacked `disputed_at` response field.<br>• **F3**: Removed ungrounded `max 100` cap on `limit` in Endpoints 3, 9, 10, restoring pure `min 1, default 20` semantics.<br>• **F4**: Added explicit handling in Endpoint 5 (`/orders`) for Withdrawn listings (`409 Conflict`) and unpriced listings (`404 Not Found`).<br>• **F5**: Extended `status` filter validation enum in Endpoints 9 & 10 to include all six valid order statuses (`Pending`, `Escrow_Funded`, `In Transit`, `Completed`, `Cancelled`, `Disputed`).<br>• **F6**: Added formal §11 *Open Questions for the Scrum Master* section.<br>• Preserved blank Scrum Master approval block pending spot-check. |
 | **v1.1 Erratum** | 2026-11-15 | Iqra Fayaz (Architect) & Manahil Sohail (RE) | Struck errant `or is_deleted = 1` clause from Endpoint 5 outcome matrix row for Withdrawn listings: soft-deleted listings return `404 Listing not found.` for consistency with the Endpoint 5 Error Catalogue, Sequence Diagram 3, and anti-enumeration doctrine (`NFR-SEC-002`, `FR-MKT-007`). Document version remains v1.1. |
 | **v1.2** | 2026-11-15 | Iqra Fayaz (Architect) & Manahil Sohail (RE) | Amended Endpoint 1 (`POST /api/auth/register`) per Scrum Master determination D-INC2-11: buyer company fields are all-or-nothing; legacy all-absent registration payloads create buyer profiles with empty strings and NULL GPS coordinates (HTTP 201), partial company field payloads rejected with HTTP 400; updated request fields and outcome matrix; recorded D-INC2-11 resolution in §11. Version becomes v1.2. |
+| **v1.2 Erratum** | 2026-11-15 | Iqra Fayaz (Architect) & Manahil Sohail (RE) | The Endpoints 9/10 status-filter enum corrected to the migration 002 CHECK set; 'Pending' removed (not an order status), 'In Transit' corrected to 'In_Transit', 'Delivered' restored. Document version remains v1.2. |
 
 ### 12.2 Verification & Validation Sign-Off Block
 
