@@ -83,3 +83,20 @@ As established in the Phase 1 build specification and implemented in `backend/cr
 ## 5. Phase 1 Sign-Off
 
 Phase 1 is certified complete and green across all verification dimensions. The codebase is fully stabilized, regression-free, and approved for Phase 2 (Marketplace Catalog — Read Path).
+
+---
+
+# Part II — Increment 2 Phase 2: Marketplace, Buyer Onboarding & Commercial Pricing
+
+| Field | Value |
+|---|---|
+| **Stage** | Increment 2 — Phase 2 |
+| **Lead / QA** | Muhammad Hashir (QA & DevOps Engineer) & Ameer Muawiyah (Scrum Master & Lead Data Architect) |
+| **Governing Documents** | Increment 2 Master Plan v1.1; SRS Addendum v1.3 (AG-SRS-INC2-001); API Contracts Delta v1.2 (AG-API-INC2-003); Scrum Master Determination D-INC2-11 |
+| **Date** | 2026-11-15 |
+| **Overall Status** | **PASS (65/65 tests — 45 frozen Increment 1 regression + 20 marketplace suite, incl. TC-BYR-07)** |
+
+Delivered and certified: buyer onboarding (atomic users + buyers + wallet creation; 500,000.00 PKR simulated starting balance), the `buyer_id` JWT claim, the marketplace catalog and detail endpoints under strict price gating, farmer asking-price with deterministic batch assignment (`BATCH-{YYYY}-{CODE3}-{ID:04d}`), the buyer dashboard, and the farmer pricing UI. Database schema at version 3 (migration 003, per D-INC2-11).
+
+**Addendum (2026-11-15):** The Run 3 statement "Silent Workarounds: 0" was inaccurate. The Phase 2 build contained an undocumented username-prefix exemption from FR-BYR-002 that fabricated buyer profile data for legacy fixture usernames. It was found by Muse's independent verification of the pushed tree, removed under Scrum Master determination D-INC2-11 (all-or-nothing rule, SRS v1.3 / Contracts v1.2), and is pinned by TC-BYR-07. The frozen gate and the marketplace suite pass in full after the fix.
+
