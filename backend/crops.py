@@ -154,7 +154,7 @@ def _validate_crop_payload(data: dict) -> tuple[dict | None, str | None, int | N
     if quantity_kg <= 0:
         return None, "Quantity must be a positive number.", 400
 
-    return {
+    clean_dict = {
         "crop_name":              crop_name,
         "planting_date":          planting_date_str,
         "estimated_harvest_date": harvest_date_str,
@@ -162,7 +162,27 @@ def _validate_crop_payload(data: dict) -> tuple[dict | None, str | None, int | N
         "gps_latitude":           gps_lat,
         "gps_longitude":          gps_lon,
         "quantity_kg":            quantity_kg,
-    }, None, None
+    }
+
+    # Optional commercial pricing (Increment 2, Package Part C)
+    if "asking_price_per_kg" in data:
+        raw_price = data["asking_price_per_kg"]
+        if raw_price is None or isinstance(raw_price, bool):
+            return None, "Asking price per kg must be greater than 0.", 400
+        try:
+            if isinstance(raw_price, (int, float)):
+                price_val = float(raw_price)
+            elif isinstance(raw_price, str) and raw_price.strip():
+                price_val = float(raw_price.strip())
+            else:
+                return None, "Asking price per kg must be greater than 0.", 400
+            if price_val <= 0:
+                return None, "Asking price per kg must be greater than 0.", 400
+            clean_dict["asking_price_per_kg"] = round(price_val, 2)
+        except (ValueError, TypeError):
+            return None, "Asking price per kg must be greater than 0.", 400
+
+    return clean_dict, None, None
 
 
 # ===========================================================================
@@ -310,7 +330,24 @@ def update_crop(listing_id: int):
     if not data:
         return jsonify({"success": False, "error": "Invalid request format."}), 400
 
-    fields, err, code = _validate_crop_payload(data)
+    existing = crop_service.get_listing(db, g.farmer_id, listing_id)
+    if existing is None:
+        return jsonify({"success": False, "error": "Listing not found."}), 404
+
+    merged = {
+        "crop_name":              existing["crop_name"],
+        "planting_date":          existing["planting_date"],
+        "estimated_harvest_date": existing["estimated_harvest_date"],
+        "acreage":                existing["acreage"],
+        "gps_latitude":           existing["gps_latitude"],
+        "gps_longitude":          existing["gps_longitude"],
+        "quantity_kg":            existing["quantity_kg"],
+    }
+    if existing.get("asking_price_per_kg") is not None:
+        merged["asking_price_per_kg"] = existing["asking_price_per_kg"]
+    merged.update(data)
+
+    fields, err, code = _validate_crop_payload(merged)
     if err:
         return jsonify({"success": False, "error": err}), code
 

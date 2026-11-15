@@ -272,13 +272,20 @@ function renderCropsTable(crops, totalCount) {
 
   crops.forEach(crop => {
     const listingId = crop.listing_id || crop.id;
+    const batchId = crop.batch_id;
+    const batchDisplay = batchId 
+      ? `<span class="cell-batch mono">${escapeHtml(batchId)}</span>` 
+      : '<span class="cell-price-na">—</span>';
+
     const cropName = crop.crop_name || crop.crop_type || 'Crop';
     const plantingDate = crop.planting_date || 'N/A';
     const harvestDate = crop.estimated_harvest_date || 'N/A';
     const acreage = parseFloat(crop.acreage) || 0;
     const quantityKg = parseFloat(crop.quantity_kg || crop.estimated_yield_kg) || 0;
     const askingPrice = crop.asking_price_per_kg || crop.asking_price || crop.price_per_kg;
-    const priceDisplay = askingPrice ? `$${parseFloat(askingPrice).toFixed(2)} / kg` : '<span class="cell-price-na">—</span>';
+    const priceDisplay = (askingPrice && parseFloat(askingPrice) > 0)
+      ? `Rs ${parseFloat(askingPrice).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} / kg`
+      : '<span class="cell-price-na">—</span>';
     const status = crop.status || 'Active';
 
     let badgeClass = 'growing';
@@ -288,6 +295,7 @@ function renderCropsTable(crops, totalCount) {
     const tr = document.createElement('tr');
     tr.innerHTML = `
       <td class="cell-id">#${listingId}</td>
+      <td>${batchDisplay}</td>
       <td>
         <div class="cell-crop">
           <span class="crop-icon">
@@ -521,6 +529,17 @@ if (cropForm) {
       gps_latitude: gpsLat,
       gps_longitude: gpsLng
     };
+
+    const rawPrice = modalAskingPrice ? modalAskingPrice.value.trim() : '';
+    if (rawPrice !== '') {
+      const priceVal = parseFloat(rawPrice);
+      if (isNaN(priceVal) || priceVal <= 0) {
+        showModalError('Asking price per kg must be greater than 0.');
+        setModalButtonLoading(false);
+        return;
+      }
+      payload.asking_price_per_kg = Math.round(priceVal * 100) / 100;
+    }
 
     setModalButtonLoading(true);
 

@@ -134,22 +134,89 @@
         </form>
 
         <!-- ==========================================
-             FORM 2: REGISTER AS FARMER
+             FORM 2: REGISTER ACCOUNT
              ========================================== -->
         <form id="registerForm" class="hidden" novalidate>
+          <!-- Role Selector -->
           <div class="field">
-            <label for="regFarmName">Farm / Facility Name <span style="color: var(--clay);">*</span></label>
-            <input 
-              type="text" 
-              id="regFarmName" 
-              name="farm_name" 
-              placeholder="e.g. Green Acres Organic Field" 
-              maxlength="100" 
-              required>
+            <label for="regRole">Account Type <span style="color: var(--clay);">*</span></label>
+            <select id="regRole" name="role" required>
+              <option value="farmer" selected>Farmer (Producer Node)</option>
+              <option value="buyer">B2B Buyer (Wholesale Merchant)</option>
+            </select>
+          </div>
+
+          <!-- Farmer-Specific Field -->
+          <div id="farmerFields">
+            <div class="field">
+              <label for="regFarmName">Farm / Facility Name <span style="color: var(--clay);">*</span></label>
+              <input 
+                type="text" 
+                id="regFarmName" 
+                name="farm_name" 
+                placeholder="e.g. Green Acres Organic Field" 
+                maxlength="100">
+            </div>
+          </div>
+
+          <!-- Buyer-Specific Fields -->
+          <div id="buyerFields" class="hidden">
+            <div class="field">
+              <label for="regCompanyName">Company / Business Name <span style="color: var(--clay);">*</span></label>
+              <input 
+                type="text" 
+                id="regCompanyName" 
+                name="company_name" 
+                placeholder="e.g. Metro Wholesale Foods" 
+                maxlength="100">
+            </div>
+
+            <div class="field">
+              <label for="regContactPhone">Contact Phone Number <span style="color: var(--clay);">*</span></label>
+              <input 
+                type="tel" 
+                id="regContactPhone" 
+                name="contact_phone" 
+                placeholder="e.g. +92-300-1234567" 
+                maxlength="20">
+            </div>
+
+            <div class="field">
+              <label for="regWarehouseAddress">Warehouse Delivery Address <span style="color: var(--clay);">*</span></label>
+              <input 
+                type="text" 
+                id="regWarehouseAddress" 
+                name="warehouse_address" 
+                placeholder="e.g. Metro Central Hub, Industrial Area, Lahore">
+            </div>
+
+            <div class="field" style="background: var(--surface-2); border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px;">
+              <div style="font-size: 12px; font-weight: 600; color: var(--ink); margin-bottom: 8px;">Warehouse GPS Coordinates (Optional)</div>
+              <div class="form-row">
+                <div>
+                  <label for="regWarehouseGpsLat" style="font-size: 11px;">Latitude (-90 to 90)</label>
+                  <input 
+                    type="number" 
+                    id="regWarehouseGpsLat" 
+                    name="warehouse_gps_latitude" 
+                    step="0.0001" 
+                    placeholder="e.g. 31.5204">
+                </div>
+                <div>
+                  <label for="regWarehouseGpsLng" style="font-size: 11px;">Longitude (-180 to 180)</label>
+                  <input 
+                    type="number" 
+                    id="regWarehouseGpsLng" 
+                    name="warehouse_gps_longitude" 
+                    step="0.0001" 
+                    placeholder="e.g. 74.3587">
+                </div>
+              </div>
+            </div>
           </div>
 
           <div class="field">
-            <label for="regUsername">Farmer Username <span style="color: var(--clay);">*</span></label>
+            <label for="regUsername">Username <span style="color: var(--clay);">*</span></label>
             <input 
               type="text" 
               id="regUsername" 
@@ -199,9 +266,9 @@
           </div>
 
           <!-- Role Assurance Indicator -->
-          <div style="background: var(--surface-2); border: 1px solid var(--line); border-radius: 12px; padding: 10px 14px; margin-bottom: 14px; display: flex; align-items: center; justify-content: space-between; font-size: 12px;">
-            <span style="font-weight: 600; color: var(--ink);">Role: Verified Farmer (Producer)</span>
-            <span class="mono" style="font-size: 10.5px; background: var(--clay); color: #fff8ec; padding: 2px 8px; border-radius: 999px;">Increment 1</span>
+          <div id="regRoleIndicator" style="background: var(--surface-2); border: 1px solid var(--line); border-radius: 12px; padding: 10px 14px; margin-bottom: 14px; display: flex; align-items: center; justify-content: space-between; font-size: 12px;">
+            <span id="regRoleBadgeText" style="font-weight: 600; color: var(--ink);">Role: Verified Farmer (Producer)</span>
+            <span class="mono" style="font-size: 10.5px; background: var(--clay); color: #fff8ec; padding: 2px 8px; border-radius: 999px;">Increment 2</span>
           </div>
 
           <button type="submit" id="registerSubmitBtn" class="btn" style="margin-top: 6px;">
@@ -212,13 +279,13 @@
 
         <!-- Bottom Toggle Prompt -->
         <p id="bottomTogglePrompt" class="bottom-prompt">
-          Don't have a farmer account yet? 
+          Don't have an account yet? 
           <button type="button" id="switchLinkToRegister" class="toggle-link">
-            Register as Farmer
+            Register Account
           </button>
         </p>
 
-        <!-- Colonnade: 5 System Roles (Farmer Active; Others Future Increments) -->
+        <!-- Colonnade: 5 System Roles (Farmer & Buyer Active; Others Future Increments) -->
         <div class="colonnade-section">
           <div class="colonnade-label">Ecosystem Roles</div>
           <div class="colonnade" aria-label="AgriGrid Roles">
@@ -229,12 +296,12 @@
               <p>Active</p>
               <span class="go">Node</span>
             </div>
-            <!-- Role 2: Buyer (Future) -->
-            <div class="role-arch future" title="Available in Increment 2">
+            <!-- Role 2: Buyer (Active in Increment 2) -->
+            <div class="role-arch" style="border-color: var(--clay);">
               <span class="glyph" aria-hidden="true">⚖️</span>
               <h5>Buyer</h5>
               <p>Trade</p>
-              <span class="go">Inc 2</span>
+              <span class="go">Active</span>
             </div>
             <!-- Role 3: Transporter (Future) -->
             <div class="role-arch future" title="Available in Increment 2">

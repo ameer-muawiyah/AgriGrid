@@ -27,6 +27,16 @@ const loginSpinner = document.getElementById('loginSpinner');
 const toggleLoginPasswordBtn = document.getElementById('toggleLoginPasswordBtn');
 
 // Register Elements
+const regRoleSelect = document.getElementById('regRole');
+const farmerFields = document.getElementById('farmerFields');
+const buyerFields = document.getElementById('buyerFields');
+const regCompanyNameInput = document.getElementById('regCompanyName');
+const regContactPhoneInput = document.getElementById('regContactPhone');
+const regWarehouseAddressInput = document.getElementById('regWarehouseAddress');
+const regWarehouseGpsLatInput = document.getElementById('regWarehouseGpsLat');
+const regWarehouseGpsLngInput = document.getElementById('regWarehouseGpsLng');
+const regRoleIndicator = document.getElementById('regRoleIndicator');
+const regRoleBadgeText = document.getElementById('regRoleBadgeText');
 const regFarmNameInput = document.getElementById('regFarmName');
 const regUsernameInput = document.getElementById('regUsername');
 const regPasswordInput = document.getElementById('regPassword');
@@ -299,6 +309,9 @@ if (loginForm) {
         if (role === 'farmer') {
           showAlert('Authentication verified. Loading Farmer Dashboard...', 'success');
           setTimeout(() => { window.location.href = 'dashboard.html'; }, 500);
+        } else if (role === 'buyer') {
+          showAlert('Authentication verified. Loading Marketplace Catalog...', 'success');
+          setTimeout(() => { window.location.href = 'buyer_dashboard.html'; }, 500);
         } else {
           showAlert(`Authenticated as ${role}. Redirecting to console...`, 'success');
           setTimeout(() => { window.location.href = `dashboard.html?role=${encodeURIComponent(role)}`; }, 500);
@@ -322,6 +335,28 @@ if (loginForm) {
 }
 
 /**
+ * Role Switcher in Registration Form
+ */
+if (regRoleSelect) {
+  regRoleSelect.addEventListener('change', () => {
+    const role = regRoleSelect.value;
+    clearAlert();
+    clearInputErrors();
+    if (role === 'buyer') {
+      if (farmerFields) farmerFields.classList.add('hidden');
+      if (buyerFields) buyerFields.classList.remove('hidden');
+      if (registerBtnText) registerBtnText.textContent = 'Register as B2B Buyer';
+      if (regRoleBadgeText) regRoleBadgeText.textContent = 'Role: B2B Wholesale Buyer';
+    } else {
+      if (farmerFields) farmerFields.classList.remove('hidden');
+      if (buyerFields) buyerFields.classList.add('hidden');
+      if (registerBtnText) registerBtnText.textContent = 'Register & Initialize Farm';
+      if (regRoleBadgeText) regRoleBadgeText.textContent = 'Role: Verified Farmer (Producer)';
+    }
+  });
+}
+
+/**
  * =========================================================================
  * Form Submission: REGISTRATION (POST /api/auth/register)
  * =========================================================================
@@ -332,19 +367,69 @@ if (registerForm) {
     clearAlert();
     clearInputErrors();
 
-    const farmName = regFarmNameInput.value.trim();
+    const selectedRole = regRoleSelect ? regRoleSelect.value : 'farmer';
     const username = regUsernameInput.value.trim();
     const password = regPasswordInput.value;
 
-    // 1. Validate farm_name
-    if (!farmName) {
-      showAlert('Farm / Facility Name is required for farmer accounts.', 'error');
-      regFarmNameInput.classList.add('has-error');
-      regFarmNameInput.focus();
-      return;
+    let payload = {
+      username: username,
+      password: password,
+      role: selectedRole
+    };
+
+    if (selectedRole === 'farmer') {
+      const farmName = regFarmNameInput ? regFarmNameInput.value.trim() : '';
+      if (!farmName) {
+        showAlert('Farm / Facility Name is required for farmer accounts.', 'error');
+        if (regFarmNameInput) {
+          regFarmNameInput.classList.add('has-error');
+          regFarmNameInput.focus();
+        }
+        return;
+      }
+      payload.farm_name = farmName;
+    } else if (selectedRole === 'buyer') {
+      const companyName = regCompanyNameInput ? regCompanyNameInput.value.trim() : '';
+      const contactPhone = regContactPhoneInput ? regContactPhoneInput.value.trim() : '';
+      const warehouseAddress = regWarehouseAddressInput ? regWarehouseAddressInput.value.trim() : '';
+
+      if (!companyName || !contactPhone || !warehouseAddress) {
+        showAlert('Company name, phone, and warehouse address are required.', 'error');
+        if (!companyName && regCompanyNameInput) regCompanyNameInput.classList.add('has-error');
+        if (!contactPhone && regContactPhoneInput) regContactPhoneInput.classList.add('has-error');
+        if (!warehouseAddress && regWarehouseAddressInput) regWarehouseAddressInput.classList.add('has-error');
+        return;
+      }
+
+      payload.company_name = companyName;
+      payload.contact_phone = contactPhone;
+      payload.warehouse_address = warehouseAddress;
+
+      const latVal = regWarehouseGpsLatInput ? regWarehouseGpsLatInput.value.trim() : '';
+      const lngVal = regWarehouseGpsLngInput ? regWarehouseGpsLngInput.value.trim() : '';
+
+      if (latVal !== '') {
+        const parsedLat = parseFloat(latVal);
+        if (isNaN(parsedLat) || parsedLat < -90 || parsedLat > 90) {
+          showAlert('Warehouse GPS Latitude must be between -90 and 90.', 'error');
+          if (regWarehouseGpsLatInput) regWarehouseGpsLatInput.classList.add('has-error');
+          return;
+        }
+        payload.warehouse_gps_latitude = parsedLat;
+      }
+
+      if (lngVal !== '') {
+        const parsedLng = parseFloat(lngVal);
+        if (isNaN(parsedLng) || parsedLng < -180 || parsedLng > 180) {
+          showAlert('Warehouse GPS Longitude must be between -180 and 180.', 'error');
+          if (regWarehouseGpsLngInput) regWarehouseGpsLngInput.classList.add('has-error');
+          return;
+        }
+        payload.warehouse_gps_longitude = parsedLng;
+      }
     }
 
-    // 2. Validate username
+    // Common validations: username
     if (!username) {
       showAlert('Username is required.', 'error');
       regUsernameInput.classList.add('has-error');
@@ -359,7 +444,7 @@ if (registerForm) {
       return;
     }
 
-    // 3. Validate password (Must be at least 8 characters)
+    // Common validations: password
     if (!password || password.length < 8) {
       showAlert('Password must be at least 8 characters long.', 'error');
       regPasswordInput.classList.add('has-error');
@@ -367,7 +452,9 @@ if (registerForm) {
       return;
     }
 
-    setButtonLoading(registerSubmitBtn, registerBtnText, registerSpinner, true, 'Registering Farm...', 'Register & Initialize Farm');
+    const loadingLabel = selectedRole === 'buyer' ? 'Registering Buyer...' : 'Registering Farm...';
+    const defaultLabel = selectedRole === 'buyer' ? 'Register as B2B Buyer' : 'Register & Initialize Farm';
+    setButtonLoading(registerSubmitBtn, registerBtnText, registerSpinner, true, loadingLabel, defaultLabel);
 
     try {
       const response = await fetch(`${API_BASE_URL}/auth/register`, {
@@ -375,12 +462,7 @@ if (registerForm) {
         headers: {
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify({
-          username: username,
-          password: password,
-          role: 'farmer',
-          farm_name: farmName
-        })
+        body: JSON.stringify(payload)
       });
 
       let responseData = null;
@@ -392,24 +474,25 @@ if (registerForm) {
 
       if (response.status === 201 || (response.ok && responseData && responseData.success)) {
         const successMessage = responseData?.message || 'Registration successful. Please log in.';
-        
-        // Clear registration form
         registerForm.reset();
-
-        // Switch to login tab and show green success message
+        if (farmerFields) farmerFields.classList.remove('hidden');
+        if (buyerFields) buyerFields.classList.add('hidden');
+        if (regRoleSelect) regRoleSelect.value = 'farmer';
+        if (registerBtnText) registerBtnText.textContent = 'Register & Initialize Farm';
+        if (regRoleBadgeText) regRoleBadgeText.textContent = 'Role: Verified Farmer (Producer)';
         switchTab('login');
         showAlert(successMessage, 'success');
-
-        // Prefill login username
         if (loginUsernameInput) {
           loginUsernameInput.value = username;
-          if (loginPasswordInput) {
-            loginPasswordInput.focus();
-          }
+          if (loginPasswordInput) loginPasswordInput.focus();
         }
       } else {
         const errorMsg = extractErrorMessage(responseData, 'Registration failed. Please check your details and try again.');
         showAlert(errorMsg, 'error');
+        if (errorMsg.toLowerCase().includes('username')) {
+          regUsernameInput.classList.add('has-error');
+          regUsernameInput.focus();
+        }
       }
     } catch (networkError) {
       console.error('Registration network error:', networkError);
@@ -418,7 +501,7 @@ if (registerForm) {
         'error'
       );
     } finally {
-      setButtonLoading(registerSubmitBtn, registerBtnText, registerSpinner, false, 'Registering Farm...', 'Register & Initialize Farm');
+      setButtonLoading(registerSubmitBtn, registerBtnText, registerSpinner, false, loadingLabel, defaultLabel);
     }
   });
 }

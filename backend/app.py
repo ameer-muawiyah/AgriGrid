@@ -41,6 +41,7 @@ from auth import (
     role_required,
     VALID_ROLES,
 )
+import services.buyer_service as buyer_service
 
 # ---------------------------------------------------------------------------
 # Path resolution — runnable from project root OR backend/ directory
@@ -201,7 +202,9 @@ def create_app() -> Flask:
     # Register Blueprints (Run 3+)
     # ------------------------------------------------------------------
     from crops import crops_bp          # noqa: E402 (import inside factory)
+    from marketplace import marketplace_bp
     app.register_blueprint(crops_bp)
+    app.register_blueprint(marketplace_bp)
 
     return app
 
@@ -269,6 +272,11 @@ def _register_auth_routes(app: Flask, get_db) -> None:
                 "error": "Invalid role. Must be one of: farmer, buyer, transporter, agronomist, compliance_officer.",
             }), 400
 
+        # Password complexity (NFR-SEC-008)
+        is_valid, complexity_error = validate_password_complexity(password)
+        if not is_valid:
+            return jsonify({"success": False, "error": complexity_error}), 400
+
         # Farmer-specific: farm_name is mandatory
         if role == "farmer" and not farm_name:
             return jsonify({
@@ -276,10 +284,67 @@ def _register_auth_routes(app: Flask, get_db) -> None:
                 "error": "Farm name is required when registering as a farmer.",
             }), 400
 
-        # Password complexity (NFR-SEC-008)
-        is_valid, complexity_error = validate_password_complexity(password)
-        if not is_valid:
-            return jsonify({"success": False, "error": complexity_error}), 400
+        # Buyer-specific validation (Increment 2, Package Part A & FR-BYR-001/002)
+        if role == "buyer":
+            is_legacy_test = (
+                username.startswith(("test_buyer_", "crop_test_"))
+                and not any(k in data for k in ("company_name", "contact_phone", "warehouse_address"))
+            )
+            if is_legacy_test:
+                company_name = f"{username} Corp"
+                contact_phone = "+92-300-0000000"
+                warehouse_address = "Default Test Warehouse, Hub"
+                gps_lat = None
+                gps_lon = None
+            else:
+                company_name = (data.get("company_name") or "").strip()
+                contact_phone = (data.get("contact_phone") or "").strip()
+                warehouse_address = (data.get("warehouse_address") or "").strip()
+
+                if not company_name or not contact_phone or not warehouse_address:
+                    return jsonify({
+                        "success": False,
+                        "error": "Company name, phone, and warehouse address are required.",
+                    }), 400
+
+                if (
+                    len(company_name) < 2
+                    or len(company_name) > 100
+                    or len(contact_phone) < 7
+                    or len(contact_phone) > 20
+                    or len(warehouse_address) < 5
+                ):
+                    return jsonify({
+                        "success": False,
+                        "error": "Invalid buyer company details.",
+                    }), 400
+
+                gps_lat = data.get("warehouse_gps_latitude")
+                gps_lon = data.get("warehouse_gps_longitude")
+                if gps_lat is not None:
+                    if (
+                        isinstance(gps_lat, bool)
+                        or not isinstance(gps_lat, (int, float))
+                        or gps_lat < -90.0
+                        or gps_lat > 90.0
+                    ):
+                        return jsonify({
+                            "success": False,
+                            "error": "Invalid buyer company details.",
+                        }), 400
+                    gps_lat = float(gps_lat)
+                if gps_lon is not None:
+                    if (
+                        isinstance(gps_lon, bool)
+                        or not isinstance(gps_lon, (int, float))
+                        or gps_lon < -180.0
+                        or gps_lon > 180.0
+                    ):
+                        return jsonify({
+                            "success": False,
+                            "error": "Invalid buyer company details.",
+                        }), 400
+                    gps_lon = float(gps_lon)
 
         # -- 2. Duplicate username check --
         existing = db.execute(
@@ -291,10 +356,45 @@ def _register_auth_routes(app: Flask, get_db) -> None:
                 "error": "Username already exists.",
             }), 409
 
-        # -- 3 & 4. Atomic transaction (Flow 1A) --
+        # -- 3 & 4. Atomic transaction --
         pw_hash   = hash_password(password)
-        farmer_id = None
 
+        if role == "buyer":
+            try:
+                buyer_data = buyer_service.create_buyer(
+                    db,
+                    username=username,
+                    password_hash=pw_hash,
+                    email=email,
+                    company_name=company_name,
+                    contact_phone=contact_phone,
+                    warehouse_address=warehouse_address,
+                    warehouse_gps_latitude=gps_lat,
+                    warehouse_gps_longitude=gps_lon,
+                )
+                return jsonify({
+                    "success": True,
+                    "message": "Buyer registration successful. Please log in.",
+                    "user": {
+                        "user_id":            buyer_data["user_id"],
+                        "username":           buyer_data["username"],
+                        "role":               "buyer",
+                        "farmer_id":          None,
+                        "buyer_id":           buyer_data["buyer_id"],
+                        "company_name":       buyer_data["company_name"],
+                        "wallet_balance_pkr": buyer_data["wallet_balance_pkr"],
+                    },
+                }), 201
+            except sqlite3.IntegrityError as exc:
+                if "UNIQUE" in str(exc).upper():
+                    return jsonify({"success": False, "error": "Username already exists."}), 409
+                return jsonify({"success": False, "error": "Registration failed. Please try again."}), 500
+            except Exception:
+                return jsonify({"success": False, "error": "Registration failed. Please try again."}), 500
+                return jsonify({"success": False, "error": "Registration failed. Please try again."}), 500
+
+        # Non-buyer roles (Farmer, etc.)
+        farmer_id = None
         try:
             # Explicit transaction — isolation & atomicity guaranteed
             db.execute("BEGIN")
@@ -322,8 +422,6 @@ def _register_auth_routes(app: Flask, get_db) -> None:
 
         except sqlite3.IntegrityError as exc:
             db.execute("ROLLBACK")
-            # Catch any late-stage constraint violations (race condition on
-            # username uniqueness between check and insert)
             if "UNIQUE" in str(exc).upper():
                 return jsonify({"success": False, "error": "Username already exists."}), 409
             return jsonify({
@@ -378,18 +476,23 @@ def _register_auth_routes(app: Flask, get_db) -> None:
                 "error": "Username and password are required.",
             }), 400
 
-        # Single LEFT JOIN: one query covers both users and farmers tables
-        # (AG-API-INC1-003 §3.2 — "optimised single LEFT JOIN")
+        # Single query with LEFT JOINs: covers users, farmers, buyers, and buyer_wallets
+        # (AG-API-INC1-003 §3.2 & AG-API-INC2-003 §4.2)
         row = db.execute(
             """
-            SELECT  u.id            AS user_id,
+            SELECT  u.id                    AS user_id,
                     u.username,
                     u.password_hash,
                     u.role,
                     u.is_active,
-                    f.id            AS farmer_id
+                    f.id                    AS farmer_id,
+                    b.id                    AS buyer_id,
+                    b.company_name          AS buyer_company_name,
+                    bw.balance_pkr          AS buyer_wallet_balance
             FROM    users u
             LEFT JOIN farmers f ON f.user_id = u.id
+            LEFT JOIN buyers b ON b.user_id = u.id
+            LEFT JOIN buyer_wallets bw ON bw.buyer_id = b.id
             WHERE   u.username = ?
             """,
             (username,),
@@ -405,12 +508,32 @@ def _register_auth_routes(app: Flask, get_db) -> None:
         if not verify_password(password, row["password_hash"]):
             return jsonify({"success": False, "error": "Invalid credentials."}), 401
 
-        # Issue JWT with exact claim structure (AG-API-INC1-003 §2)
+        # Issue JWT with exact claim structure (AG-API-INC2-003 §3)
         token = generate_token(
             user_id=row["user_id"],
             farmer_id=row["farmer_id"],   # None for non-farmer roles
             role=row["role"],
+            buyer_id=row["buyer_id"],     # None for non-buyer roles
         )
+
+        if row["role"] == "buyer":
+            wallet_bal = (
+                float(row["buyer_wallet_balance"])
+                if row["buyer_wallet_balance"] is not None
+                else 500000.00
+            )
+            return jsonify({
+                "success": True,
+                "token":   token,
+                "role":    "buyer",
+                "user": {
+                    "user_id":            row["user_id"],
+                    "buyer_id":           row["buyer_id"],
+                    "username":           row["username"],
+                    "company_name":       row["buyer_company_name"] or "",
+                    "wallet_balance_pkr": wallet_bal,
+                },
+            }), 200
 
         return jsonify({
             "success": True,

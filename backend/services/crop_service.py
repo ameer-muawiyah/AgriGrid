@@ -23,34 +23,56 @@ Extraction Boundary (Package §B1):
 """
 
 import sqlite3
+from datetime import datetime, timezone
+
+CROP_CODE_MAP = {
+    "Wheat":     "WHT",
+    "Rice":      "RIC",
+    "Tomato":    "TOM",
+    "Potato":    "POT",
+    "Cotton":    "COT",
+    "Maize":     "MAI",
+    "Sugarcane": "SUG",
+}
+
+
+def _get_crop_code(crop_name: str) -> str:
+    """Return 3-letter uppercase crop taxonomy code, defaulting to 'OTH'."""
+    return CROP_CODE_MAP.get(crop_name, "OTH")
 
 
 def row_to_summary(row: sqlite3.Row) -> dict:
-    """List-view fields (AG-API-INC1-003 §4.2 response shape)."""
+    """List-view fields (AG-API-INC1-003 §4.2 & AG-API-INC2-003 §8.1 shape)."""
+    keys = row.keys() if hasattr(row, "keys") else ()
     return {
         "listing_id":             row["id"],
         "crop_name":              row["crop_name"],
+        "batch_id":               row["batch_id"] if "batch_id" in keys else None,
         "planting_date":          row["planting_date"],
         "estimated_harvest_date": row["estimated_harvest_date"],
         "acreage":                row["acreage"],
         "quantity_kg":            row["quantity_kg"],
+        "asking_price_per_kg":    row["asking_price_per_kg"] if "asking_price_per_kg" in keys else None,
         "status":                 row["status"],
         "created_at":             row["created_at"],
     }
 
 
 def row_to_full(row: sqlite3.Row) -> dict:
-    """Full detail fields (AG-API-INC1-003 §4.1 / §4.3 / §4.4 response shape)."""
+    """Full detail fields (AG-API-INC1-003 §4.1/§4.3/§4.4 & AG-API-INC2-003 §8.1 shape)."""
+    keys = row.keys() if hasattr(row, "keys") else ()
     return {
         "listing_id":             row["id"],
         "farmer_id":              row["farmer_id"],
         "crop_name":              row["crop_name"],
+        "batch_id":               row["batch_id"] if "batch_id" in keys else None,
+        "acreage":                row["acreage"],
+        "quantity_kg":            row["quantity_kg"],
+        "asking_price_per_kg":    row["asking_price_per_kg"] if "asking_price_per_kg" in keys else None,
         "planting_date":          row["planting_date"],
         "estimated_harvest_date": row["estimated_harvest_date"],
-        "acreage":                row["acreage"],
         "gps_latitude":           row["gps_latitude"],
         "gps_longitude":          row["gps_longitude"],
-        "quantity_kg":            row["quantity_kg"],
         "status":                 row["status"],
         "is_deleted":             bool(row["is_deleted"]),
         "created_at":             row["created_at"],
@@ -167,33 +189,82 @@ def update_listing(
 ) -> dict | None:
     """
     Update mutable listing fields.
+    Persists commercial asking price and generates unique batch_id if currently null.
     Returns None if 0 rows affected (not found or cross-tenant).
     """
+    # 1. Fetch existing listing to verify ownership, active status, and current batch_id
+    existing = conn.execute(
+        "SELECT id, crop_name, batch_id, asking_price_per_kg FROM listings WHERE id = ? AND farmer_id = ? AND is_deleted = 0",
+        (listing_id, farmer_id),
+    ).fetchone()
+    if not existing:
+        return None
+
     try:
-        cursor = conn.execute(
-            """
-            UPDATE listings
-               SET crop_name              = ?,
-                   planting_date          = ?,
-                   estimated_harvest_date = ?,
-                   acreage                = ?,
-                   gps_latitude           = ?,
-                   gps_longitude          = ?,
-                   quantity_kg            = ?
-             WHERE id = ? AND farmer_id = ? AND is_deleted = 0
-            """,
-            (
-                cleaned["crop_name"],
-                cleaned["planting_date"],
-                cleaned["estimated_harvest_date"],
-                cleaned["acreage"],
-                cleaned["gps_latitude"],
-                cleaned["gps_longitude"],
-                cleaned["quantity_kg"],
-                listing_id,
-                farmer_id,
-            ),
-        )
+        if "asking_price_per_kg" in cleaned:
+            # Set price and assign batch_id if currently NULL
+            current_batch = existing["batch_id"]
+            if current_batch:
+                batch_id_to_persist = current_batch
+            else:
+                crop = cleaned.get("crop_name") or existing["crop_name"]
+                code3 = _get_crop_code(crop)
+                year = datetime.now(timezone.utc).year
+                batch_id_to_persist = f"BATCH-{year}-{code3}-{listing_id:04d}"
+
+            cursor = conn.execute(
+                """
+                UPDATE listings
+                   SET crop_name              = ?,
+                       planting_date          = ?,
+                       estimated_harvest_date = ?,
+                       acreage                = ?,
+                       gps_latitude           = ?,
+                       gps_longitude          = ?,
+                       quantity_kg            = ?,
+                       asking_price_per_kg    = ?,
+                       batch_id               = ?
+                 WHERE id = ? AND farmer_id = ? AND is_deleted = 0
+                """,
+                (
+                    cleaned["crop_name"],
+                    cleaned["planting_date"],
+                    cleaned["estimated_harvest_date"],
+                    cleaned["acreage"],
+                    cleaned["gps_latitude"],
+                    cleaned["gps_longitude"],
+                    cleaned["quantity_kg"],
+                    cleaned["asking_price_per_kg"],
+                    batch_id_to_persist,
+                    listing_id,
+                    farmer_id,
+                ),
+            )
+        else:
+            cursor = conn.execute(
+                """
+                UPDATE listings
+                   SET crop_name              = ?,
+                       planting_date          = ?,
+                       estimated_harvest_date = ?,
+                       acreage                = ?,
+                       gps_latitude           = ?,
+                       gps_longitude          = ?,
+                       quantity_kg            = ?
+                 WHERE id = ? AND farmer_id = ? AND is_deleted = 0
+                """,
+                (
+                    cleaned["crop_name"],
+                    cleaned["planting_date"],
+                    cleaned["estimated_harvest_date"],
+                    cleaned["acreage"],
+                    cleaned["gps_latitude"],
+                    cleaned["gps_longitude"],
+                    cleaned["quantity_kg"],
+                    listing_id,
+                    farmer_id,
+                ),
+            )
         conn.commit()
     except sqlite3.Error:
         conn.rollback()

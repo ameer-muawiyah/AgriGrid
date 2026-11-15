@@ -1,0 +1,329 @@
+/**
+ * Agri-Grid — Buyer Portal & Marketplace Catalog Stylesheet
+ * Terra × Terracotta Hybrid Design Theme
+ */
+
+/* ── Topbar Wallet Pill ── */
+.wallet-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 6px 14px;
+  font-size: 12px;
+}
+.wallet-pill .wallet-lbl {
+  color: var(--ink-soft);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-weight: 500;
+}
+.wallet-pill .wallet-val {
+  font-family: "IBM Plex Mono", monospace;
+  font-weight: 600;
+  color: var(--clay-deep);
+}
+
+/* ── Filter Bar Elements ── */
+.filter-bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 14px 18px;
+  margin-top: 20px;
+}
+.filter-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.filter-group label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ink-soft);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+.filter-select,
+.filter-input {
+  min-height: 38px;
+  padding: 6px 12px;
+  border: 1.5px solid var(--line);
+  border-radius: 10px;
+  background: var(--paper);
+  color: var(--ink);
+  font-size: 13.5px;
+  font-family: "Public Sans", sans-serif;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+.filter-select:focus,
+.filter-input:focus {
+  border-color: var(--clay);
+  outline: none;
+  box-shadow: 0 0 0 3px var(--clay-soft);
+}
+.btn-secondary {
+  border: 1.5px solid var(--line);
+  background: transparent;
+  color: var(--ink);
+  border-radius: 10px;
+  padding: 8px 16px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.btn-secondary:hover {
+  border-color: var(--clay);
+  color: var(--clay-deep);
+  background: var(--clay-soft);
+}
+
+/* ── Produce Cards Catalog Grid ── */
+.catalog-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 20px;
+  margin-top: 22px;
+}
+.produce-card {
+  background: var(--surface);
+  border: 1.5px solid var(--line);
+  border-radius: 18px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+  position: relative;
+  overflow: hidden;
+}
+.produce-card:hover {
+  transform: translateY(-3px);
+  border-color: var(--clay);
+  box-shadow: var(--shadow);
+}
+.produce-card-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+.crop-profile {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.crop-profile-icon {
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  background: var(--field-soft);
+  display: grid;
+  place-items: center;
+  font-size: 22px;
+  flex-shrink: 0;
+}
+.crop-profile-info h3 {
+  font-family: "Fraunces", serif;
+  font-size: 18px;
+  font-weight: 600;
+  margin: 0;
+  color: var(--ink);
+}
+.crop-profile-info .farm-origin {
+  font-size: 12px;
+  color: var(--ink-soft);
+  margin-top: 2px;
+}
+.badge-batch {
+  display: inline-flex;
+  align-items: center;
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 10.5px;
+  font-weight: 600;
+  color: var(--clay);
+  background: var(--clay-soft);
+  border: 1px solid rgba(199, 107, 61, 0.25);
+  border-radius: 999px;
+  padding: 3px 8px;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+}
+
+/* Card Metrics */
+.card-metrics {
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 12px 14px;
+  margin-bottom: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-size: 13px;
+}
+.metric-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+}
+.metric-row .m-lbl {
+  color: var(--ink-soft);
+  font-size: 12px;
+}
+.metric-row .m-val {
+  font-weight: 600;
+  color: var(--ink);
+}
+.metric-row.highlight {
+  border-top: 1px dashed var(--line);
+  padding-top: 8px;
+  margin-top: 2px;
+}
+.metric-row.highlight .m-val {
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 15px;
+  color: var(--clay-deep);
+}
+
+.produce-card-foot {
+  margin-top: auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.btn-view-detail {
+  width: 100%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: var(--clay-soft);
+  color: var(--clay-deep);
+  border: 1.5px solid var(--clay);
+  border-radius: 10px;
+  padding: 9px 16px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.btn-view-detail:hover {
+  background: var(--clay);
+  color: #fff8ec;
+}
+
+/* ── Listing Detail Modal Grid ── */
+.detail-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+  margin-top: 16px;
+}
+.detail-item {
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 10px 14px;
+}
+.detail-item .d-lbl {
+  font-size: 11px;
+  color: var(--ink-soft);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-weight: 500;
+  margin-bottom: 4px;
+}
+.detail-item .d-val {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--ink);
+}
+.detail-item.full-width {
+  grid-column: 1 / -1;
+}
+.detail-item.highlight {
+  border-color: var(--clay);
+  background: var(--clay-soft);
+}
+.detail-item.highlight .d-val {
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 16px;
+  color: var(--clay-deep);
+}
+
+/* ── Orders Section (Disabled / Increment 3 Placeholder) ── */
+.orders-section {
+  margin-top: 48px;
+  padding-top: 32px;
+  border-top: 1px solid var(--line);
+}
+.orders-placeholder-card {
+  background: var(--surface);
+  border: 2px dashed var(--line);
+  border-radius: 20px;
+  padding: 36px 24px;
+  text-align: center;
+  margin-top: 16px;
+  opacity: 0.9;
+}
+.orders-placeholder-card .p-icon {
+  font-size: 36px;
+  margin-bottom: 12px;
+  opacity: 0.8;
+}
+.orders-placeholder-card h3 {
+  font-family: "Fraunces", serif;
+  font-size: 20px;
+  font-weight: 600;
+  margin: 0 0 8px;
+  color: var(--ink);
+}
+.orders-placeholder-card p {
+  font-size: 14px;
+  color: var(--ink-soft);
+  max-width: 520px;
+  margin: 0 auto 16px;
+  line-height: 1.5;
+}
+.orders-placeholder-card .inc-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 11px;
+  font-weight: 600;
+  background: var(--surface-2);
+  color: var(--ink-soft);
+  border: 1px solid var(--line);
+  padding: 4px 12px;
+  border-radius: 999px;
+  letter-spacing: 0.06em;
+}
+
+/* Responsive collapse */
+@media (max-width: 768px) {
+  .catalog-grid {
+    grid-template-columns: 1fr;
+  }
+  .filter-bar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .filter-group {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .detail-grid {
+    grid-template-columns: 1fr;
+  }
+}

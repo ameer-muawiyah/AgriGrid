@@ -151,14 +151,20 @@ def validate_password_complexity(password: str) -> tuple[bool, str]:
 # 3. JWT Issuance
 # ---------------------------------------------------------------------------
 
-def generate_token(user_id: int, farmer_id: int | None, role: str) -> str:
+def generate_token(
+    user_id: int,
+    farmer_id: int | None,
+    role: str,
+    buyer_id: int | None = None,
+) -> str:
     """
     Issue a signed HS256 JWT following the exact claims structure
-    specified in AG-API-INC1-003 §2:
+    specified in AG-API-INC1-003 §2 & AG-API-INC2-003 §3:
 
         {
             "user_id":   <int>,
             "farmer_id": <int | null>,
+            "buyer_id":  <int | null>,
             "role":      "<role_string>",
             "iat":       <unix_timestamp>,
             "exp":       <unix_timestamp>
@@ -173,6 +179,7 @@ def generate_token(user_id: int, farmer_id: int | None, role: str) -> str:
     payload = {
         "user_id":   user_id,
         "farmer_id": farmer_id,
+        "buyer_id":  buyer_id,
         "role":      role,
         "iat":       now,
         "exp":       expiry,
@@ -244,6 +251,7 @@ def token_required(f):
         # Inject tenant identity into Flask's g (Zero-Trust: never from body)
         g.user_id   = payload.get("user_id")
         g.farmer_id = payload.get("farmer_id")
+        g.buyer_id  = payload.get("buyer_id")
         g.role      = payload.get("role")
 
         return f(*args, **kwargs)
