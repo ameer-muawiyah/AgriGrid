@@ -16,6 +16,7 @@ Test Coverage
     TC-BYR-04  POST /api/auth/register  — Register missing warehouse_address rejected (400)
     TC-BYR-05  POST /api/auth/register  — Duplicate buyer username rejected (409)
     TC-BYR-06  POST /api/auth/register  — Farmer registration still functions per Increment 1 baseline (201)
+    TC-BYR-07  POST /api/auth/register  — D-INC2-11 buyer profile all-or-nothing rule (legacy empty profile, uniformity, partial 400 rejection)
 
   Marketplace Procurement Catalog (TC-MKT)
     TC-MKT-01  Setup & Visibility       — Tahir prices Wheat (1); leaves Tomato unpriced (2); Sara & Tahir see priced Wheat, Tomato absent
@@ -370,6 +371,113 @@ def tc_byr_06_farmer_registration_regression():
     )
 
 
+def tc_byr_07_all_or_nothing_company_fields():
+    """
+    D-INC2-11 Buyer Profile All-or-Nothing Rule:
+      - TC-BYR-07a (Legacy all-absent): register buyer with ordinary generated username and NO company fields
+        -> 201, user.company_name == "", DB fields equal to "", login succeeds.
+      - TC-BYR-07b (Uniformity): register buyer with username starting with 'test_buyer_' and NO company fields
+        -> identical 201, company_name == "", empty-string DB fields, login succeeds.
+      - TC-BYR-07c (Partial set): register buyer supplying ONLY company_name
+        -> 400, error exactly "Company name, phone, and warehouse address are required."
+    """
+    conn = _get_db_conn()
+    try:
+        # --- 7a: Legacy all-absent registration ---
+        user_7a = f"buyer_legacy_allabsent_{RUN_TIMESTAMP}"
+        r_7a = requests.post(
+            f"{API_BASE_URL}/auth/register",
+            json={"username": user_7a, "password": "BuyerSecurePass1!", "role": "buyer"},
+        )
+        data_7a = r_7a.json()
+        status_7a_ok = r_7a.status_code == 201
+        resp_7a_comp_ok = data_7a.get("user", {}).get("company_name") == ""
+
+        row_7a = conn.execute(
+            "SELECT b.company_name, b.contact_phone, b.warehouse_address "
+            "FROM buyers b JOIN users u ON u.id = b.user_id WHERE u.username = ?",
+            (user_7a,),
+        ).fetchone()
+        db_7a_ok = (
+            row_7a is not None
+            and row_7a["company_name"] == ""
+            and row_7a["contact_phone"] == ""
+            and row_7a["warehouse_address"] == ""
+        )
+
+        r_7a_login = requests.post(
+            f"{API_BASE_URL}/auth/login",
+            json={"username": user_7a, "password": "BuyerSecurePass1!"},
+        )
+        login_7a_ok = r_7a_login.status_code == 200 and r_7a_login.json().get("success") is True
+
+        ok_7a = status_7a_ok and resp_7a_comp_ok and db_7a_ok and login_7a_ok
+
+        # --- 7b: Uniformity (test_buyer_ prefix) ---
+        user_7b = f"test_buyer_uniformity_{RUN_TIMESTAMP}"
+        r_7b = requests.post(
+            f"{API_BASE_URL}/auth/register",
+            json={"username": user_7b, "password": "BuyerSecurePass1!", "role": "buyer"},
+        )
+        data_7b = r_7b.json()
+        status_7b_ok = r_7b.status_code == 201
+        resp_7b_comp_ok = data_7b.get("user", {}).get("company_name") == ""
+
+        row_7b = conn.execute(
+            "SELECT b.company_name, b.contact_phone, b.warehouse_address "
+            "FROM buyers b JOIN users u ON u.id = b.user_id WHERE u.username = ?",
+            (user_7b,),
+        ).fetchone()
+        db_7b_ok = (
+            row_7b is not None
+            and row_7b["company_name"] == ""
+            and row_7b["contact_phone"] == ""
+            and row_7b["warehouse_address"] == ""
+        )
+
+        r_7b_login = requests.post(
+            f"{API_BASE_URL}/auth/login",
+            json={"username": user_7b, "password": "BuyerSecurePass1!"},
+        )
+        login_7b_ok = r_7b_login.status_code == 200 and r_7b_login.json().get("success") is True
+
+        ok_7b = status_7b_ok and resp_7b_comp_ok and db_7b_ok and login_7b_ok
+
+        # --- 7c: Partial set (only company_name provided) ---
+        user_7c = f"buyer_partial_set_{RUN_TIMESTAMP}"
+        r_7c = requests.post(
+            f"{API_BASE_URL}/auth/register",
+            json={
+                "username": user_7c,
+                "password": "BuyerSecurePass1!",
+                "role": "buyer",
+                "company_name": "Only Name Foods",
+            },
+        )
+        data_7c = r_7c.json()
+        status_7c_ok = r_7c.status_code == 400
+        expected_err = "Company name, phone, and warehouse address are required."
+        err_7c_ok = data_7c.get("error") == expected_err
+
+        ok_7c = status_7c_ok and err_7c_ok
+    finally:
+        conn.close()
+
+    all_ok = ok_7a and ok_7b and ok_7c
+    detail = (
+        f"7a_legacy={'PASS' if ok_7a else 'FAIL'} (201, company='', db_empty={db_7a_ok}, login={r_7a_login.status_code}) | "
+        f"7b_uniformity={'PASS' if ok_7b else 'FAIL'} (201, company='', db_empty={db_7b_ok}, login={r_7b_login.status_code}) | "
+        f"7c_partial={'PASS' if ok_7c else 'FAIL'} (status={r_7c.status_code}, error='{data_7c.get('error')}')"
+    )
+
+    _check(
+        "TC-BYR-07",
+        "D-INC2-11 all-or-nothing buyer registration rule (legacy empty profile, test_buyer_ uniformity, partial 400 rejection)",
+        all_ok,
+        detail,
+    )
+
+
 # ===========================================================================
 # 2. MARKETPLACE CATALOG (TC-MKT)
 # ===========================================================================
@@ -579,18 +687,22 @@ def tc_mkt_06_listing_detail_unified_404():
         r_unpriced = requests.get(f"{API_BASE_URL}/marketplace/listings/2", headers=_auth(_sara_token))
 
         # 2. Sold listing: create one in 'Sold' status
+        batch_sold = f"BATCH-2026-WHT-{RUN_TIMESTAMP % 8999 + 1000}"
         cursor = conn.execute(
             "INSERT INTO listings (farmer_id, crop_name, planting_date, estimated_harvest_date, acreage, "
             "gps_latitude, gps_longitude, quantity_kg, status, asking_price_per_kg, batch_id, is_deleted) "
-            "VALUES (1, 'Wheat', '2026-09-01', '2027-01-15', 5.0, 30.0444, 72.3441, 2000.0, 'Sold', 45.0, 'BATCH-2026-WHT-9901', 0)"
+            "VALUES (1, 'Wheat', '2026-09-01', '2027-01-15', 5.0, 30.0444, 72.3441, 2000.0, 'Sold', 45.0, ?, 0)",
+            (batch_sold,),
         )
         sold_id = cursor.lastrowid
 
         # 3. Soft-deleted listing
+        batch_del = f"BATCH-2026-TOM-{(RUN_TIMESTAMP + 1) % 8999 + 1000}"
         cursor = conn.execute(
             "INSERT INTO listings (farmer_id, crop_name, planting_date, estimated_harvest_date, acreage, "
             "gps_latitude, gps_longitude, quantity_kg, status, asking_price_per_kg, batch_id, is_deleted) "
-            "VALUES (1, 'Tomato', '2026-09-01', '2027-01-15', 3.0, 30.0444, 72.3441, 1500.0, 'Active', 50.0, 'BATCH-2026-TOM-9902', 1)"
+            "VALUES (1, 'Tomato', '2026-09-01', '2027-01-15', 3.0, 30.0444, 72.3441, 1500.0, 'Active', 50.0, ?, 1)",
+            (batch_del,),
         )
         deleted_id = cursor.lastrowid
         conn.commit()
@@ -834,6 +946,7 @@ def main():
         tc_byr_04_buyer_missing_required_fields,
         tc_byr_05_buyer_duplicate_username,
         tc_byr_06_farmer_registration_regression,
+        tc_byr_07_all_or_nothing_company_fields,
         # Marketplace procurement catalog (TC-MKT)
         tc_mkt_01_pricing_setup_and_visibility,
         tc_mkt_02_crop_name_filter,
