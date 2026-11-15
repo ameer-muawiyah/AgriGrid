@@ -182,15 +182,28 @@ def run_migrations(target_db_path: str = None) -> int:
 
             else:
                 # State 1 or Pending Migration: Apply inside explicit BEGIN IMMEDIATE ... COMMIT
+                # In SQLite, table rebuilds require foreign keys to be disabled during DDL.
+                # Foreign key integrity is strictly validated via PRAGMA foreign_key_check before commit.
                 with open(file_path, "r", encoding="utf-8") as f:
                     sql_text = f.read()
 
                 statements = split_sql_statements(sql_text)
 
+                conn.execute("PRAGMA foreign_keys = OFF;")
                 conn.execute("BEGIN IMMEDIATE;")
                 try:
                     for stmt in statements:
                         conn.execute(stmt)
+
+                    # Verify foreign key integrity across the whole schema before recording version
+                    fk_check_cursor = conn.cursor()
+                    fk_check_cursor.execute("PRAGMA foreign_key_check;")
+                    fk_violations = fk_check_cursor.fetchall()
+                    if fk_violations:
+                        raise sqlite3.IntegrityError(
+                            f"Foreign key constraint violation after {script_name}: {fk_violations}"
+                        )
+
                     conn.execute(
                         "INSERT INTO schema_versions (version, script_name, checksum) VALUES (?, ?, ?);",
                         (ver, script_name, checksum),
@@ -206,6 +219,8 @@ def run_migrations(target_db_path: str = None) -> int:
                         file=sys.stderr,
                     )
                     return 1
+                finally:
+                    conn.execute("PRAGMA foreign_keys = ON;")
 
         # Step 5: Output current schema version
         cursor.execute("SELECT MAX(version) FROM schema_versions;")
