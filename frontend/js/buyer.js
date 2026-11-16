@@ -39,7 +39,13 @@ const headerWalletBalance = document.getElementById('headerWalletBalance');
 const headerWalletPill = document.getElementById('headerWalletPill');
 const buyerAvatar = document.getElementById('buyerAvatar');
 const buyerLogoutBtn = document.getElementById('buyerLogoutBtn');
-const farmerConsoleLink = document.getElementById('farmerConsoleLink');
+
+// Navigation links (Candidate links, unhidden at init based on role)
+const farmerNavConsole = document.getElementById('farmerNavConsole');
+const farmerNavOrders = document.getElementById('farmerNavOrders');
+const farmerNavMarketplace = document.getElementById('farmerNavMarketplace');
+const buyerNavMarketplace = document.getElementById('buyerNavMarketplace');
+const buyerNavOrders = document.getElementById('buyerNavOrders');
 
 // Catalog & Filter Elements
 const filterCropName = document.getElementById('filterCropName');
@@ -95,24 +101,6 @@ const successOrderTotal = document.getElementById('successOrderTotal');
 const successRemainingBalance = document.getElementById('successRemainingBalance');
 const closeSuccessModalBtn = document.getElementById('closeSuccessModalBtn');
 
-// Buyer Orders Elements (Increment 2 Phase 3)
-const buyerOrdersTable = document.getElementById('buyerOrdersTable');
-const buyerOrdersTableBody = document.getElementById('buyerOrdersTableBody');
-const buyerOrdersEmpty = document.getElementById('buyerOrdersEmpty');
-const buyerOrdersLoading = document.getElementById('buyerOrdersLoading');
-const buyerOrdersCountBadge = document.getElementById('buyerOrdersCountBadge');
-const buyerOrdersPaginationInfo = document.getElementById('buyerOrdersPaginationInfo');
-const buyerOrdersPageIndicator = document.getElementById('buyerOrdersPageIndicator');
-const buyerOrdersPrevBtn = document.getElementById('buyerOrdersPrevBtn');
-const buyerOrdersNextBtn = document.getElementById('buyerOrdersNextBtn');
-const buyerChipAll = document.getElementById('buyerChipAll');
-const buyerChipEscrowFunded = document.getElementById('buyerChipEscrowFunded');
-const buyerChipInTransit = document.getElementById('buyerChipInTransit');
-const buyerChipDelivered = document.getElementById('buyerChipDelivered');
-const buyerChipCompleted = document.getElementById('buyerChipCompleted');
-const buyerChipCancelled = document.getElementById('buyerChipCancelled');
-const buyerChipDisputed = document.getElementById('buyerChipDisputed');
-
 // State
 let currentDetailListing = null;
 let currentListings = [];
@@ -120,13 +108,6 @@ let currentPage = 1;
 const pageSize = 12;
 let totalListings = 0;
 let totalPages = 1;
-
-let currentBuyerOrders = [];
-let currentBuyerOrdersPage = 1;
-const buyerOrdersPageSize = 20;
-let totalBuyerOrders = 0;
-let totalBuyerOrdersPages = 1;
-let currentBuyerOrdersStatus = '';
 
 // Crop Emoji Taxonomy Mapping
 function getCropEmoji(cropName) {
@@ -173,7 +154,9 @@ function initHeaderProfile() {
 
   if (role === 'farmer') {
     // Farmer viewing marketplace
-    if (farmerConsoleLink) farmerConsoleLink.classList.remove('hidden');
+    if (farmerNavConsole) farmerNavConsole.classList.remove('hidden');
+    if (farmerNavOrders) farmerNavOrders.classList.remove('hidden');
+    if (farmerNavMarketplace) farmerNavMarketplace.classList.remove('hidden');
     if (headerCompanyNameDisplay) {
       headerCompanyNameDisplay.textContent = currentUser.farm_name || currentUser.username || 'Farmer Terminal';
     }
@@ -184,8 +167,10 @@ function initHeaderProfile() {
       headerWalletBalance.textContent = 'Transparency View';
     }
     if (buyerAvatar) buyerAvatar.textContent = (currentUser.username || 'F').charAt(0).toUpperCase();
-  } else {
+  } else if (role === 'buyer') {
     // Buyer account
+    if (buyerNavMarketplace) buyerNavMarketplace.classList.remove('hidden');
+    if (buyerNavOrders) buyerNavOrders.classList.remove('hidden');
     const company = currentUser.company_name || currentUser.username || 'B2B Wholesale Terminal';
     if (headerCompanyNameDisplay) headerCompanyNameDisplay.textContent = company;
     if (headerLocationDisplay) headerLocationDisplay.textContent = 'Wholesale Terminal · Verified';
@@ -594,9 +579,8 @@ if (checkoutForm) {
 
         showToast(resData.message || 'Order created successfully. Escrow funds locked.', 'success');
 
-        // Refresh Catalog (purchased lot is now Sold) and My Orders list
+        // Refresh Catalog (purchased lot is now Sold)
         fetchCatalog(currentPage);
-        fetchBuyerOrders(1);
 
       } else {
         // Contract requirement: Server errors render inline, verbatim
@@ -630,252 +614,6 @@ function setCheckoutBtnLoading(isLoading) {
     checkoutSubmitBtnText.textContent = isLoading ? 'Processing...' : 'Lock Escrow & Place Order';
   }
 }
-
-// =========================================================================
-// 6. BUYER ORDERS SECTION (Contracts Endpoints 6–9)
-// =========================================================================
-function getBuyerOrderStatusClass(status) {
-  const s = (status || '').toLowerCase().replace(/_/g, '-');
-  if (s.includes('escrow')) return 'escrow-funded';
-  if (s.includes('transit')) return 'in-transit';
-  if (s.includes('deliver')) return 'delivered';
-  if (s.includes('complet')) return 'completed';
-  if (s.includes('cancel')) return 'cancelled';
-  if (s.includes('disput')) return 'disputed';
-  return 'active';
-}
-
-async function fetchBuyerOrders(page = 1) {
-  if (!buyerOrdersTableBody) return;
-  currentBuyerOrdersPage = page;
-  showBuyerOrdersLoading(true);
-
-  try {
-    let url = `${API_BASE_URL}/orders/buyer?page=${page}&limit=${buyerOrdersPageSize}`;
-    if (currentBuyerOrdersStatus) {
-      url += `&status=${encodeURIComponent(currentBuyerOrdersStatus)}`;
-    }
-
-    const response = await fetch(url, {
-      method: 'GET',
-      headers: getAuthHeaders()
-    });
-
-    if (response.status === 401) {
-      showToast('Session expired. Please log in again.', 'error');
-      sessionStorage.removeItem('agrigrid_token');
-      setTimeout(() => window.location.replace('index.html'), 1200);
-      return;
-    }
-
-    if (response.status === 403) {
-      showToast('Access denied to procurement orders.', 'error');
-      return;
-    }
-
-    const resData = await response.json().catch(() => null);
-
-    if (response.ok && resData && resData.success) {
-      currentBuyerOrders = resData.data || [];
-      totalBuyerOrders = resData.total !== undefined ? resData.total : currentBuyerOrders.length;
-      totalBuyerOrdersPages = Math.max(1, Math.ceil(totalBuyerOrders / buyerOrdersPageSize));
-
-      renderBuyerOrdersTable(currentBuyerOrders);
-      updateBuyerOrdersPagination();
-    } else {
-      const err = resData?.error || 'Failed to retrieve procurement orders.';
-      showToast(err, 'error');
-      renderBuyerOrdersTable([]);
-    }
-  } catch (err) {
-    console.error('Fetch buyer orders error:', err);
-    showToast(`Network error reaching ${API_BASE_URL}. Ensure backend is active.`, 'error');
-    renderBuyerOrdersTable([]);
-  } finally {
-    showBuyerOrdersLoading(false);
-  }
-}
-
-function showBuyerOrdersLoading(isLoading) {
-  if (isLoading) {
-    if (buyerOrdersLoading) buyerOrdersLoading.classList.remove('hidden');
-    if (buyerOrdersEmpty) buyerOrdersEmpty.classList.add('hidden');
-  } else {
-    if (buyerOrdersLoading) buyerOrdersLoading.classList.add('hidden');
-  }
-}
-
-function renderBuyerOrdersTable(orders) {
-  if (!buyerOrdersTableBody) return;
-  buyerOrdersTableBody.innerHTML = '';
-
-  if (buyerOrdersCountBadge) {
-    buyerOrdersCountBadge.textContent = `${totalBuyerOrders} Orders`;
-  }
-
-  if (!orders || orders.length === 0) {
-    if (buyerOrdersEmpty) buyerOrdersEmpty.classList.remove('hidden');
-    return;
-  }
-
-  if (buyerOrdersEmpty) buyerOrdersEmpty.classList.add('hidden');
-
-  orders.forEach(order => {
-    const orderId = order.order_id || order.id;
-    const orderNumber = order.order_number || `ORD-${orderId}`;
-    const cropName = order.crop_name || 'Produce';
-    const batchId = order.batch_id || '—';
-    const farmName = order.farm_name || (order.farmer_id ? `Farm #${order.farmer_id}` : 'Verified Farm');
-    const qty = parseFloat(order.ordered_quantity_kg) || 0;
-    const pricePerKg = parseFloat(order.agreed_price_per_kg) || 0;
-    const totalPkr = parseFloat(order.total_amount_pkr) || (qty * pricePerKg);
-    const destination = order.destination_warehouse || '—';
-    const maxTemp = order.max_temperature_celsius !== undefined && order.max_temperature_celsius !== null 
-      ? `${parseFloat(order.max_temperature_celsius).toFixed(1)}°C` 
-      : '—';
-    const status = order.order_status || 'Escrow_Funded';
-    const dateStr = order.created_at ? order.created_at.replace('T', ' ').substring(0, 16) : '—';
-
-    const tr = document.createElement('tr');
-
-    let actionsHtml = '<span class="cell-price-na">—</span>';
-    if (status === 'Escrow_Funded') {
-      actionsHtml = `
-        <div class="action-group">
-          <button type="button" class="btn-order-action confirm" onclick="handleBuyerConfirmDelivery(${orderId}, '${escapeHtml(orderNumber)}')">Confirm</button>
-          <button type="button" class="btn-order-action cancel" onclick="handleBuyerCancelOrder(${orderId}, '${escapeHtml(orderNumber)}')">Cancel</button>
-          <button type="button" class="btn-order-action dispute" onclick="handleBuyerDisputeOrder(${orderId}, '${escapeHtml(orderNumber)}')">Dispute</button>
-        </div>
-      `;
-    }
-
-    tr.innerHTML = `
-      <td class="cell-id mono">${escapeHtml(orderNumber)}</td>
-      <td>
-        <div class="cell-crop">
-          <span class="crop-icon">${getCropEmoji(cropName)}</span>
-          <div>
-            <div class="crop-name">${escapeHtml(cropName)}</div>
-            <div class="cell-batch">${escapeHtml(batchId)}</div>
-          </div>
-        </div>
-      </td>
-      <td class="crop-name">${escapeHtml(farmName)}</td>
-      <td>
-        <span class="cell-value">${Math.round(qty).toLocaleString('en-US')}</span>
-        <span class="cell-unit">kg</span>
-      </td>
-      <td class="cell-price">${formatPriceRs(pricePerKg)} / kg</td>
-      <td class="cell-price" style="font-weight: 700;">${formatPriceRs(totalPkr)}</td>
-      <td class="cell-date" style="max-width: 170px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${escapeHtml(destination)}">${escapeHtml(destination)}</td>
-      <td class="mono cell-date">${escapeHtml(maxTemp)}</td>
-      <td>
-        <span class="status ${getBuyerOrderStatusClass(status)}">${escapeHtml(status)}</span>
-      </td>
-      <td class="cell-date mono">${escapeHtml(dateStr)}</td>
-      <td class="cell-actions">${actionsHtml}</td>
-    `;
-
-    buyerOrdersTableBody.appendChild(tr);
-  });
-}
-
-function updateBuyerOrdersPagination() {
-  if (buyerOrdersPaginationInfo) {
-    const start = totalBuyerOrders === 0 ? 0 : (currentBuyerOrdersPage - 1) * buyerOrdersPageSize + 1;
-    const end = Math.min(currentBuyerOrdersPage * buyerOrdersPageSize, totalBuyerOrders);
-    buyerOrdersPaginationInfo.textContent = `Showing ${start} to ${end} of ${totalBuyerOrders} orders`;
-  }
-
-  if (buyerOrdersPageIndicator) {
-    buyerOrdersPageIndicator.textContent = `Page ${currentBuyerOrdersPage} of ${totalBuyerOrdersPages}`;
-  }
-
-  if (buyerOrdersPrevBtn) buyerOrdersPrevBtn.disabled = currentBuyerOrdersPage <= 1;
-  if (buyerOrdersNextBtn) buyerOrdersNextBtn.disabled = currentBuyerOrdersPage >= totalBuyerOrdersPages;
-}
-
-window.handleBuyerConfirmDelivery = async function(orderId, orderNumber) {
-  try {
-    const resp = await fetch(`${API_BASE_URL}/orders/${orderId}/confirm-delivery`, {
-      method: 'POST',
-      headers: getAuthHeaders()
-    });
-    const resData = await resp.json().catch(() => null);
-    if (resp.ok && resData && resData.success) {
-      showToast(resData.message || 'Delivery confirmed and escrow funds released to farmer.', 'success');
-      fetchBuyerOrders(currentBuyerOrdersPage);
-    } else {
-      const err = resData?.error || resData?.message || 'Failed to confirm delivery.';
-      showToast(err, 'error');
-      fetchBuyerOrders(currentBuyerOrdersPage);
-    }
-  } catch (e) {
-    console.error('Confirm delivery error:', e);
-    showToast('Network error while confirming delivery.', 'error');
-    fetchBuyerOrders(currentBuyerOrdersPage);
-  }
-};
-
-window.handleBuyerCancelOrder = async function(orderId, orderNumber) {
-  if (!window.confirm(`Are you sure you want to cancel order ${orderNumber}? Escrow funds will be refunded to your wallet.`)) {
-    return;
-  }
-  try {
-    const resp = await fetch(`${API_BASE_URL}/orders/${orderId}/cancel`, {
-      method: 'POST',
-      headers: getAuthHeaders()
-    });
-    const resData = await resp.json().catch(() => null);
-    if (resp.ok && resData && resData.success) {
-      const refunded = resData.data?.refunded_amount_pkr || 0;
-      if (currentUser) {
-        currentUser.wallet_balance_pkr = (currentUser.wallet_balance_pkr || 0) + refunded;
-        sessionStorage.setItem('agrigrid_user', JSON.stringify(currentUser));
-      }
-      if (headerWalletBalance) {
-        const cur = currentUser ? currentUser.wallet_balance_pkr : (parseFloat(headerWalletBalance.textContent.replace(/[^\d.]/g, '')) || 0);
-        headerWalletBalance.textContent = formatTotalRs(cur);
-      }
-      showToast(resData.message || 'Order cancelled successfully. Funds refunded and crop restored to catalog.', 'success');
-      fetchBuyerOrders(currentBuyerOrdersPage);
-      fetchCatalog(currentPage);
-    } else {
-      const err = resData?.error || resData?.message || 'Failed to cancel order.';
-      showToast(err, 'error');
-      fetchBuyerOrders(currentBuyerOrdersPage);
-    }
-  } catch (e) {
-    console.error('Cancel order error:', e);
-    showToast('Network error while cancelling order.', 'error');
-    fetchBuyerOrders(currentBuyerOrdersPage);
-  }
-};
-
-window.handleBuyerDisputeOrder = async function(orderId, orderNumber) {
-  if (!window.confirm(`Are you sure you want to flag a formal dispute on order ${orderNumber}? Escrow funds will be frozen.`)) {
-    return;
-  }
-  try {
-    const resp = await fetch(`${API_BASE_URL}/orders/${orderId}/dispute`, {
-      method: 'POST',
-      headers: getAuthHeaders()
-    });
-    const resData = await resp.json().catch(() => null);
-    if (resp.ok && resData && resData.success) {
-      showToast(resData.message || 'Dispute registered. Escrow funds have been frozen.', 'success');
-      fetchBuyerOrders(currentBuyerOrdersPage);
-    } else {
-      const err = resData?.error || resData?.message || 'Failed to dispute order.';
-      showToast(err, 'error');
-      fetchBuyerOrders(currentBuyerOrdersPage);
-    }
-  } catch (e) {
-    console.error('Dispute order error:', e);
-    showToast('Network error while disputing order.', 'error');
-    fetchBuyerOrders(currentBuyerOrdersPage);
-  }
-};
 
 // =========================================================================
 // 5. TOAST NOTIFICATION UTILITY
@@ -971,44 +709,6 @@ document.addEventListener('DOMContentLoaded', () => {
   if (catalogNextBtn) {
     catalogNextBtn.addEventListener('click', () => {
       if (currentPage < totalPages) fetchCatalog(currentPage + 1);
-    });
-  }
-
-  // Fetch Buyer Orders (Increment 2 Phase 3)
-  fetchBuyerOrders(1);
-
-  // Status Filter Chips for Buyer Orders
-  const buyerChips = [
-    buyerChipAll,
-    buyerChipEscrowFunded,
-    buyerChipInTransit,
-    buyerChipDelivered,
-    buyerChipCompleted,
-    buyerChipCancelled,
-    buyerChipDisputed
-  ];
-
-  buyerChips.forEach(chip => {
-    if (chip) {
-      chip.addEventListener('click', () => {
-        buyerChips.forEach(c => c && c.classList.remove('active'));
-        chip.classList.add('active');
-        currentBuyerOrdersStatus = chip.getAttribute('data-status') || '';
-        fetchBuyerOrders(1);
-      });
-    }
-  });
-
-  // Pagination for Buyer Orders
-  if (buyerOrdersPrevBtn) {
-    buyerOrdersPrevBtn.addEventListener('click', () => {
-      if (currentBuyerOrdersPage > 1) fetchBuyerOrders(currentBuyerOrdersPage - 1);
-    });
-  }
-
-  if (buyerOrdersNextBtn) {
-    buyerOrdersNextBtn.addEventListener('click', () => {
-      if (currentBuyerOrdersPage < totalBuyerOrdersPages) fetchBuyerOrders(currentBuyerOrdersPage + 1);
     });
   }
 });

@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="color-scheme" content="light dark">
+  <link rel="icon" href="data:,">
+  <title>AgriGrid — Buyer Orders &amp; Procurement Ledger</title>
+
+  <!-- Immediate Auth & Role Guard (PD-R2): Redirects before render -->
+  <script>
+    (function() {
+      const token = sessionStorage.getItem('agrigrid_token');
+      const userRaw = sessionStorage.getItem('agrigrid_user');
+      if (!token || !userRaw) {
+        window.location.replace('index.html');
+        return;
+      }
+      try {
+        const user = JSON.parse(userRaw);
+        if (user.role === 'farmer') {
+          window.location.replace('dashboard.html');
+        } else if (user.role !== 'buyer') {
+          window.location.replace('index.html');
+        }
+      } catch (e) {
+        window.location.replace('index.html');
+      }
+    })();
+  </script>
+
+  <!-- Google Fonts: Fraunces, Public Sans, IBM Plex Mono -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,400;1,9..144,500&family=Public+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+
+  <!-- Hybrid Design Token Stylesheets -->
+  <link rel="stylesheet" href="css/dashboard.css">
+  <link rel="stylesheet" href="css/buyer.css">
+</head>
+<body>
+
+  <!-- Top Bar / Navigation -->
+  <header class="topbar">
+    <div class="topbar-inner">
+      <a href="buyer_dashboard.html" class="brand">
+        <span class="brand-mark" aria-hidden="true"></span>
+        <span>AgriGrid<small>Buyer Portal · Procurement Ledger</small></span>
+      </a>
+
+      <!-- Navigation links (Candidate links, unhidden at init based on role) -->
+      <nav class="topbar-nav" aria-label="Portal Navigation">
+        <!-- Buyer Set (visible to buyer sessions) -->
+        <a href="buyer_dashboard.html" class="nav-link hidden" id="buyerNavMarketplace">Marketplace</a>
+        <a href="buyer_orders.html" class="nav-link active hidden" id="buyerNavOrders">Orders</a>
+      </nav>
+
+      <!-- Header Identity & Session Controls -->
+      <div class="header-right">
+        <!-- Virtual Escrow Wallet Pill -->
+        <div class="wallet-pill" id="headerWalletPill" title="Virtual Escrow Wallet Balance">
+          <span class="wallet-lbl">Escrow Wallet</span>
+          <span class="wallet-val" id="headerWalletBalance">Rs 500,000</span>
+        </div>
+
+        <div class="header-identity">
+          <div class="header-farm-name" id="headerCompanyNameDisplay">Loading credentials...</div>
+          <div class="header-farm-location" id="headerLocationDisplay">Wholesale Hub · Verified</div>
+          <div class="header-username" id="headerRoleBadge">B2B Buyer</div>
+        </div>
+
+        <div class="user-avatar" id="buyerAvatar" title="Active buyer profile">B</div>
+
+        <button type="button" id="buyerLogoutBtn" class="btn-signout" title="Sign out of Agri-Grid">
+          <svg width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
+          </svg>
+          <span>Sign Out</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Content Wrap -->
+  <main class="dash-wrap">
+    <!-- =========================================================================
+         ORDERS SECTION (PD-R1, verbatim from buyer_dashboard.html)
+         ========================================================================= -->
+    <section id="ordersSection" class="orders-section" aria-labelledby="ordersHeading">
+      <div class="dash-head" style="margin: 0 0 10px;">
+        <div>
+          <h1 id="ordersHeading" class="serif" style="font-size: 28px; margin: 0;">Escrow Orders &amp; <em>Procurement Ledger</em></h1>
+          <p style="margin: 4px 0 0; color: var(--ink-soft); font-size: 13px;">Manage multi-actor procurement contracts and settlement release states.</p>
+        </div>
+      </div>
+
+      <!-- Status Filter Chips -->
+      <div class="order-chips-bar" role="group" aria-label="Buyer order status filter">
+        <span class="chip-label">Filter Status:</span>
+        <button type="button" class="chip active" id="buyerChipAll" data-status="">All</button>
+        <button type="button" class="chip" id="buyerChipEscrowFunded" data-status="Escrow_Funded">Escrow_Funded</button>
+        <button type="button" class="chip" id="buyerChipInTransit" data-status="In_Transit">In_Transit</button>
+        <button type="button" class="chip" id="buyerChipDelivered" data-status="Delivered">Delivered</button>
+        <button type="button" class="chip" id="buyerChipCompleted" data-status="Completed">Completed</button>
+        <button type="button" class="chip" id="buyerChipCancelled" data-status="Cancelled">Cancelled</button>
+        <button type="button" class="chip" id="buyerChipDisputed" data-status="Disputed">Disputed</button>
+        <span id="buyerOrdersCountBadge" class="records-badge" style="margin-left: auto;">0 Orders</span>
+      </div>
+
+      <!-- Table Container -->
+      <div class="table-scroll" style="margin-top: 14px;">
+        <table class="crop-table" id="buyerOrdersTable">
+          <thead>
+            <tr>
+              <th scope="col" style="width: 130px;">Order #</th>
+              <th scope="col">Crop &amp; Batch</th>
+              <th scope="col">Farm Origin</th>
+              <th scope="col">Quantity</th>
+              <th scope="col">Price/kg</th>
+              <th scope="col">Total (PKR)</th>
+              <th scope="col">Destination</th>
+              <th scope="col">Max Temp</th>
+              <th scope="col">Status</th>
+              <th scope="col">Created</th>
+              <th scope="col" style="text-align: right; padding-right: 16px;">Actions</th>
+            </tr>
+          </thead>
+          <tbody id="buyerOrdersTableBody">
+            <!-- Populated dynamically via buyer_orders.js -->
+          </tbody>
+        </table>
+
+        <!-- Empty State -->
+        <div id="buyerOrdersEmpty" class="empty-state hidden">
+          <div class="empty-icon" aria-hidden="true">📦</div>
+          <h3 class="serif">No procurement orders found.</h3>
+          <p>You have no procurement orders matching the selected status filter.</p>
+        </div>
+
+        <!-- Loading State -->
+        <div id="buyerOrdersLoading" class="table-loading hidden">
+          <div class="loading-spinner"></div>
+          <p>Fetching procurement orders from settlement ledger...</p>
+        </div>
+      </div>
+
+      <!-- Pagination -->
+      <div class="pagination">
+        <div id="buyerOrdersPaginationInfo" class="pagination-info">Showing 0 to 0 of 0 orders</div>
+        <div class="pagination-controls">
+          <button type="button" id="buyerOrdersPrevBtn" class="page-btn" disabled>&larr; Previous</button>
+          <span class="page-indicator" id="buyerOrdersPageIndicator">Page 1 of 1</span>
+          <button type="button" id="buyerOrdersNextBtn" class="page-btn" disabled>Next &rarr;</button>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Notification Toast Container -->
+  <div id="toastContainer" class="toast-container" aria-live="polite"></div>
+
+  <!-- Dedicated Buyer Orders Script -->
+  <script src="js/buyer_orders.js"></script>
+</body>
+</html>

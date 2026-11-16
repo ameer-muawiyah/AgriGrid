@@ -109,25 +109,11 @@ const forecastTelemetryContainer = document.getElementById('forecastTelemetryCon
 // DOM Elements: Toast Notification
 const toastContainer = document.getElementById('toastContainer');
 
-// DOM Elements: Farmer Incoming Orders (Increment 2 Phase 3)
-const incomingOrdersSection = document.getElementById('incomingOrdersSection');
-const incomingOrdersHeading = document.getElementById('incomingOrdersHeading');
-const farmerOrdersTable = document.getElementById('farmerOrdersTable');
-const farmerOrdersTableBody = document.getElementById('farmerOrdersTableBody');
-const farmerOrdersEmpty = document.getElementById('farmerOrdersEmpty');
-const farmerOrdersLoading = document.getElementById('farmerOrdersLoading');
-const farmerOrdersCountBadge = document.getElementById('farmerOrdersCountBadge');
-const farmerOrdersPaginationInfo = document.getElementById('farmerOrdersPaginationInfo');
-const farmerOrdersPageIndicator = document.getElementById('farmerOrdersPageIndicator');
-const farmerOrdersPrevBtn = document.getElementById('farmerOrdersPrevBtn');
-const farmerOrdersNextBtn = document.getElementById('farmerOrdersNextBtn');
-const farmerChipAll = document.getElementById('farmerChipAll');
-const farmerChipEscrowFunded = document.getElementById('farmerChipEscrowFunded');
-const farmerChipInTransit = document.getElementById('farmerChipInTransit');
-const farmerChipDelivered = document.getElementById('farmerChipDelivered');
-const farmerChipCompleted = document.getElementById('farmerChipCompleted');
-const farmerChipCancelled = document.getElementById('farmerChipCancelled');
-const farmerChipDisputed = document.getElementById('farmerChipDisputed');
+// Navigation & Wallet (Increment 2 Phase 4 Refactor)
+const navFarmerConsole = document.getElementById('navFarmerConsole');
+const navFarmerOrders = document.getElementById('navFarmerOrders');
+const navMarketplaceLink = document.getElementById('navMarketplaceLink');
+const farmerWalletBalance = document.getElementById('farmerWalletBalance');
 
 // =========================================================================
 // 2. INITIALIZATION & HEADER POPULATION
@@ -142,7 +128,7 @@ document.addEventListener('DOMContentLoaded', () => {
   setupEventListeners();
   loadMetrics();
   loadCrops(1);
-  loadFarmerOrders(1);
+  fetchFarmerWallet();
 });
 
 function renderRolePlaceholder(role) {
@@ -159,6 +145,13 @@ function renderRolePlaceholder(role) {
 
 function initUserProfile() {
   if (currentUser) {
+    const role = currentUser.role || 'farmer';
+    if (role === 'farmer') {
+      if (navFarmerConsole) navFarmerConsole.classList.remove('hidden');
+      if (navFarmerOrders) navFarmerOrders.classList.remove('hidden');
+      if (navMarketplaceLink) navMarketplaceLink.classList.remove('hidden');
+    }
+
     const username = currentUser.username || 'Farmer';
     const farmName = currentUser.farm_name || currentUser.farm || (currentUser.farmer_id ? `Farm Node #${currentUser.farmer_id}` : 'Verified Farm Node');
     
@@ -167,6 +160,27 @@ function initUserProfile() {
     if (userAvatar) userAvatar.textContent = username.charAt(0).toUpperCase();
   } else {
     if (headerFarmNameDisplay) headerFarmNameDisplay.textContent = 'Active Farmer Terminal';
+  }
+}
+
+async function fetchFarmerWallet() {
+  if (!farmerWalletBalance) return;
+  try {
+    const res = await fetch(`${API_BASE_URL}/farmer/wallet`, {
+      headers: getAuthHeaders()
+    });
+    if (!res.ok) {
+      farmerWalletBalance.textContent = 'Rs —';
+      return;
+    }
+    const data = await res.json().catch(() => null);
+    if (data && data.success && data.data && typeof data.data.balance_pkr === 'number') {
+      farmerWalletBalance.textContent = `Rs ${data.data.balance_pkr.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+    } else {
+      farmerWalletBalance.textContent = 'Rs —';
+    }
+  } catch (e) {
+    farmerWalletBalance.textContent = 'Rs —';
   }
 }
 
@@ -1014,40 +1028,6 @@ function setupEventListeners() {
       });
     }
   });
-
-  // Farmer Inbound Orders Status Chips
-  const farmerChips = [
-    farmerChipAll,
-    farmerChipEscrowFunded,
-    farmerChipInTransit,
-    farmerChipDelivered,
-    farmerChipCompleted,
-    farmerChipCancelled,
-    farmerChipDisputed
-  ];
-
-  farmerChips.forEach(chip => {
-    if (chip) {
-      chip.addEventListener('click', () => {
-        farmerChips.forEach(c => c && c.classList.remove('active'));
-        chip.classList.add('active');
-        currentFarmerOrdersStatus = chip.getAttribute('data-status') || '';
-        loadFarmerOrders(1);
-      });
-    }
-  });
-
-  // Farmer Inbound Orders Pagination
-  if (farmerOrdersPrevBtn) {
-    farmerOrdersPrevBtn.addEventListener('click', () => {
-      if (currentFarmerOrdersPage > 1) loadFarmerOrders(currentFarmerOrdersPage - 1);
-    });
-  }
-  if (farmerOrdersNextBtn) {
-    farmerOrdersNextBtn.addEventListener('click', () => {
-      if (currentFarmerOrdersPage < totalFarmerOrdersPages) loadFarmerOrders(currentFarmerOrdersPage + 1);
-    });
-  }
 }
 
 function escapeHtml(str) {
@@ -1059,230 +1039,3 @@ function escapeHtml(str) {
     .replace(/"/g, '&quot;')
     .replace(/'/g, '&#039;');
 }
-
-// =========================================================================
-// 10. FARMER INCOMING ORDERS (Increment 2 Phase 3)
-// =========================================================================
-let currentFarmerOrders = [];
-let currentFarmerOrdersPage = 1;
-const farmerOrdersPageSize = 20;
-let totalFarmerOrders = 0;
-let totalFarmerOrdersPages = 1;
-let currentFarmerOrdersStatus = '';
-
-function formatPriceRs(val) {
-  const num = parseFloat(val) || 0;
-  return `Rs ${num.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-}
-
-function getOrderStatusClass(status) {
-  const s = (status || '').toLowerCase().replace(/_/g, '-');
-  if (s.includes('escrow')) return 'escrow-funded';
-  if (s.includes('transit')) return 'in-transit';
-  if (s.includes('deliver')) return 'delivered';
-  if (s.includes('complet')) return 'completed';
-  if (s.includes('cancel')) return 'cancelled';
-  if (s.includes('disput')) return 'disputed';
-  return 'active';
-}
-
-async function loadFarmerOrders(page = 1) {
-  if (!farmerOrdersTableBody) return;
-  currentFarmerOrdersPage = page;
-  showFarmerOrdersLoading(true);
-
-  try {
-    let url = `${API_BASE_URL}/orders/farmer?page=${page}&limit=${farmerOrdersPageSize}`;
-    if (currentFarmerOrdersStatus) {
-      url += `&status=${encodeURIComponent(currentFarmerOrdersStatus)}`;
-    }
-
-    const response = await fetch(url, {
-      method: 'GET',
-      headers: getAuthHeaders()
-    });
-
-    if (response.status === 401) {
-      showToast('Session expired. Please log in again.', 'error');
-      sessionStorage.removeItem('agrigrid_token');
-      setTimeout(() => window.location.replace('index.html'), 1200);
-      return;
-    }
-
-    if (response.status === 403) {
-      showToast('Access denied to incoming orders.', 'error');
-      return;
-    }
-
-    const resData = await response.json().catch(() => null);
-
-    if (response.ok && resData && resData.success) {
-      currentFarmerOrders = resData.data || [];
-      totalFarmerOrders = resData.total !== undefined ? resData.total : currentFarmerOrders.length;
-      totalFarmerOrdersPages = Math.max(1, Math.ceil(totalFarmerOrders / farmerOrdersPageSize));
-
-      renderFarmerOrdersTable(currentFarmerOrders);
-      updateFarmerOrdersPagination();
-    } else {
-      const err = resData?.error || 'Failed to retrieve inbound orders.';
-      showToast(err, 'error');
-      renderFarmerOrdersTable([]);
-    }
-  } catch (err) {
-    console.error('Load farmer orders error:', err);
-    showToast(`Network error reaching ${API_BASE_URL}. Ensure backend is active.`, 'error');
-    renderFarmerOrdersTable([]);
-  } finally {
-    showFarmerOrdersLoading(false);
-  }
-}
-
-function showFarmerOrdersLoading(isLoading) {
-  if (isLoading) {
-    if (farmerOrdersLoading) farmerOrdersLoading.classList.remove('hidden');
-    if (farmerOrdersEmpty) farmerOrdersEmpty.classList.add('hidden');
-  } else {
-    if (farmerOrdersLoading) farmerOrdersLoading.classList.add('hidden');
-  }
-}
-
-function renderFarmerOrdersTable(orders) {
-  if (!farmerOrdersTableBody) return;
-  farmerOrdersTableBody.innerHTML = '';
-
-  if (farmerOrdersCountBadge) {
-    farmerOrdersCountBadge.textContent = `${totalFarmerOrders} Orders`;
-  }
-
-  if (!orders || orders.length === 0) {
-    if (farmerOrdersEmpty) farmerOrdersEmpty.classList.remove('hidden');
-    return;
-  }
-
-  if (farmerOrdersEmpty) farmerOrdersEmpty.classList.add('hidden');
-
-  orders.forEach(order => {
-    const orderId = order.order_id || order.id;
-    const orderNumber = order.order_number || `ORD-${orderId}`;
-    const buyerName = order.buyer_company_name || (order.buyer_id ? `Buyer #${order.buyer_id}` : 'Verified Buyer');
-    const cropName = order.crop_name || 'Crop';
-    const batchId = order.batch_id || '—';
-    const qty = parseFloat(order.ordered_quantity_kg) || 0;
-    const pricePerKg = parseFloat(order.agreed_price_per_kg) || 0;
-    const totalPkr = parseFloat(order.total_amount_pkr) || (qty * pricePerKg);
-    const destination = order.destination_warehouse || '—';
-    const maxTemp = order.max_temperature_celsius !== undefined && order.max_temperature_celsius !== null 
-      ? `${parseFloat(order.max_temperature_celsius).toFixed(1)}°C` 
-      : '—';
-    const status = order.order_status || 'Escrow_Funded';
-    const dateStr = order.created_at ? order.created_at.replace('T', ' ').substring(0, 16) : '—';
-
-    const tr = document.createElement('tr');
-
-    let actionsHtml = '<span class="cell-price-na">—</span>';
-    if (status === 'Escrow_Funded') {
-      actionsHtml = `
-        <div class="action-group">
-          <button type="button" class="btn-order-action cancel" onclick="handleFarmerCancelOrder(${orderId}, '${escapeHtml(orderNumber)}')">Cancel</button>
-          <button type="button" class="btn-order-action dispute" onclick="handleFarmerDisputeOrder(${orderId}, '${escapeHtml(orderNumber)}')">Dispute</button>
-        </div>
-      `;
-    }
-
-    tr.innerHTML = `
-      <td class="cell-id mono">${escapeHtml(orderNumber)}</td>
-      <td class="crop-name">${escapeHtml(buyerName)}</td>
-      <td>
-        <div class="cell-crop">
-          <span class="crop-icon">${getCropEmoji(cropName)}</span>
-          <div>
-            <div class="crop-name">${escapeHtml(cropName)}</div>
-            <div class="cell-batch">${escapeHtml(batchId)}</div>
-          </div>
-        </div>
-      </td>
-      <td>
-        <span class="cell-value">${Math.round(qty).toLocaleString('en-US')}</span>
-        <span class="cell-unit">kg</span>
-      </td>
-      <td class="cell-price">${formatPriceRs(pricePerKg)} / kg</td>
-      <td class="cell-price" style="font-weight: 700;">${formatPriceRs(totalPkr)}</td>
-      <td class="cell-date" style="max-width: 170px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${escapeHtml(destination)}">${escapeHtml(destination)}</td>
-      <td class="mono cell-date">${escapeHtml(maxTemp)}</td>
-      <td>
-        <span class="status ${getOrderStatusClass(status)}">${escapeHtml(status)}</span>
-      </td>
-      <td class="cell-date mono">${escapeHtml(dateStr)}</td>
-      <td class="cell-actions">${actionsHtml}</td>
-    `;
-
-    farmerOrdersTableBody.appendChild(tr);
-  });
-}
-
-function updateFarmerOrdersPagination() {
-  if (farmerOrdersPaginationInfo) {
-    const start = totalFarmerOrders === 0 ? 0 : (currentFarmerOrdersPage - 1) * farmerOrdersPageSize + 1;
-    const end = Math.min(currentFarmerOrdersPage * farmerOrdersPageSize, totalFarmerOrders);
-    farmerOrdersPaginationInfo.textContent = `Showing ${start} to ${end} of ${totalFarmerOrders} orders`;
-  }
-
-  if (farmerOrdersPageIndicator) {
-    farmerOrdersPageIndicator.textContent = `Page ${currentFarmerOrdersPage} of ${totalFarmerOrdersPages}`;
-  }
-
-  if (farmerOrdersPrevBtn) farmerOrdersPrevBtn.disabled = currentFarmerOrdersPage <= 1;
-  if (farmerOrdersNextBtn) farmerOrdersNextBtn.disabled = currentFarmerOrdersPage >= totalFarmerOrdersPages;
-}
-
-window.handleFarmerCancelOrder = async function(orderId, orderNumber) {
-  if (!window.confirm(`Are you sure you want to cancel order ${orderNumber}? The crop listing will be restored to Active status.`)) {
-    return;
-  }
-  try {
-    const resp = await fetch(`${API_BASE_URL}/orders/${orderId}/cancel`, {
-      method: 'POST',
-      headers: getAuthHeaders()
-    });
-    const resData = await resp.json().catch(() => null);
-    if (resp.ok && resData && resData.success) {
-      showToast(resData.message || 'Order cancelled successfully. Funds refunded and crop restored to catalog.', 'success');
-      loadFarmerOrders(currentFarmerOrdersPage);
-      loadCrops(currentPage);
-      loadMetrics();
-    } else {
-      const err = resData?.error || resData?.message || 'Failed to cancel order.';
-      showToast(err, 'error');
-      loadFarmerOrders(currentFarmerOrdersPage);
-    }
-  } catch (e) {
-    console.error('Cancel order error:', e);
-    showToast('Network error while cancelling order.', 'error');
-    loadFarmerOrders(currentFarmerOrdersPage);
-  }
-};
-
-window.handleFarmerDisputeOrder = async function(orderId, orderNumber) {
-  if (!window.confirm(`Are you sure you want to flag a formal dispute on order ${orderNumber}? Escrow funds will be frozen.`)) {
-    return;
-  }
-  try {
-    const resp = await fetch(`${API_BASE_URL}/orders/${orderId}/dispute`, {
-      method: 'POST',
-      headers: getAuthHeaders()
-    });
-    const resData = await resp.json().catch(() => null);
-    if (resp.ok && resData && resData.success) {
-      showToast(resData.message || 'Dispute registered. Escrow funds have been frozen.', 'success');
-      loadFarmerOrders(currentFarmerOrdersPage);
-    } else {
-      const err = resData?.error || resData?.message || 'Failed to dispute order.';
-      showToast(err, 'error');
-      loadFarmerOrders(currentFarmerOrdersPage);
-    }
-  } catch (e) {
-    console.error('Dispute order error:', e);
-    showToast('Network error while disputing order.', 'error');
-    loadFarmerOrders(currentFarmerOrdersPage);
-  }
-};

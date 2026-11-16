@@ -33,11 +33,16 @@
         <span>AgriGrid<small>Buyer Portal · Marketplace Catalog</small></span>
       </a>
 
-      <!-- Navigation links -->
+      <!-- Navigation links (Candidate links, unhidden at init based on role) -->
       <nav class="topbar-nav" aria-label="Portal Navigation">
-        <a href="buyer_dashboard.html" class="nav-link active">Marketplace</a>
-        <a href="#ordersSection" class="nav-link">Orders</a>
-        <a href="dashboard.html" class="nav-link hidden" id="farmerConsoleLink">Farmer Console</a>
+        <!-- Farmer Set (visible when farmer views marketplace in transparency mode) -->
+        <a href="dashboard.html" class="nav-link hidden" id="farmerNavConsole">Farmer Console</a>
+        <a href="farmer_orders.html" class="nav-link hidden" id="farmerNavOrders">Orders</a>
+        <a href="buyer_dashboard.html" class="nav-link active hidden" id="farmerNavMarketplace">Marketplace</a>
+
+        <!-- Buyer Set (visible to buyer sessions) -->
+        <a href="buyer_dashboard.html" class="nav-link active hidden" id="buyerNavMarketplace">Marketplace</a>
+        <a href="buyer_orders.html" class="nav-link hidden" id="buyerNavOrders">Orders</a>
       </nav>
 
       <!-- Header Identity & Session Controls -->
@@ -167,78 +172,6 @@
         </div>
       </div>
 
-    </section>
-
-    <!-- =========================================================================
-         ORDERS SECTION (Increment 2 Phase 3: My Orders)
-         ========================================================================= -->
-    <section id="ordersSection" class="orders-section" aria-labelledby="ordersHeading">
-      <div class="dash-head" style="margin: 0 0 10px;">
-        <div>
-          <h2 id="ordersHeading" class="serif" style="font-size: 24px; margin: 0;">Escrow Orders &amp; <em>Procurement Ledger</em></h2>
-          <p style="margin: 4px 0 0; color: var(--ink-soft); font-size: 13px;">Manage multi-actor procurement contracts and settlement release states.</p>
-        </div>
-      </div>
-
-      <!-- Status Filter Chips -->
-      <div class="order-chips-bar" role="group" aria-label="Buyer order status filter">
-        <span class="chip-label">Filter Status:</span>
-        <button type="button" class="chip active" id="buyerChipAll" data-status="">All</button>
-        <button type="button" class="chip" id="buyerChipEscrowFunded" data-status="Escrow_Funded">Escrow_Funded</button>
-        <button type="button" class="chip" id="buyerChipInTransit" data-status="In_Transit">In_Transit</button>
-        <button type="button" class="chip" id="buyerChipDelivered" data-status="Delivered">Delivered</button>
-        <button type="button" class="chip" id="buyerChipCompleted" data-status="Completed">Completed</button>
-        <button type="button" class="chip" id="buyerChipCancelled" data-status="Cancelled">Cancelled</button>
-        <button type="button" class="chip" id="buyerChipDisputed" data-status="Disputed">Disputed</button>
-        <span id="buyerOrdersCountBadge" class="records-badge" style="margin-left: auto;">0 Orders</span>
-      </div>
-
-      <!-- Table Container -->
-      <div class="table-scroll" style="margin-top: 14px;">
-        <table class="crop-table" id="buyerOrdersTable">
-          <thead>
-            <tr>
-              <th scope="col" style="width: 130px;">Order #</th>
-              <th scope="col">Crop &amp; Batch</th>
-              <th scope="col">Farm Origin</th>
-              <th scope="col">Quantity</th>
-              <th scope="col">Price/kg</th>
-              <th scope="col">Total (PKR)</th>
-              <th scope="col">Destination</th>
-              <th scope="col">Max Temp</th>
-              <th scope="col">Status</th>
-              <th scope="col">Created</th>
-              <th scope="col" style="text-align: right; padding-right: 16px;">Actions</th>
-            </tr>
-          </thead>
-          <tbody id="buyerOrdersTableBody">
-            <!-- Populated dynamically via buyer.js -->
-          </tbody>
-        </table>
-
-        <!-- Empty State -->
-        <div id="buyerOrdersEmpty" class="empty-state hidden">
-          <div class="empty-icon" aria-hidden="true">📦</div>
-          <h3 class="serif">No procurement orders found.</h3>
-          <p>You have no procurement orders matching the selected status filter.</p>
-        </div>
-
-        <!-- Loading State -->
-        <div id="buyerOrdersLoading" class="table-loading hidden">
-          <div class="loading-spinner"></div>
-          <p>Fetching procurement orders from settlement ledger...</p>
-        </div>
-      </div>
-
-      <!-- Pagination -->
-      <div class="pagination">
-        <div id="buyerOrdersPaginationInfo" class="pagination-info">Showing 0 to 0 of 0 orders</div>
-        <div class="pagination-controls">
-          <button type="button" id="buyerOrdersPrevBtn" class="page-btn" disabled>&larr; Previous</button>
-          <span class="page-indicator" id="buyerOrdersPageIndicator">Page 1 of 1</span>
-          <button type="button" id="buyerOrdersNextBtn" class="page-btn" disabled>Next &rarr;</button>
-        </div>
-      </div>
     </section>
 
   </main>
