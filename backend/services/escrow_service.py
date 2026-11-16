@@ -127,3 +127,55 @@ def refund_escrow(conn: sqlite3.Connection, order_id: int, trigger: str) -> dict
         "release_tx_ref": release_tx_ref,
         "buyer_new_balance_pkr": buyer_new_balance_pkr,
     }
+
+
+def get_farmer_wallet_balance(farmer_id: int, conn: sqlite3.Connection | None = None) -> float:
+    """Return the farmer's current wallet balance in PKR.
+    A farmer with no farmer_wallets row (no completed sale yet) has 0.0 —
+    the row is created by settlement, never by this read."""
+    should_close = False
+    db = conn
+    if db is None:
+        try:
+            from flask import current_app, g, has_app_context
+            if has_app_context():
+                if "db" in g:
+                    db = g.db
+                else:
+                    import os
+                    from pathlib import Path
+                    _base = Path(__file__).resolve().parent.parent
+                    db_path = current_app.config.get(
+                        "DB_PATH",
+                        os.environ.get("AGRIGRID_DB_PATH", str(_base / "database" / "agrigrid.db")),
+                    )
+                    db = sqlite3.connect(db_path, detect_types=sqlite3.PARSE_DECLTYPES)
+                    db.row_factory = sqlite3.Row
+                    db.execute("PRAGMA foreign_keys = ON;")
+                    should_close = True
+        except ImportError:
+            pass
+        if db is None:
+            import os
+            from pathlib import Path
+            _base = Path(__file__).resolve().parent.parent
+            db_path = os.environ.get(
+                "AGRIGRID_DB_PATH", str(_base / "database" / "agrigrid.db")
+            )
+            db = sqlite3.connect(db_path, detect_types=sqlite3.PARSE_DECLTYPES)
+            db.row_factory = sqlite3.Row
+            db.execute("PRAGMA foreign_keys = ON;")
+            should_close = True
+    try:
+        cursor = db.cursor()
+        cursor.execute(
+            "SELECT balance_pkr FROM farmer_wallets WHERE farmer_id = ?", (farmer_id,)
+        )
+        row = cursor.fetchone()
+        if not row:
+            return 0.0
+        val = row[0] if not isinstance(row, sqlite3.Row) else row["balance_pkr"]
+        return float(val) if val is not None else 0.0
+    finally:
+        if should_close:
+            db.close()

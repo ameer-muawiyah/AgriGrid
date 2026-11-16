@@ -206,6 +206,7 @@ def create_app() -> Flask:
     from marketplace import marketplace_bp
     from orders import orders_bp
     from telemetry import telemetry_bp
+    from wallet import wallet_bp
     yield_bp = importlib.import_module("yield").yield_bp
 
     app.register_blueprint(crops_bp)
@@ -213,6 +214,7 @@ def create_app() -> Flask:
     app.register_blueprint(orders_bp)
     app.register_blueprint(telemetry_bp)
     app.register_blueprint(yield_bp)
+    app.register_blueprint(wallet_bp)
 
     # ------------------------------------------------------------------
     # Telemetry Cache Startup Purge (PD-9)
