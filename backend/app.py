@@ -545,6 +545,7 @@ def _register_auth_routes(app: Flask, get_db) -> None:
                     "user_id":            row["user_id"],
                     "buyer_id":           row["buyer_id"],
                     "username":           row["username"],
+                    "role":               row["role"],
                     "company_name":       row["buyer_company_name"] or "",
                     "wallet_balance_pkr": wallet_bal,
                 },
