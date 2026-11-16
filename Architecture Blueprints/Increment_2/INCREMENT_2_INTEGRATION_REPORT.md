@@ -359,3 +359,119 @@ Signature: `[Signed & Approved: Ameer Muawiyah — 2026-11-15]`
 
 
 
+
+
+---
+
+# Part V — Post-Increment-2 Patch & Refactor: Farmer Wallet Visibility + Page Split
+
+| Attribute | Details |
+| :--- | :--- |
+| **Stage** | Post-Increment-2 Patch & Frontend Refactor Certification |
+| **Governing Specifications** | `agrigrid-farmer-wallet-patch-package.md` (PD-W1–PD-W4)<br>`agrigrid-page-split-refactor-package.md` (PD-R1–PD-R7)<br>Increment 2 Master Plan v1.1, SRS Addendum v1.3, API Contracts Delta v1.2 |
+| **Date** | 2026-11-16 |
+| **Lead QA & DevOps Engineer** | Muhammad Hashir |
+| **Lead Architect & Scrum Master** | Ameer Muawiyah |
+| **Overall Gate Status** | **PASS (98 / 98 tests passing, 100% green)** |
+
+---
+
+### 1. Origin & Architectural Context
+
+Following the master certification of Increment 2 on 2026-11-15, live system usage and end-to-end evaluation by Scrum Master Ameer Muawiyah on 2026-11-16 revealed two key operational insights:
+1. **Farmer Escrow Wallet Visibility Gap:** When buyers confirmed delivery, escrow funds were credited to the farmer's internal wallet balance in SQLite, but farmers had no frontend or API visibility into their accumulated funds, as API Contracts Delta v1.2 previously stated "no wallet endpoint for farmers" in its scope note.
+2. **Dashboard Monolith & Navigation Ergonomics:** In the original Increment 2 layout, both farmer crop management and incoming orders were cramped inside a single `dashboard.html`, while buyer marketplace listings and purchase orders shared a single `buyer_dashboard.html`. Splitting order history into dedicated views (`farmer_orders.html` and `buyer_orders.html`) improves workflow clarity, prevents UI crowding, and establishes dedicated navigation targets.
+
+To address these needs without altering core data invariants, two packaged changes were implemented:
+- **Farmer Wallet Patch (`agrigrid-farmer-wallet-patch-package.md`):** Added `GET /api/farmer/wallet` endpoint, exposed via `backend/wallet.py` (registered in `backend/app.py`), backed by `escrow_service.get_farmer_wallet(farmer_id)`. **Scope Note:** This explicitly supersedes API Contracts Delta v1.2's earlier note ("no wallet endpoint") for farmers only; buyer wallet endpoints remain untouched. A live balance badge is rendered on `frontend/dashboard.html`.
+- **Page-Split Refactor (`agrigrid-page-split-refactor-package.md`):** Extracted incoming farmer orders to `frontend/farmer_orders.html` (backed by `frontend/js/farmer_orders.js`), and buyer purchase orders to `frontend/buyer_orders.html` (backed by `frontend/js/buyer_orders.js`), moving markup, event listeners, and styling verbatim while maintaining contract IDs and role-based navigation matrices.
+
+---
+
+### 2. Refactor Structure Audit (Static Verification)
+
+The static structure audit verifies that the extraction cleanly decoupled the order workflows while preserving all DOM bindings, IDs, and frozen contract elements:
+
+1. **Farmer Dashboard vs. Farmer Orders:**
+   - `frontend/dashboard.html` contains **no** `incomingOrdersSection` (verified absent).
+   - `frontend/farmer_orders.html` exists and contains `incomingOrdersSection`, with all `farmerChip*` filter chips and `farmerOrdersTable` IDs completely intact.
+2. **Buyer Dashboard vs. Buyer Orders:**
+   - `frontend/buyer_dashboard.html` contains **no** `ordersSection` (verified absent).
+   - `frontend/buyer_orders.html` exists and contains `ordersSection`, with all `buyerOrders*` IDs (`buyerOrdersTable`, `buyerOrdersCountBadge`, `buyerOrdersTableBody`, `buyerOrdersEmpty`, `buyerOrdersLoading`, `buyerOrdersPaginationInfo`, `buyerOrdersPrevBtn`, `buyerOrdersPageIndicator`, `buyerOrdersNextBtn`) and `buyerChip*` filter chips intact.
+3. **Script Separation:**
+   - `frontend/js/buyer.js` contains **no** `fetchBuyerOrders` (all order logic relocated to `frontend/js/buyer_orders.js`).
+   - `frontend/js/dashboard.js` contains **no** `/api/orders/farmer` fetch (all farmer order fetch logic relocated to `frontend/js/farmer_orders.js`).
+4. **Navigation Matrix Compliance (PD-R2):**
+   - Farmer views (`dashboard.html`, `farmer_orders.html`) expose navigation links to `dashboard.html` (My Crops) and `farmer_orders.html` (Orders).
+   - Buyer views (`buyer_dashboard.html`, `buyer_orders.html`) expose navigation links to `buyer_dashboard.html` (Marketplace) and `buyer_orders.html` (My Orders).
+   - The buyer-visible navigation bar strictly isolates buyer links and contains no `Farmer Console` link.
+5. **Frozen Contract Spot Checks:**
+   - `frontend/dashboard.html` retains `modalCropName`, `statusFilter`, and the empty state string: `"You have no active crops. Click 'Add New Crop' to get started."`.
+   - `frontend/js/dashboard.js` retains `"Dashboard under construction — available in a future increment."`.
+
+---
+
+### 3. New Test Suite & Verification: `backend/test_farmer_wallet.py`
+
+A dedicated test suite adhering to the house harness pattern was authored at `backend/test_farmer_wallet.py` running on dedicated port 5006, testing the 4 contract requirements:
+
+- **TC-WLT-01 (Zero Balance on New Farmer):** A fresh farmer with no prior transaction history receives HTTP 200 with `balance_pkr == 0.0`.
+- **TC-WLT-02 (Settlement Balance Accumulation):**
+  - Sale 1 (Wheat, total 45,000.00 PKR): After buyer confirms delivery, farmer wallet balance is exactly **45,000.00 PKR**.
+  - Sale 2 (Wheat, total 30,000.00 PKR): After second delivery confirmation, farmer wallet balance accumulates to exactly **75,000.00 PKR** (exact mathematical sum).
+- **TC-WLT-03 (RBAC Guards):** Calls to `GET /api/farmer/wallet` with Buyer token return HTTP 403 with error `"Access denied."`; Transporter token returns HTTP 403 with error `"Access denied."`.
+- **TC-WLT-04 (Authentication Guard):** Unauthenticated call returns HTTP 401 with error `"Authentication required. Please log in."`.
+
+**Result:** 4 / 4 passed (100% green).
+
+---
+
+### 4. Full-Regression Certification Gate (98 / 98 Passing)
+
+```text
+===================================================================================
+  AGRI-GRID POST-INCREMENT-2 REFACTOR & PATCH GATE (98/98 PASSING, 100% GREEN)
+===================================================================================
+  [1] backend/test_frontend_contract.py .........................  5 /  5 passed (PASS)
+  [2] backend/test_auth.py ...................................... 17 / 17 passed (PASS)
+  [3] backend/test_crops_api.py ................................. 23 / 23 passed (PASS)
+  [4] backend/test_marketplace_api.py ........................... 20 / 20 passed (PASS)
+  [5] backend/test_escrow_orders.py ............................. 18 / 18 passed (PASS)
+  [6] backend/test_yield_telemetry.py ........................... 11 / 11 passed (PASS)
+  [7] backend/test_farmer_wallet.py .............................  4 /  4 passed (PASS)
+-----------------------------------------------------------------------------------
+  TOTAL VERIFIED CONTRACT CASES ................................. 98 / 98 passed (100%)
+===================================================================================
+```
+
+---
+
+### 5. Frozen File Invariant & Scope Audit
+
+- **Baseline Commit:** `d1b4372`
+- **Frozen File Invariant:** Diff across 10 baseline files (`test_frontend_contract.py`, `test_auth.py`, `test_crops_api.py`, `test_marketplace_api.py`, `test_escrow_orders.py`, `test_yield_telemetry.py`, `backend/database/schema.sql`, `migrations/001_increment_1_baseline.sql`, `migrations/002_increment_2_marketplace_escrow_telemetry.sql`, `migrations/003_buyers_legacy_profile.sql`) is exactly **0 lines** (untouched).
+- **Scope Audit:**
+  - Backend modifications strictly confined to `backend/wallet.py`, `backend/services/escrow_service.py`, and `backend/app.py` (registration).
+  - Frontend modifications strictly confined to `frontend/buyer_dashboard.html`, `frontend/buyer_orders.html`, `frontend/dashboard.html`, `frontend/farmer_orders.html`, `frontend/css/dashboard.css`, `frontend/js/buyer.js`, `frontend/js/buyer_orders.js`, `frontend/js/dashboard.js`, and `frontend/js/farmer_orders.js`.
+  - Test suites: Only the new `backend/test_farmer_wallet.py` file was added.
+
+---
+
+### 6. Deviations
+
+**Deviations: none.**  
+All implementations, behavioral responses, status codes, error messages, and DOM IDs conform strictly to `agrigrid-farmer-wallet-patch-package.md` and `agrigrid-page-split-refactor-package.md`.
+
+---
+
+### Certification Sign-Off
+
+**Certifier (QA & DevOps Engineer):**  
+Name: Muhammad Hashir  
+Date: 2026-11-16  
+Signature: `[Certified: Muhammad Hashir — 2026-11-16]`
+
+**Lead Reviewer & Scrum Master:**  
+Name: Ameer Muawiyah (Scrum Master & Lead Data Architect)  
+Date: 2026-11-16  
+Signature: `[Signed & Approved: Ameer Muawiyah — 2026-11-16]`
