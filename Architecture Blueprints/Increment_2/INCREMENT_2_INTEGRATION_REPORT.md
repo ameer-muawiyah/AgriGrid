@@ -475,3 +475,12 @@ Signature: `[Certified: Muhammad Hashir — 2026-11-16]`
 Name: Ameer Muawiyah (Scrum Master & Lead Data Architect)  
 Date: 2026-11-16  
 Signature: `[Signed & Approved: Ameer Muawiyah — 2026-11-16]`
+
+
+---
+
+### Addendum (2026-11-17): Post-Certification Defect & Re-Verification
+
+- **Defect Description:** During an end-to-end live walkthrough following Part V certification, a buyer order lockout defect was identified: the buyer login response omitted the `role` field from the returned `user` payload. Consequently, the client-side authentication and role guard in `buyer_orders.js` failed to detect the `buyer` role and redirected authenticated buyers back to the sign-in page (`index.html`).
+- **Root Cause & Remediation:** Located in `backend/app.py` within the `login()` buyer branch, where the dictionary omitted `"role": row["role"]`. Remediated in commit `65e3a2b` (`Code: fix buyer order lockout bug`) via a one-line fix.
+- **Regression Verification:** The full 7-suite integration gate was re-verified at **98 / 98 tests passing (100% green)** on 2026-11-17, confirming complete resolution and zero regressions across all Increment 2 pipelines.
