@@ -19,6 +19,9 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,400;1,9..144,500&family=Public+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 
+  <!-- Anti-flash Theme Snippet (PD-T2) -->
+  <script>try{var t=localStorage.getItem('agrigrid_theme');if(t)document.documentElement.setAttribute('data-theme',t);}catch(e){}</script>
+
   <!-- Hybrid Design Token Stylesheet -->
   <link rel="stylesheet" href="css/dashboard.css">
 
@@ -57,6 +60,17 @@
         </div>
 
         <div class="user-avatar" id="userAvatar" title="Farmer profile">F</div>
+
+        <!-- Keystone Theme Dial (PD-T3) -->
+        <button type="button" class="medallion medallion-compact" id="themeToggle" aria-label="Switch to light mode" title="Switch to light mode">
+          <svg class="face-sun" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
+            <circle cx="12" cy="12" r="4"/>
+            <path d="M12 3v2.4M12 18.6V21M3 12h2.4M18.6 12H21M5.6 5.6l1.7 1.7M16.7 16.7l1.7 1.7M18.4 5.6l-1.7 1.7M7.3 16.7l-1.7 1.7"/>
+          </svg>
+          <svg class="face-moon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+          </svg>
+        </button>
 
         <button type="button" id="logoutBtn" class="btn-signout" title="Sign out">
           <svg width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -400,6 +414,9 @@
 
   <!-- Leaflet 1.9.4 Map Library (CDN) -->
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+
+  <!-- Theme Controller (PD-T4) -->
+  <script src="js/theme.js"></script>
 
   <!-- Vanilla JavaScript Dashboard Controller -->
   <script src="js/dashboard.js"></script>

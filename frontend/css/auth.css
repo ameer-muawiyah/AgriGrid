@@ -54,6 +54,59 @@
   }
 }
 
+/* ── Theme Mechanism (PD-T1 / PD-T2 / PD-T6) ── */
+/* Default theme: Dark (product home look, always active unless data-theme="light") */
+:root:not([data-theme="light"]),
+[data-theme="dark"] {
+  --paper: #1a110a;
+  --bg: #130c06;
+  --surface: #241810;
+  --surface-2: #2e2013;
+  --ink: #f3e8d3;
+  --ink-soft: #bda888;
+  --line: #40301d;
+  --clay: #dd8150;
+  --clay-deep: #eda26e;
+  --clay-soft: #3d2415;
+  --field: #a4c48d;
+  --field-soft: #27341e;
+  --gold: #dcb264;
+  --gold-soft: #3a2f16;
+  --neutral-soft: #332619;
+  --shadow: 0 24px 60px -28px rgba(0, 0, 0, 0.7);
+  --shadow-sm: 0 10px 30px -14px rgba(0, 0, 0, 0.6);
+  --danger: #e06050;
+  --danger-soft: #3d1a14;
+}
+
+/* Light Mode Palette (warm paper, clay, and ink) */
+[data-theme="light"] {
+  --paper: #faf5ec;
+  --bg: #f4ecdc;
+  --surface: #fffdf7;
+  --surface-2: #f1e7d2;
+  --ink: #2c2015;
+  --ink-soft: #6f5d47;
+  --line: #e2d3b8;
+  --clay: #b0512a;
+  --clay-deep: #8a3b1c;
+  --clay-soft: #f4e0d0;
+  --field: #46603c;
+  --field-soft: #e3ead6;
+  --gold: #c0912f;
+  --gold-soft: #f4e7c6;
+  --neutral-soft: #eae2d2;
+  --shadow: 0 18px 45px -20px rgba(74, 44, 18, 0.22);
+  --shadow-sm: 0 6px 18px -8px rgba(74, 44, 18, 0.16);
+  --danger: #a63220;
+  --danger-soft: #fce8e4;
+}
+
+/* Motion transition for smooth palette changes (PD-T7) */
+body, .topbar, .doorway, .col-card, input, select, .btn, .chip, .tab-btn {
+  transition: background-color .3s ease, color .3s ease, border-color .3s ease, box-shadow .3s ease;
+}
+
 /* ── Reset & Base ── */
 *, *::before, *::after { box-sizing: border-box; }
 html { scroll-behavior: smooth; }
@@ -148,7 +201,7 @@ input, select { font: inherit; }
   border: 1px solid var(--line); border-radius: var(--arch); pointer-events: none;
 }
 
-/* Sun medallion */
+/* Sun medallion / Keystone Theme Dial (PD-T3) */
 .medallion {
   position: absolute; top: -27px; left: 50%; transform: translateX(-50%);
   width: 54px; height: 54px; border-radius: 50%;
@@ -156,6 +209,56 @@ input, select { font: inherit; }
   border: 3px solid var(--surface);
   box-shadow: 0 0 0 1.5px var(--clay), var(--shadow-sm);
   display: grid; place-items: center; color: #5d3c07;
+  cursor: pointer; padding: 0; outline: none; z-index: 10;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.3s ease;
+}
+.medallion:hover {
+  transform: translateX(-50%) scale(1.05);
+  box-shadow: 0 0 0 2px var(--clay), var(--shadow);
+}
+.medallion:focus-visible {
+  outline: 2px solid var(--clay);
+  outline-offset: 3px;
+}
+.medallion-compact {
+  width: 38px; height: 38px; min-height: 38px;
+}
+
+/* Medallion dial faces (Sun / Moon) */
+.medallion .face-sun,
+.medallion .face-moon {
+  grid-area: 1 / 1;
+  transition: transform 0.45s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.35s ease;
+  pointer-events: none;
+}
+
+/* Default / Dark Mode */
+:root:not([data-theme="light"]) .medallion .face-sun,
+[data-theme="dark"] .medallion .face-sun {
+  opacity: 0;
+  transform: rotate(-90deg) scale(0.5);
+}
+:root:not([data-theme="light"]) .medallion .face-moon,
+[data-theme="dark"] .medallion .face-moon {
+  opacity: 1;
+  transform: rotate(0deg) scale(1);
+}
+
+/* Light Mode */
+[data-theme="light"] .medallion .face-sun {
+  opacity: 1;
+  transform: rotate(0deg) scale(1);
+}
+[data-theme="light"] .medallion .face-moon {
+  opacity: 0;
+  transform: rotate(90deg) scale(0.5);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  body, .topbar, .doorway, .col-card, input, select, .btn, .chip, .tab-btn,
+  .medallion, .medallion .face-sun, .medallion .face-moon {
+    transition: none !important;
+  }
 }
 
 /* ── Doorway Typography ── */
@@ -182,6 +285,12 @@ input, select { font: inherit; }
 @media (prefers-color-scheme: dark) {
   .chip.active, .chip[aria-pressed="true"] { color: #26130a; }
 }
+:root:not([data-theme="light"]) .chip.active,
+:root:not([data-theme="light"]) .chip[aria-pressed="true"],
+[data-theme="dark"] .chip.active,
+[data-theme="dark"] .chip[aria-pressed="true"] { color: #26130a; }
+[data-theme="light"] .chip.active,
+[data-theme="light"] .chip[aria-pressed="true"] { color: #fff8ec; }
 
 /* ── Tab Switcher ── */
 .tab-bar {
@@ -198,6 +307,9 @@ input, select { font: inherit; }
   background: var(--clay); color: #fff8ec; box-shadow: var(--shadow-sm);
 }
 @media (prefers-color-scheme: dark) { .tab-btn.active { color: #26130a; } }
+:root:not([data-theme="light"]) .tab-btn.active,
+[data-theme="dark"] .tab-btn.active { color: #26130a; }
+[data-theme="light"] .tab-btn.active { color: #fff8ec; }
 
 /* ── Form Fields ── */
 .field { margin-bottom: 14px; }
@@ -259,6 +371,12 @@ input, select { font: inherit; }
 .btn:hover { background: var(--clay-deep); transform: translateY(-1px); }
 .btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
 @media (prefers-color-scheme: dark) { .btn { color: #26130a; } .btn:hover { color: #26130a; } }
+:root:not([data-theme="light"]) .btn,
+:root:not([data-theme="light"]) .btn:hover,
+[data-theme="dark"] .btn,
+[data-theme="dark"] .btn:hover { color: #26130a; }
+[data-theme="light"] .btn,
+[data-theme="light"] .btn:hover { color: #fff8ec; }
 
 .btn.ghost {
   background: transparent; color: var(--ink); border: 1.5px solid var(--line);

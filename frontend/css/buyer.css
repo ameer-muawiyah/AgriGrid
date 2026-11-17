@@ -221,6 +221,9 @@
   background: var(--clay);
   color: #fff8ec;
 }
+:root:not([data-theme="light"]) .btn-view-detail:hover,
+[data-theme="dark"] .btn-view-detail:hover { color: #26130a; }
+[data-theme="light"] .btn-view-detail:hover { color: #fff8ec; }
 
 /* ── Listing Detail Modal Grid ── */
 .detail-grid {
@@ -310,6 +313,9 @@
   color: #fff8ec;
   border-color: var(--clay);
 }
+:root:not([data-theme="light"]) .chip.active,
+[data-theme="dark"] .chip.active { color: #26130a; }
+[data-theme="light"] .chip.active { color: #fff8ec; }
 .btn-order-action {
   display: inline-flex;
   align-items: center;
@@ -350,6 +356,12 @@
   color: #7c5a10;
   border-color: var(--gold);
 }
+:root:not([data-theme="light"]) .btn-order-action.dispute,
+:root:not([data-theme="light"]) .btn-order-action.dispute:hover,
+[data-theme="dark"] .btn-order-action.dispute,
+[data-theme="dark"] .btn-order-action.dispute:hover { color: var(--gold); border-color: var(--gold-soft); }
+[data-theme="light"] .btn-order-action.dispute,
+[data-theme="light"] .btn-order-action.dispute:hover { color: #7c5a10; border-color: rgba(192, 145, 47, 0.4); }
 .btn-order-action.confirm {
   background: var(--field-soft);
   color: var(--field);
@@ -359,6 +371,9 @@
   background: var(--field);
   color: #fff8ec;
 }
+:root:not([data-theme="light"]) .btn-order-action.confirm:hover,
+[data-theme="dark"] .btn-order-action.confirm:hover { color: #26130a; }
+[data-theme="light"] .btn-order-action.confirm:hover { color: #fff8ec; }
 
 /* ── Checkout Section (Inside Listing Detail Modal) ── */
 .checkout-section {
@@ -534,6 +549,12 @@
 @media (prefers-color-scheme: dark) { 
   .status.ready, .status.escrow-funded { color: var(--gold); } 
 }
+:root:not([data-theme="light"]) .status.ready,
+:root:not([data-theme="light"]) .status.escrow-funded,
+[data-theme="dark"] .status.ready,
+[data-theme="dark"] .status.escrow-funded { color: var(--gold); }
+[data-theme="light"] .status.ready,
+[data-theme="light"] .status.escrow-funded { color: #7c5a10; }
 
 /* Responsive collapse */
 @media (max-width: 768px) {
@@ -550,5 +571,14 @@
   }
   .detail-grid {
     grid-template-columns: 1fr;
+  }
+}
+
+.card, .detail-grid, .checkout-section {
+  transition: background-color .3s ease, color .3s ease, border-color .3s ease, box-shadow .3s ease;
+}
+@media (prefers-reduced-motion: reduce) {
+  .card, .detail-grid, .checkout-section {
+    transition: none !important;
   }
 }
