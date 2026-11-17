@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-Agri-Grid — One-Click Launcher (Increment 1)
-============================================
+Agri-Grid — One-Click Launcher
+==============================
 Starts the Flask backend API (port 5000) and the static frontend server
 (port 5500), waits until both respond, then opens the app in the default
 browser. No commands to remember.
@@ -137,7 +137,7 @@ def print_log_tail(path, lines=20):
 
 def main():
     print("=" * 58)
-    print("  Agri-Grid Launcher — starting Increment 1")
+    print("  Agri-Grid Launcher — starting AgriGrid")
     print("=" * 58)
 
     os.makedirs(LOG_DIR, exist_ok=True)

@@ -484,3 +484,19 @@ Signature: `[Signed & Approved: Ameer Muawiyah — 2026-11-16]`
 - **Defect Description:** During an end-to-end live walkthrough following Part V certification, a buyer order lockout defect was identified: the buyer login response omitted the `role` field from the returned `user` payload. Consequently, the client-side authentication and role guard in `buyer_orders.js` failed to detect the `buyer` role and redirected authenticated buyers back to the sign-in page (`index.html`).
 - **Root Cause & Remediation:** Located in `backend/app.py` within the `login()` buyer branch, where the dictionary omitted `"role": row["role"]`. Remediated in commit `65e3a2b` (`Code: fix buyer order lockout bug`) via a one-line fix.
 - **Regression Verification:** The full 7-suite integration gate was re-verified at **98 / 98 tests passing (100% green)** on 2026-11-17, confirming complete resolution and zero regressions across all Increment 2 pipelines.
+
+
+---
+
+# Part VI — Post-Increment-2 Patch Programme: Closure Log
+
+| Date | Change | Commits |
+|---|---|---|
+| 2026-11-16 | Farmer Wallet endpoint (`GET /api/farmer/wallet`) | `b31b4a1` |
+| 2026-11-16 | Role-based page-split refactor (Farmer Console / Orders / Marketplace) | `6c43d06` |
+| 2026-11-17 | Certification: TC-WLT-01…04 + Part V (this report) | `b1cd87a` |
+| 2026-11-17 | Buyer login `role` fix (see Part V Addendum) | `65e3a2b` |
+| 2026-11-17 | UI polish (sticky Actions column, sign-in label) + full UI copy cleanup | `8ea50cb` |
+| 2026-11-17 | Map pin-drop location picker (Leaflet, satellite default, Peshawar default view); forecast telemetry-context GPS fix (`row_to_summary`) | `fc61cde` |
+
+Final state verified first-hand by Muse on the pushed tree, 2026-11-17 — full gate **98/98**, frozen files untouched.
