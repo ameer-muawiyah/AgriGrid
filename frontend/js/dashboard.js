@@ -83,6 +83,11 @@ const saveCropSubmitBtn = document.getElementById('saveCropSubmitBtn');
 const saveCropBtnText = document.getElementById('saveCropBtnText');
 const saveCropSpinner = document.getElementById('saveCropSpinner');
 
+// DOM Elements: Location Picker (PD-M3, PD-M4)
+const cropLocationMap = document.getElementById('cropLocationMap');
+const useMyLocationBtn = document.getElementById('useMyLocationBtn');
+const locationPickerStatus = document.getElementById('locationPickerStatus');
+
 // DOM Elements: Delete / Withdraw Modal
 const deleteModal = document.getElementById('deleteModal');
 const deleteModalMessage = document.getElementById('deleteModalMessage');
@@ -448,6 +453,179 @@ function updatePaginationControls(total) {
 }
 
 // =========================================================================
+// 5.5 FIELD LOCATION PICKER (LEAFLET PIN-DROP) (PD-M4, PD-M5)
+// =========================================================================
+let cropLocationMapInstance = null;
+let cropLocationMarker = null;
+let locationPickerInitialized = false;
+
+function updateGpsInputs(lat, lng) {
+  if (modalGpsLat) modalGpsLat.value = lat.toFixed(6);
+  if (modalGpsLng) modalGpsLng.value = lng.toFixed(6);
+  if (locationPickerStatus) locationPickerStatus.textContent = '';
+}
+
+function handleGpsInputChange() {
+  const latVal = parseFloat(modalGpsLat?.value);
+  const lngVal = parseFloat(modalGpsLng?.value);
+  if (!isNaN(latVal) && !isNaN(lngVal) && latVal >= -90 && latVal <= 90 && lngVal >= -180 && lngVal <= 180) {
+    if (cropLocationMarker) {
+      cropLocationMarker.setLatLng([latVal, lngVal]);
+    }
+    if (cropLocationMapInstance) {
+      cropLocationMapInstance.setView([latVal, lngVal]);
+      if (locationPickerStatus) locationPickerStatus.textContent = '';
+    }
+  }
+}
+
+function handleUseMyLocation() {
+  if (!window.L) {
+    if (locationPickerStatus) {
+      locationPickerStatus.textContent = 'Map unavailable — type the coordinates instead.';
+    }
+    if (useMyLocationBtn) {
+      useMyLocationBtn.disabled = true;
+    }
+    return;
+  }
+
+  if (!navigator.geolocation || !navigator.geolocation.getCurrentPosition) {
+    if (locationPickerStatus) {
+      locationPickerStatus.textContent = 'Location unavailable — drop the pin on the map instead.';
+    }
+    return;
+  }
+
+  navigator.geolocation.getCurrentPosition(
+    function(pos) {
+      const lat = pos.coords.latitude;
+      const lng = pos.coords.longitude;
+      updateGpsInputs(lat, lng);
+      if (cropLocationMarker) {
+        cropLocationMarker.setLatLng([lat, lng]);
+      }
+      if (cropLocationMapInstance) {
+        cropLocationMapInstance.setView([lat, lng], 15);
+      }
+      if (locationPickerStatus) {
+        locationPickerStatus.textContent = '';
+      }
+    },
+    function(err) {
+      if (locationPickerStatus) {
+        locationPickerStatus.textContent = 'Location unavailable — drop the pin on the map instead.';
+      }
+    },
+    { enableHighAccuracy: true, timeout: 8000, maximumAge: 60000 }
+  );
+}
+
+function initLocationPicker() {
+  if (locationPickerInitialized) return;
+  locationPickerInitialized = true;
+
+  if (useMyLocationBtn) {
+    useMyLocationBtn.addEventListener('click', handleUseMyLocation);
+  }
+
+  if (modalGpsLat) modalGpsLat.addEventListener('change', handleGpsInputChange);
+  if (modalGpsLng) modalGpsLng.addEventListener('change', handleGpsInputChange);
+
+  if (!window.L) {
+    if (locationPickerStatus) {
+      locationPickerStatus.textContent = 'Map unavailable — type the coordinates instead.';
+    }
+    if (useMyLocationBtn) {
+      useMyLocationBtn.disabled = true;
+    }
+    return;
+  }
+
+  if (!cropLocationMap) return;
+
+  const initialLat = parseFloat(modalGpsLat?.value) || 34.0151;
+  const initialLng = parseFloat(modalGpsLng?.value) || 71.5249;
+
+  // Base layers: Satellite (default, Esri) and Street (OSM) (PD-M2)
+  const satelliteLayer = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+    attribution: 'Tiles &copy; Esri',
+    maxZoom: 18
+  });
+
+  const streetLayer = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '&copy; OpenStreetMap contributors',
+    maxZoom: 19
+  });
+
+  const baseLayers = {
+    'Satellite': satelliteLayer,
+    'Street': streetLayer
+  };
+
+  cropLocationMapInstance = L.map(cropLocationMap, {
+    center: [initialLat, initialLng],
+    zoom: 13,
+    layers: [satelliteLayer]
+  });
+
+  L.control.layers(baseLayers).addTo(cropLocationMapInstance);
+
+  // Draggable marker (PD-M4)
+  cropLocationMarker = L.marker([initialLat, initialLng], {
+    draggable: true
+  }).addTo(cropLocationMapInstance);
+
+  cropLocationMarker.on('dragend', function(e) {
+    const pos = e.target.getLatLng();
+    updateGpsInputs(pos.lat, pos.lng);
+  });
+
+  cropLocationMapInstance.on('click', function(e) {
+    const lat = e.latlng.lat;
+    const lng = e.latlng.lng;
+    cropLocationMarker.setLatLng([lat, lng]);
+    updateGpsInputs(lat, lng);
+  });
+}
+
+function syncLocationPicker(lat, lng, zoom = 13) {
+  if (!locationPickerInitialized) {
+    initLocationPicker();
+  }
+
+  if (!window.L) {
+    if (locationPickerStatus) {
+      locationPickerStatus.textContent = 'Map unavailable — type the coordinates instead.';
+    }
+    if (useMyLocationBtn) {
+      useMyLocationBtn.disabled = true;
+    }
+    return;
+  }
+
+  if (locationPickerStatus) {
+    locationPickerStatus.textContent = '';
+  }
+
+  const validLat = typeof lat === 'number' && !isNaN(lat) ? lat : (parseFloat(modalGpsLat?.value) || 34.0151);
+  const validLng = typeof lng === 'number' && !isNaN(lng) ? lng : (parseFloat(modalGpsLng?.value) || 71.5249);
+
+  if (cropLocationMarker) {
+    cropLocationMarker.setLatLng([validLat, validLng]);
+  }
+  if (cropLocationMapInstance) {
+    cropLocationMapInstance.setView([validLat, validLng], zoom);
+    cropLocationMapInstance.invalidateSize();
+    setTimeout(() => {
+      if (cropLocationMapInstance) {
+        cropLocationMapInstance.invalidateSize();
+      }
+    }, 50);
+  }
+}
+
+// =========================================================================
 // 6. ADD / EDIT CROP MODAL WORKFLOW
 // =========================================================================
 function openAddCropModal() {
@@ -459,10 +637,11 @@ function openAddCropModal() {
   cropForm.reset();
   initDateDefaults();
 
-  if (modalGpsLat) modalGpsLat.value = '30.3753';
-  if (modalGpsLng) modalGpsLng.value = '69.3451';
+  if (modalGpsLat) modalGpsLat.value = '34.0151';
+  if (modalGpsLng) modalGpsLng.value = '71.5249';
 
   cropModal.classList.remove('hidden');
+  syncLocationPicker(34.0151, 71.5249, 12);
   modalCropName.focus();
 }
 
@@ -516,10 +695,14 @@ window.openEditModal = async function(listingId) {
   const price = crop.asking_price_per_kg || crop.asking_price || crop.price_per_kg || '';
   modalAskingPrice.value = price;
 
-  if (modalGpsLat) modalGpsLat.value = crop.gps_latitude || '30.3753';
-  if (modalGpsLng) modalGpsLng.value = crop.gps_longitude || '69.3451';
+  const latVal = parseFloat(crop.gps_latitude || '34.0151');
+  const lngVal = parseFloat(crop.gps_longitude || '71.5249');
+
+  if (modalGpsLat) modalGpsLat.value = crop.gps_latitude || '34.0151';
+  if (modalGpsLng) modalGpsLng.value = crop.gps_longitude || '71.5249';
 
   cropModal.classList.remove('hidden');
+  syncLocationPicker(latVal, lngVal, 13);
   modalAcreage.focus();
 };
 
@@ -543,8 +726,8 @@ if (cropForm) {
     const harvestDate = modalHarvestDate.value;
     const acreage = parseFloat(modalAcreage.value);
     const quantityKg = parseFloat(modalQuantityKg.value);
-    const gpsLat = parseFloat(modalGpsLat.value || 30.3753);
-    const gpsLng = parseFloat(modalGpsLng.value || 69.3451);
+    const gpsLat = parseFloat(modalGpsLat.value || 34.0151);
+    const gpsLng = parseFloat(modalGpsLng.value || 71.5249);
 
     // Client-side validations matching contract constraints
     if (!cropName) {

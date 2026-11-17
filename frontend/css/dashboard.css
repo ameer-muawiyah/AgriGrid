@@ -1014,3 +1014,25 @@ input, select, textarea { font: inherit; }
   html { scroll-behavior: auto; }
   *, *::before, *::after { transition: none !important; animation: none !important; }
 }
+
+/* ── Crop Modal Field Location Picker (PD-M3) ── */
+#cropLocationMap {
+  height: 300px;
+  width: 100%;
+  border-radius: var(--radius-sm, 8px);
+  border: 1px solid var(--line);
+  margin-bottom: 4px;
+}
+
+#useMyLocationBtn {
+  font-size: 12px;
+  padding: 6px 14px;
+  min-height: 32px;
+}
+
+#locationPickerStatus {
+  font-size: 11.5px;
+  color: var(--clay);
+  line-height: 1.3;
+}
+

@@ -50,6 +50,8 @@ def row_to_summary(row: sqlite3.Row) -> dict:
         "batch_id":               row["batch_id"] if "batch_id" in keys else None,
         "planting_date":          row["planting_date"],
         "estimated_harvest_date": row["estimated_harvest_date"],
+        "gps_latitude":           row["gps_latitude"],
+        "gps_longitude":          row["gps_longitude"],
         "acreage":                row["acreage"],
         "quantity_kg":            row["quantity_kg"],
         "asking_price_per_kg":    row["asking_price_per_kg"] if "asking_price_per_kg" in keys else None,
