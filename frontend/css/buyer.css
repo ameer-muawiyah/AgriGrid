@@ -315,7 +315,7 @@
   align-items: center;
   justify-content: center;
   gap: 4px;
-  padding: 5px 12px;
+  padding: 5px 9px;
   border-radius: 8px;
   font-size: 11.5px;
   font-weight: 600;
@@ -325,6 +325,7 @@
   cursor: pointer;
   transition: all 0.15s ease;
   font-family: "Public Sans", sans-serif;
+  white-space: nowrap;
 }
 .btn-order-action:hover {
   border-color: var(--clay);

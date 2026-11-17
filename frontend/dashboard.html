@@ -29,7 +29,7 @@
     <div class="topbar-inner">
       <a href="dashboard.html" class="brand">
         <span class="brand-mark" aria-hidden="true"></span>
-        <span>AgriGrid<small>Farmer Console · Provenance Ledger</small></span>
+        <span>AgriGrid<small></small></span>
       </a>
 
       <!-- Navigation links -->
@@ -48,14 +48,14 @@
         </div>
 
         <div class="header-identity">
-          <div class="header-farm-name" id="headerFarmNameDisplay">Loading farm credentials...</div>
-          <div class="header-farm-location" id="headerFarmLocation">PK-Node · Verified</div>
+          <div class="header-farm-name" id="headerFarmNameDisplay">Loading…</div>
+          <div class="header-farm-location" id="headerFarmLocation"></div>
           <div class="header-username" id="headerUsername">Farmer</div>
         </div>
 
-        <div class="user-avatar" id="userAvatar" title="Active farmer node profile">F</div>
+        <div class="user-avatar" id="userAvatar" title="Farmer profile">F</div>
 
-        <button type="button" id="logoutBtn" class="btn-signout" title="Sign out of Agri-Grid">
+        <button type="button" id="logoutBtn" class="btn-signout" title="Sign out">
           <svg width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
           </svg>
@@ -71,8 +71,7 @@
     <!-- Dashboard Header -->
     <div class="dash-head">
       <div>
-        <h1 class="serif">Crop Ledger &amp; <em>Active Fields</em></h1>
-        <p>Manage your registered crops, planting telemetry, and harvest projections.</p>
+        <h1 class="serif">Crops</h1>
       </div>
       <button type="button" id="openAddCropModalBtn" class="btn small btn-add">
         + Add New Crop
@@ -93,7 +92,7 @@
         <!-- Metric 2: Total Cultivated Acreage -->
         <div class="dstat">
           <div class="num"><span id="metricTotalAcreage">0.0</span> <span style="font-size: 14px; font-weight: 500; color: var(--ink-soft);">ac</span></div>
-          <div class="lbl">Total Cultivated Acreage</div>
+          <div class="lbl">Total Acreage</div>
         </div>
 
         <!-- Metric 3: Projected Yield (Sum of kg) -->
@@ -155,7 +154,7 @@
         <!-- Table Loading State -->
         <div id="tableLoadingState" class="table-loading hidden">
           <div class="loading-spinner"></div>
-          <p>Fetching crop registry records from AgriGrid node...</p>
+          <p>Loading crops…</p>
         </div>
       </div>
 
@@ -184,7 +183,7 @@
       
       <!-- Modal Header -->
       <div class="modal-header">
-        <h3 id="modalTitle">Register New Crop Listing</h3>
+        <h3 id="modalTitle">Crop Listing</h3>
         <button type="button" id="closeCropModalBtn" class="modal-close" title="Close dialog">
           <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
@@ -262,10 +261,6 @@
             </div>
           </div>
 
-          <!-- Zero-Trust Compliance Notice -->
-          <div style="font-size: 11.5px; color: var(--ink-soft); background: var(--surface); border: 1px dashed var(--line); border-radius: 8px; padding: 8px 12px; margin-bottom: 6px;">
-            Zero-Trust Rule: Tenant identification is extracted strictly from your signed JWT session.
-          </div>
         </form>
       </div>
 
@@ -292,7 +287,7 @@
         <div class="delete-icon" aria-hidden="true">⚠️</div>
         <h3 id="deleteModalTitle">Withdraw Crop Listing</h3>
         <p id="deleteModalMessage">
-          Are you sure you want to withdraw this crop listing? It will be marked as Withdrawn in the provenance ledger.
+          Are you sure you want to withdraw this crop listing? It will be marked as Withdrawn and removed from the marketplace.
         </p>
       </div>
       <div class="modal-footer">
@@ -316,9 +311,9 @@
       <!-- Modal Header -->
       <div class="modal-header">
         <div>
-          <div class="forecast-badge-pill">⚡ Predictive Yield Forecast</div>
+          <div class="forecast-badge-pill">Yield Forecast</div>
           <h3 id="forecastModalCropName">Wheat Yield Projection</h3>
-          <p class="forecast-meta-sub" id="forecastModalAcreage">12.5 Acres · Provenance Field Model</p>
+          <p class="forecast-meta-sub" id="forecastModalAcreage">12.5 Acres</p>
         </div>
         <button type="button" id="closeForecastModalBtn" class="modal-close" title="Close dialog">
           <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -333,16 +328,16 @@
         <!-- Hero Metrics Grid: Yield & Confidence -->
         <div class="forecast-hero-grid">
           <div class="forecast-hero-card">
-            <div class="forecast-hero-label">Estimated Projected Yield</div>
+            <div class="forecast-hero-label">Estimated Yield</div>
             <div class="forecast-hero-value" id="forecastEstimatedYield">—</div>
-            <div class="forecast-hero-sub">Deterministic Agronomic Engine</div>
+            <div class="forecast-hero-sub"></div>
           </div>
           <div class="forecast-hero-card">
             <div class="forecast-hero-label">Confidence Score</div>
             <div class="forecast-badge-wrap">
               <span class="confidence-badge conf-high" id="forecastConfidenceBadge">--% Confidence</span>
             </div>
-            <div class="forecast-hero-sub" id="forecastConfidenceTier">Agronomic certainty tier</div>
+            <div class="forecast-hero-sub" id="forecastConfidenceTier"></div>
           </div>
         </div>
 
@@ -375,7 +370,7 @@
           </div>
           
           <div id="forecastTelemetryContainer" class="telemetry-grid">
-            <div class="telemetry-unavailable">Telemetry context unavailable</div>
+            <div class="telemetry-unavailable">Weather and soil data unavailable</div>
           </div>
         </div>
 
@@ -393,11 +388,6 @@
 
   <!-- Notification Toast Container -->
   <div id="toastContainer" class="toast-container" aria-live="polite"></div>
-
-  <!-- Footer -->
-  <footer style="margin-top: 48px; padding: 24px 0 32px; text-align: center; border-top: 1px solid var(--line); font-size: 13px; color: var(--ink-soft);">
-    Agri-Grid Protocol • Increment 1: Farmer Dashboard &amp; Supply-Side Provenance Ledger
-  </footer>
 
   <!-- Vanilla JavaScript Dashboard Controller -->
   <script src="js/dashboard.js"></script>

@@ -1,11 +1,11 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <meta name="color-scheme" content="light dark">
   <link rel="icon" href="data:,">
-  <title>AgriGrid — Wholesale Marketplace &amp; Buyer Portal</title>
+  <title>AgriGrid — Marketplace</title>
 
   <!-- Immediate Auth Guard: Redirects before render if unauthenticated -->
   <script>
@@ -30,7 +30,7 @@
     <div class="topbar-inner">
       <a href="buyer_dashboard.html" class="brand">
         <span class="brand-mark" aria-hidden="true"></span>
-        <span>AgriGrid<small>Buyer Portal · Marketplace Catalog</small></span>
+        <span>AgriGrid<small></small></span>
       </a>
 
       <!-- Navigation links (Candidate links, unhidden at init based on role) -->
@@ -47,21 +47,21 @@
 
       <!-- Header Identity & Session Controls -->
       <div class="header-right">
-        <!-- Virtual Escrow Wallet Pill -->
-        <div class="wallet-pill" id="headerWalletPill" title="Virtual Escrow Wallet Balance">
+        <!-- Escrow Wallet Pill -->
+        <div class="wallet-pill" id="headerWalletPill" title="Escrow Wallet Balance">
           <span class="wallet-lbl">Escrow Wallet</span>
           <span class="wallet-val" id="headerWalletBalance">Rs 500,000</span>
         </div>
 
         <div class="header-identity">
           <div class="header-farm-name" id="headerCompanyNameDisplay">Loading credentials...</div>
-          <div class="header-farm-location" id="headerLocationDisplay">Wholesale Hub · Verified</div>
-          <div class="header-username" id="headerRoleBadge">B2B Buyer</div>
+          <div class="header-farm-location" id="headerLocationDisplay"></div>
+          <div class="header-username" id="headerRoleBadge">Buyer</div>
         </div>
 
         <div class="user-avatar" id="buyerAvatar" title="Active buyer profile">B</div>
 
-        <button type="button" id="buyerLogoutBtn" class="btn-signout" title="Sign out of Agri-Grid">
+        <button type="button" id="buyerLogoutBtn" class="btn-signout" title="Sign out">
           <svg width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
           </svg>
@@ -77,8 +77,7 @@
     <!-- Section Header -->
     <div class="dash-head">
       <div>
-        <h1 class="serif">Wholesale Marketplace &amp; <em>Produce Catalog</em></h1>
-        <p>Browse verified commercial crop listings directly from authenticated farm nodes.</p>
+        <h1 class="serif">Marketplace</h1>
       </div>
     </div>
 
@@ -142,14 +141,14 @@
       <!-- Loading State -->
       <div id="catalogLoading" class="table-loading hidden">
         <div class="loading-spinner"></div>
-        <p>Fetching active marketplace listings from AgriGrid network...</p>
+        <p>Loading listings…</p>
       </div>
 
       <!-- Empty State -->
       <div id="catalogEmpty" class="empty-state hidden">
         <div class="empty-icon" aria-hidden="true">🌾</div>
         <h3 class="serif">No produce listings found.</h3>
-        <p>No active commercial listings match your selected filter criteria.</p>
+        <p>No listings match your filters.</p>
         <button type="button" id="clearFiltersBtn" class="btn small">Clear All Filters</button>
       </div>
 
@@ -184,7 +183,7 @@
       
       <!-- Modal Header -->
       <div class="modal-header">
-        <h3 id="detailModalTitle">Produce Listing Details</h3>
+        <h3 id="detailModalTitle">Listing Details</h3>
         <button type="button" id="closeDetailModalBtn" class="modal-close" title="Close dialog">
           <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
@@ -210,7 +209,7 @@
 
           <div class="detail-grid">
             <div class="detail-item highlight">
-              <div class="d-lbl">Commercial Asking Price</div>
+              <div class="d-lbl">Asking Price</div>
               <div class="d-val" id="modalAskingPriceVal">Rs 45.00 / kg</div>
             </div>
 
@@ -240,7 +239,7 @@
             </div>
 
             <div class="detail-item full-width">
-              <div class="d-lbl">Farm GPS Telemetry</div>
+              <div class="d-lbl">Farm Location (GPS)</div>
               <div class="d-val mono" id="modalGpsVal" style="font-size: 13px;">30.0444° N, 72.3441° E</div>
             </div>
 
@@ -257,8 +256,8 @@
 
           <!-- Checkout Section (Increment 2 Phase 3) -->
           <div id="checkoutSection" class="checkout-section">
-            <h4 class="checkout-heading">Procurement Escrow Checkout</h4>
-            <p class="checkout-sub">Whole-listing procurement locked in virtual escrow under zero-trust authorization.</p>
+            <h4 class="checkout-heading">Checkout</h4>
+            <p class="checkout-sub">The full amount is held in escrow and released to the farmer when you confirm delivery.</p>
 
             <!-- Inline checkout error / alert banner (Rendered inline verbatim) -->
             <div id="checkoutAlert" class="checkout-alert hidden"></div>
@@ -267,9 +266,9 @@
               <div class="checkout-form-grid">
                 <!-- Locked Quantity (Whole-listing invariant) -->
                 <div class="checkout-field">
-                  <label for="checkoutLockedQuantity">Ordered Quantity (Locked) <span class="lock-icon" aria-hidden="true">🔒</span></label>
+                  <label for="checkoutLockedQuantity">Quantity (full lot) <span class="lock-icon" aria-hidden="true">🔒</span></label>
                   <input type="text" id="checkoutLockedQuantity" class="checkout-input locked" readonly disabled value="0 kg">
-                  <span class="field-hint">Whole-listing procurement rule (not editable)</span>
+                  <span class="field-hint">Whole-listing purchase only</span>
                 </div>
 
                 <!-- Destination Warehouse (Required) -->
@@ -281,23 +280,23 @@
 
                 <!-- Max Temperature Celsius (Required) -->
                 <div class="checkout-field">
-                  <label for="checkoutMaxTemp">Max Cold-Chain Temp (°C) <span class="required-star">*</span></label>
+                  <label for="checkoutMaxTemp">Max Temperature (°C) <span class="required-star">*</span></label>
                   <input type="number" id="checkoutMaxTemp" class="checkout-input" step="0.1" min="-25.0" max="30.0" placeholder="e.g. 6.0" required>
-                  <span class="field-hint">Cold-chain threshold (-25.0°C to 30.0°C)</span>
+                  <span class="field-hint">Between −25°C and 30°C</span>
                 </div>
 
                 <!-- Total Escrow Commitment -->
                 <div class="checkout-field">
-                  <label>Total Escrow Commitment</label>
+                  <label>Total</label>
                   <div id="checkoutTotalCommitment" class="checkout-total-val">Rs 0</div>
-                  <span class="field-hint">Deducted from Escrow Wallet upon confirmation</span>
+                  <span class="field-hint">Deducted from your escrow wallet</span>
                 </div>
               </div>
 
               <!-- Checkout Actions -->
               <div class="checkout-actions">
                 <button type="submit" id="checkoutSubmitBtn" class="btn checkout-btn">
-                  <span id="checkoutSubmitBtnText">Lock Escrow &amp; Place Order</span>
+                  <span id="checkoutSubmitBtnText">Place Order</span>
                   <span id="checkoutSpinner" class="spinner hidden"></span>
                 </button>
               </div>
@@ -306,15 +305,15 @@
             <!-- Order Success State View (Revealed on 201) -->
             <div id="checkoutSuccessState" class="checkout-success hidden">
               <div class="success-icon" aria-hidden="true">✓</div>
-              <h4>Order Created Successfully</h4>
-              <p>Escrow funds locked in AgriGrid settlement ledger.</p>
+              <h4>Order Placed</h4>
+              <p>The amount is held in escrow until you confirm delivery.</p>
               <div class="success-details">
                 <div class="s-row">
                   <span class="s-lbl">Order Number:</span>
                   <span class="s-val mono" id="successOrderNumber">ORD-2026-XXXX</span>
                 </div>
                 <div class="s-row">
-                  <span class="s-lbl">Total Escrow Locked:</span>
+                  <span class="s-lbl">Total:</span>
                   <span class="s-val mono" id="successOrderTotal">Rs 0</span>
                 </div>
                 <div class="s-row">

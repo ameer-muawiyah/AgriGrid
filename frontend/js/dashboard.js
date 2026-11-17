@@ -1,6 +1,6 @@
-/**
- * Agri-Grid Farmer Dashboard Controller (Increment 1)
- * Manages Auth Session Guard, Active Crop CRUD Operations, Metrics, and Zero-Trust Request Pipeline.
+﻿/**
+ * AgriGrid Farmer Dashboard Controller (Increment 1)
+ * Manages Auth Session Guard, Active Crop CRUD Operations, Metrics, and Request Pipeline.
  */
 
 const API_BASE_URL = 'http://127.0.0.1:5000/api';
@@ -153,13 +153,13 @@ function initUserProfile() {
     }
 
     const username = currentUser.username || 'Farmer';
-    const farmName = currentUser.farm_name || currentUser.farm || (currentUser.farmer_id ? `Farm Node #${currentUser.farmer_id}` : 'Verified Farm Node');
+    const farmName = currentUser.farm_name || currentUser.farm || (currentUser.farmer_id ? `My Farm #${currentUser.farmer_id}` : 'My Farm');
     
     if (headerUsername) headerUsername.textContent = username;
     if (headerFarmNameDisplay) headerFarmNameDisplay.textContent = farmName;
     if (userAvatar) userAvatar.textContent = username.charAt(0).toUpperCase();
   } else {
-    if (headerFarmNameDisplay) headerFarmNameDisplay.textContent = 'Active Farmer Terminal';
+    if (headerFarmNameDisplay) headerFarmNameDisplay.textContent = 'My Farm';
   }
 }
 
@@ -198,7 +198,7 @@ function initDateDefaults() {
 }
 
 // =========================================================================
-// 3. API SERVICE LAYER (WITH ZERO-TRUST & JWT HEADERS)
+// 3. API SERVICE LAYER (WITH AUTH & JWT HEADERS)
 // =========================================================================
 function getAuthHeaders() {
   return {
@@ -208,7 +208,7 @@ function getAuthHeaders() {
 }
 
 /**
- * Robust error extractor matching Agri-Grid contract Section 5
+ * Robust error extractor matching AgriGrid contract Section 5
  */
 function extractErrorMessage(data, fallback = 'Server operation failed.') {
   if (!data) return fallback;
@@ -279,7 +279,7 @@ async function loadCrops(page = 1) {
     }
   } catch (error) {
     console.error('Failed to load crop listings:', error);
-    showToast(`Network error reaching Agri-Grid API at ${API_BASE_URL}. Ensure backend is running.`, 'error');
+    showToast(`Network error reaching AgriGrid API at ${API_BASE_URL}. Ensure backend is running.`, 'error');
     renderCropsTable([], 0);
   } finally {
     showTableLoading(false);
@@ -577,7 +577,7 @@ if (cropForm) {
       return;
     }
 
-    // Zero-Trust Payload Construction:
+    // Payload Construction:
     // STRICT RULE: Never include farmer_id or user_id in the payload!
     const payload = {
       crop_name: cropName,
@@ -656,7 +656,7 @@ function setModalButtonLoading(isLoading) {
 // =========================================================================
 window.openWithdrawModal = function(listingId) {
   cropToDeleteId = listingId;
-  deleteModalMessage.textContent = `Are you sure you want to withdraw crop listing #${listingId}? It will be marked as Withdrawn in the provenance ledger.`;
+  deleteModalMessage.textContent = `Are you sure you want to withdraw crop listing #${listingId}? It will be marked as Withdrawn and removed from the marketplace.`;
   deleteModal.classList.remove('hidden');
 };
 
@@ -696,7 +696,7 @@ if (confirmDeleteBtn) {
       }
     } catch (err) {
       console.error('Delete crop error:', err);
-      showToast(`Network error communicating with Agri-Grid Gateway.`, 'error');
+      showToast(`Network error communicating with AgriGrid Gateway.`, 'error');
       closeDeleteModal();
     }
   });
@@ -758,7 +758,7 @@ window.handleForecastYield = async function(event, listingId) {
     }
   } catch (err) {
     console.error('Yield prediction error:', err);
-    showToast(`Network error reaching Agri-Grid API at ${API_BASE_URL}. Ensure backend is running.`, 'error');
+    showToast(`Network error reaching AgriGrid API at ${API_BASE_URL}. Ensure backend is running.`, 'error');
   } finally {
     if (btn) {
       btn.disabled = false;
@@ -780,7 +780,7 @@ async function openForecastModal(forecast, listingId) {
     forecastModalCropName.textContent = `${cropName} Yield Projection`;
   }
   if (forecastModalAcreage) {
-    forecastModalAcreage.textContent = `${acreage.toFixed(1)} Acres · Provenance Field Model`;
+    forecastModalAcreage.textContent = `${acreage.toFixed(1)} Acres`;
   }
 
   // Estimated yield: formatted kg + tonnes in parentheses (2 decimals)
@@ -852,7 +852,7 @@ async function loadTelemetryContext(lat, lon) {
   if (!forecastTelemetryContainer) return;
 
   if (lat === null || lat === undefined || lon === null || lon === undefined || isNaN(Number(lat)) || isNaN(Number(lon))) {
-    forecastTelemetryContainer.innerHTML = '<div class="telemetry-unavailable">Telemetry context unavailable</div>';
+    forecastTelemetryContainer.innerHTML = '<div class="telemetry-unavailable">Weather and soil data unavailable</div>';
     return;
   }
 
@@ -887,7 +887,7 @@ async function loadTelemetryContext(lat, lon) {
     }
 
     if (!weatherData || !soilData) {
-      forecastTelemetryContainer.innerHTML = '<div class="telemetry-unavailable">Telemetry context unavailable</div>';
+      forecastTelemetryContainer.innerHTML = '<div class="telemetry-unavailable">Weather and soil data unavailable</div>';
       return;
     }
 
@@ -917,7 +917,7 @@ async function loadTelemetryContext(lat, lon) {
     forecastTelemetryContainer.innerHTML = html;
   } catch (err) {
     console.error('Telemetry fetch error:', err);
-    forecastTelemetryContainer.innerHTML = '<div class="telemetry-unavailable">Telemetry context unavailable</div>';
+    forecastTelemetryContainer.innerHTML = '<div class="telemetry-unavailable">Weather and soil data unavailable</div>';
   }
 }
 

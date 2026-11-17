@@ -1,4 +1,4 @@
-/**
+﻿/**
  * AgriGrid — Farmer Inbound Orders & Settlement Management
  * Handles inbound order tracking, cancellation/dispute actions, and wallet updates.
  */
@@ -155,7 +155,7 @@ function initUserProfile() {
     }
 
     const username = currentUser.username || 'Farmer';
-    const farmName = currentUser.farm_name || currentUser.farm || (currentUser.farmer_id ? `Farm Node #${currentUser.farmer_id}` : 'Verified Farm Node');
+    const farmName = currentUser.farm_name || currentUser.farm || (currentUser.farmer_id ? `My Farm #${currentUser.farmer_id}` : 'My Farm');
 
     if (headerUsername) headerUsername.textContent = username;
     if (headerFarmNameDisplay) headerFarmNameDisplay.textContent = farmName;
@@ -301,7 +301,7 @@ function renderFarmerOrdersTable(orders) {
     const qtyKg = parseFloat(order.quantity_kg || 0).toLocaleString();
     const unitPrice = formatPriceRs(order.unit_price_pkr);
     const totalPrice = formatPriceRs(order.total_price_pkr);
-    const dest = order.delivery_address || order.destination || 'Mandi Terminal';
+    const dest = order.delivery_address || order.destination || '—';
     const maxTemp = order.max_temp_celsius !== undefined && order.max_temp_celsius !== null
       ? `${order.max_temp_celsius}°C`
       : 'Standard';

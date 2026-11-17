@@ -1,11 +1,11 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <meta name="color-scheme" content="light dark">
   <link rel="icon" href="data:,">
-  <title>AgriGrid — Buyer Orders &amp; Procurement Ledger</title>
+  <title>AgriGrid — Orders</title>
 
   <!-- Immediate Auth & Role Guard (PD-R2): Redirects before render -->
   <script>
@@ -45,7 +45,7 @@
     <div class="topbar-inner">
       <a href="buyer_dashboard.html" class="brand">
         <span class="brand-mark" aria-hidden="true"></span>
-        <span>AgriGrid<small>Buyer Portal · Procurement Ledger</small></span>
+        <span>AgriGrid<small></small></span>
       </a>
 
       <!-- Navigation links (Candidate links, unhidden at init based on role) -->
@@ -57,21 +57,21 @@
 
       <!-- Header Identity & Session Controls -->
       <div class="header-right">
-        <!-- Virtual Escrow Wallet Pill -->
-        <div class="wallet-pill" id="headerWalletPill" title="Virtual Escrow Wallet Balance">
+        <!-- Escrow Wallet Pill -->
+        <div class="wallet-pill" id="headerWalletPill" title="Escrow Wallet Balance">
           <span class="wallet-lbl">Escrow Wallet</span>
           <span class="wallet-val" id="headerWalletBalance">Rs 500,000</span>
         </div>
 
         <div class="header-identity">
           <div class="header-farm-name" id="headerCompanyNameDisplay">Loading credentials...</div>
-          <div class="header-farm-location" id="headerLocationDisplay">Wholesale Hub · Verified</div>
-          <div class="header-username" id="headerRoleBadge">B2B Buyer</div>
+          <div class="header-farm-location" id="headerLocationDisplay"></div>
+          <div class="header-username" id="headerRoleBadge">Buyer</div>
         </div>
 
         <div class="user-avatar" id="buyerAvatar" title="Active buyer profile">B</div>
 
-        <button type="button" id="buyerLogoutBtn" class="btn-signout" title="Sign out of Agri-Grid">
+        <button type="button" id="buyerLogoutBtn" class="btn-signout" title="Sign out">
           <svg width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
           </svg>
@@ -89,8 +89,7 @@
     <section id="ordersSection" class="orders-section" aria-labelledby="ordersHeading">
       <div class="dash-head" style="margin: 0 0 10px;">
         <div>
-          <h1 id="ordersHeading" class="serif" style="font-size: 28px; margin: 0;">Escrow Orders &amp; <em>Procurement Ledger</em></h1>
-          <p style="margin: 4px 0 0; color: var(--ink-soft); font-size: 13px;">Manage multi-actor procurement contracts and settlement release states.</p>
+          <h1 id="ordersHeading" class="serif" style="font-size: 28px; margin: 0;">Orders</h1>
         </div>
       </div>
 
@@ -122,7 +121,7 @@
               <th scope="col">Max Temp</th>
               <th scope="col">Status</th>
               <th scope="col">Created</th>
-              <th scope="col" style="text-align: right; padding-right: 16px;">Actions</th>
+              <th scope="col" class="cell-actions" style="text-align: right; padding-right: 16px;">Actions</th>
             </tr>
           </thead>
           <tbody id="buyerOrdersTableBody">
@@ -133,14 +132,14 @@
         <!-- Empty State -->
         <div id="buyerOrdersEmpty" class="empty-state hidden">
           <div class="empty-icon" aria-hidden="true">📦</div>
-          <h3 class="serif">No procurement orders found.</h3>
-          <p>You have no procurement orders matching the selected status filter.</p>
+          <h3 class="serif">No orders found.</h3>
+          <p>No orders match the selected status.</p>
         </div>
 
         <!-- Loading State -->
         <div id="buyerOrdersLoading" class="table-loading hidden">
           <div class="loading-spinner"></div>
-          <p>Fetching procurement orders from settlement ledger...</p>
+          <p>Loading orders…</p>
         </div>
       </div>
 

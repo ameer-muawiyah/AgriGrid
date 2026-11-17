@@ -1,6 +1,6 @@
 /**
- * AgriGrid — B2B Buyer Procurement & Escrow Orders Controller
- * Dedicated orders management page for wholesale buyers.
+ * AgriGrid — Buyer Orders Controller
+ * Dedicated orders management page for buyers.
  */
 
 const API_BASE_URL = 'http://127.0.0.1:5000/api';
@@ -131,10 +131,10 @@ function initHeaderProfile() {
     if (buyerNavMarketplace) buyerNavMarketplace.classList.remove('hidden');
     if (buyerNavOrders) buyerNavOrders.classList.remove('hidden');
 
-    const company = currentUser.company_name || currentUser.username || 'B2B Wholesale Terminal';
+    const company = currentUser.company_name || currentUser.username || 'My Company';
     if (headerCompanyNameDisplay) headerCompanyNameDisplay.textContent = company;
-    if (headerLocationDisplay) headerLocationDisplay.textContent = 'Wholesale Terminal · Verified';
-    if (headerRoleBadge) headerRoleBadge.textContent = 'B2B Buyer';
+    if (headerLocationDisplay) headerLocationDisplay.textContent = '';
+    if (headerRoleBadge) headerRoleBadge.textContent = 'Buyer';
 
     const rawBalance = currentUser.wallet_balance_pkr !== undefined ? currentUser.wallet_balance_pkr : 500000.0;
     const formattedBalance = `Rs ${Math.round(parseFloat(rawBalance)).toLocaleString('en-US')}`;
@@ -292,7 +292,7 @@ function renderBuyerOrdersTable(orders) {
     const orderNumber = order.order_number || `ORD-${orderId}`;
     const cropName = order.crop_name || 'Produce';
     const batchId = order.batch_id || '—';
-    const farmName = order.farm_name || (order.farmer_id ? `Farm #${order.farmer_id}` : 'Verified Farm');
+    const farmName = order.farm_name || (order.farmer_id ? `Farm #${order.farmer_id}` : 'Farm');
     const qty = parseFloat(order.ordered_quantity_kg) || 0;
     const pricePerKg = parseFloat(order.agreed_price_per_kg) || 0;
     const totalPkr = parseFloat(order.total_amount_pkr) || (qty * pricePerKg);

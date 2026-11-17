@@ -1,11 +1,11 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <meta name="color-scheme" content="light dark">
   <link rel="icon" href="data:,">
-  <title>AgriGrid — Terra × Terracotta Hybrid Auth Portal</title>
+  <title>AgriGrid — Sign In</title>
   
   <!-- Google Fonts: Fraunces (Display serif), Public Sans (Body), IBM Plex Mono (Code/Metadata) -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -22,12 +22,9 @@
     <div class="topbar-inner">
       <a href="index.html" class="brand">
         <span class="brand-mark" aria-hidden="true"></span>
-        <span>AgriGrid<small>Decentralized Food Security · Increment 1</small></span>
+        <span>AgriGrid<small>Smart Agriculture Ecosystem</small></span>
       </a>
       <div style="margin-left: auto; display: flex; align-items: center; gap: 8px;">
-        <span class="mono" style="font-size: 11.5px; color: var(--clay); font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase;">
-          RBAC Gateway · Farmer Node
-        </span>
       </div>
     </div>
   </header>
@@ -37,10 +34,8 @@
     
     <!-- Left: Arch-Framed Wheat-Sunset Hero Photo -->
     <figure class="login-photo" style="margin: 0;">
-      <img src="img/wheat-sunset.jpg" alt="Golden wheat field at sunset — AgriGrid provenance">
-      <figcaption>
-        Good earth. <em>Fair trade.</em> One grid.
-      </figcaption>
+      <img src="img/wheat-sunset.jpg" alt="Golden wheat field at sunset">
+      <figcaption></figcaption>
     </figure>
 
     <!-- Right: Arched Doorway Sign-In Panel -->
@@ -56,8 +51,8 @@
         </div>
 
         <!-- Headings -->
-        <h1 class="serif" id="authPortalHeading" style="font-size: 26px; text-align: center; margin: 0 0 4px; font-weight: 500;">Welcome to Agri-Grid</h1>
-        <p class="sub" id="authPortalSubheading">Access your decentralized farm telemetry and crop ledger</p>
+        <h1 class="serif" id="authPortalHeading" style="font-size: 26px; text-align: center; margin: 0 0 4px; font-weight: 500;">Welcome to AgriGrid</h1>
+        <p class="sub" id="authPortalSubheading">Sign in to manage your crops, orders and sales.</p>
 
         <!-- Tab Switcher -->
         <div class="tab-bar" role="tablist" aria-label="Authentication Options">
@@ -102,7 +97,7 @@
               <label for="loginPassword" style="margin-bottom: 0;">Password</label>
               <a href="javascript:void(0)" id="forgotPasswordLink" class="forgot-link">
                 Forgot password?
-                <span class="tooltip">Self-service recovery scheduled for Increment 2</span>
+                <span class="tooltip">Password recovery is not available yet — it is planned for a future increment.</span>
               </a>
             </div>
             <div class="password-wrap">
@@ -128,7 +123,7 @@
           </div>
 
           <button type="submit" id="loginSubmitBtn" class="btn" style="margin-top: 10px;">
-            <span id="loginBtnText">Sign In to Farm Node</span>
+            <span id="loginBtnText">Sign In to AgriGrid</span>
             <span id="loginSpinner" class="spinner hidden"></span>
           </button>
         </form>
@@ -141,8 +136,8 @@
           <div class="field">
             <label for="regRole">Account Type <span style="color: var(--clay);">*</span></label>
             <select id="regRole" name="role" required>
-              <option value="farmer" selected>Farmer (Producer Node)</option>
-              <option value="buyer">B2B Buyer (Wholesale Merchant)</option>
+              <option value="farmer" selected>Farmer</option>
+              <option value="buyer">Buyer</option>
             </select>
           </div>
 
@@ -226,7 +221,7 @@
               minlength="3" 
               maxlength="50" 
               required>
-            <small style="display: block; font-size: 11px; color: var(--ink-soft); margin-top: 4px;">3–50 alphanumeric characters (unique node ID)</small>
+            <small style="display: block; font-size: 11px; color: var(--ink-soft); margin-top: 4px;">3–50 characters, letters and numbers only</small>
           </div>
 
           <div class="field">
@@ -267,12 +262,11 @@
 
           <!-- Role Assurance Indicator -->
           <div id="regRoleIndicator" style="background: var(--surface-2); border: 1px solid var(--line); border-radius: 12px; padding: 10px 14px; margin-bottom: 14px; display: flex; align-items: center; justify-content: space-between; font-size: 12px;">
-            <span id="regRoleBadgeText" style="font-weight: 600; color: var(--ink);">Role: Verified Farmer (Producer)</span>
-            <span class="mono" style="font-size: 10.5px; background: var(--clay); color: #fff8ec; padding: 2px 8px; border-radius: 999px;">Increment 2</span>
+            <span id="regRoleBadgeText" style="font-weight: 600; color: var(--ink);">Farmer account</span>
           </div>
 
           <button type="submit" id="registerSubmitBtn" class="btn" style="margin-top: 6px;">
-            <span id="registerBtnText">Register & Initialize Farm</span>
+            <span id="registerBtnText">Create Farmer Account</span>
             <span id="registerSpinner" class="spinner hidden"></span>
           </button>
         </form>
@@ -287,42 +281,42 @@
 
         <!-- Colonnade: 5 System Roles (Farmer & Buyer Active; Others Future Increments) -->
         <div class="colonnade-section">
-          <div class="colonnade-label">Ecosystem Roles</div>
+          <div class="colonnade-label">Roles on AgriGrid</div>
           <div class="colonnade" aria-label="AgriGrid Roles">
             <!-- Role 1: Farmer (Active) -->
             <div class="role-arch" style="border-color: var(--clay);">
               <span class="glyph" aria-hidden="true">🌱</span>
               <h5>Farmer</h5>
-              <p>Active</p>
-              <span class="go">Node</span>
+              <p>Available</p>
+              <span class="go">Available</span>
             </div>
             <!-- Role 2: Buyer (Active in Increment 2) -->
             <div class="role-arch" style="border-color: var(--clay);">
               <span class="glyph" aria-hidden="true">⚖️</span>
               <h5>Buyer</h5>
-              <p>Trade</p>
-              <span class="go">Active</span>
+              <p>Available</p>
+              <span class="go">Available</span>
             </div>
             <!-- Role 3: Transporter (Future) -->
             <div class="role-arch future" title="Available in Increment 2">
               <span class="glyph" aria-hidden="true">🚛</span>
               <h5>Transporter</h5>
-              <p>Fleet</p>
-              <span class="go">Inc 2</span>
+              <p>Increment 3</p>
+              <span class="go">Increment 3</span>
             </div>
             <!-- Role 4: Agronomist (Future) -->
             <div class="role-arch future" title="Available in a future increment">
               <span class="glyph" aria-hidden="true">🔬</span>
               <h5>Agronomist</h5>
-              <p>Advisory</p>
-              <span class="go">Future</span>
+              <p>Increment 3</p>
+              <span class="go">Increment 3</span>
             </div>
             <!-- Role 5: Compliance Officer (Future) -->
             <div class="role-arch future" title="Available in a future increment">
               <span class="glyph" aria-hidden="true">🛡️</span>
               <h5>Compliance</h5>
-              <p>Audit</p>
-              <span class="go">Future</span>
+              <p>Increment 3</p>
+              <span class="go">Increment 3</span>
             </div>
           </div>
         </div>

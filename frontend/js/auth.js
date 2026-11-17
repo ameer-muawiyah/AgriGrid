@@ -1,5 +1,5 @@
 /**
- * Agri-Grid Authentication & Session Gateway (Increment 1)
+ * AgriGrid Authentication & Session Gateway
  * Handles Farmer Registration, Authentication, JWT Token Persistence, and UI State Transitions.
  */
 
@@ -66,13 +66,13 @@ function switchTab(target) {
     registerForm.classList.add('hidden');
 
     // Text headings
-    authPortalHeading.textContent = 'Welcome to Agri-Grid';
-    authPortalSubheading.textContent = 'Access your decentralized farm telemetry and crop ledger';
+    authPortalHeading.textContent = 'Welcome to AgriGrid';
+    authPortalSubheading.textContent = 'Sign in to manage your crops, orders and sales.';
 
     // Bottom toggle prompt
-    bottomTogglePrompt.innerHTML = `Don't have a farmer account yet? 
+    bottomTogglePrompt.innerHTML = `Don't have an account yet? 
       <button type="button" id="switchLinkToRegister" class="toggle-link">
-        Register as Farmer
+        Register Account
       </button>`;
     
     const newSwitchBtn = document.getElementById('switchLinkToRegister');
@@ -93,11 +93,11 @@ function switchTab(target) {
     loginForm.classList.add('hidden');
 
     // Text headings
-    authPortalHeading.textContent = 'Join Agri-Grid Network';
-    authPortalSubheading.textContent = 'Register your farm node to start logging crops and telemetry';
+    authPortalHeading.textContent = 'Join AgriGrid';
+    authPortalSubheading.textContent = 'Create an account to manage crops, orders and sales.';
 
     // Bottom toggle prompt
-    bottomTogglePrompt.innerHTML = `Already registered on Agri-Grid? 
+    bottomTogglePrompt.innerHTML = `Already registered on AgriGrid? 
       <button type="button" id="switchLinkToLogin" class="toggle-link">
         Sign in here
       </button>`;
@@ -275,7 +275,7 @@ if (loginForm) {
       return;
     }
 
-    setButtonLoading(loginSubmitBtn, loginBtnText, loginSpinner, true, 'Authenticating...', 'Sign In to Farm Node');
+    setButtonLoading(loginSubmitBtn, loginBtnText, loginSpinner, true, 'Authenticating...', 'Sign In to AgriGrid');
 
     try {
       const response = await fetch(`${API_BASE_URL}/auth/login`, {
@@ -325,11 +325,11 @@ if (loginForm) {
     } catch (networkError) {
       console.error('Login network error:', networkError);
       showAlert(
-        `Unable to reach Agri-Grid Gateway at ${API_BASE_URL}. Ensure the backend server is active.`,
+        `Unable to reach AgriGrid Gateway at ${API_BASE_URL}. Ensure the backend server is active.`,
         'error'
       );
     } finally {
-      setButtonLoading(loginSubmitBtn, loginBtnText, loginSpinner, false, 'Authenticating...', 'Sign In to Farm Node');
+      setButtonLoading(loginSubmitBtn, loginBtnText, loginSpinner, false, 'Authenticating...', 'Sign In to AgriGrid');
     }
   });
 }
@@ -345,13 +345,13 @@ if (regRoleSelect) {
     if (role === 'buyer') {
       if (farmerFields) farmerFields.classList.add('hidden');
       if (buyerFields) buyerFields.classList.remove('hidden');
-      if (registerBtnText) registerBtnText.textContent = 'Register as B2B Buyer';
-      if (regRoleBadgeText) regRoleBadgeText.textContent = 'Role: B2B Wholesale Buyer';
+      if (registerBtnText) registerBtnText.textContent = 'Create Buyer Account';
+      if (regRoleBadgeText) regRoleBadgeText.textContent = 'Buyer account';
     } else {
       if (farmerFields) farmerFields.classList.remove('hidden');
       if (buyerFields) buyerFields.classList.add('hidden');
-      if (registerBtnText) registerBtnText.textContent = 'Register & Initialize Farm';
-      if (regRoleBadgeText) regRoleBadgeText.textContent = 'Role: Verified Farmer (Producer)';
+      if (registerBtnText) registerBtnText.textContent = 'Create Farmer Account';
+      if (regRoleBadgeText) regRoleBadgeText.textContent = 'Farmer account';
     }
   });
 }
@@ -453,7 +453,7 @@ if (registerForm) {
     }
 
     const loadingLabel = selectedRole === 'buyer' ? 'Registering Buyer...' : 'Registering Farm...';
-    const defaultLabel = selectedRole === 'buyer' ? 'Register as B2B Buyer' : 'Register & Initialize Farm';
+    const defaultLabel = selectedRole === 'buyer' ? 'Create Buyer Account' : 'Create Farmer Account';
     setButtonLoading(registerSubmitBtn, registerBtnText, registerSpinner, true, loadingLabel, defaultLabel);
 
     try {
@@ -478,8 +478,8 @@ if (registerForm) {
         if (farmerFields) farmerFields.classList.remove('hidden');
         if (buyerFields) buyerFields.classList.add('hidden');
         if (regRoleSelect) regRoleSelect.value = 'farmer';
-        if (registerBtnText) registerBtnText.textContent = 'Register & Initialize Farm';
-        if (regRoleBadgeText) regRoleBadgeText.textContent = 'Role: Verified Farmer (Producer)';
+        if (registerBtnText) registerBtnText.textContent = 'Create Farmer Account';
+        if (regRoleBadgeText) regRoleBadgeText.textContent = 'Farmer account';
         switchTab('login');
         showAlert(successMessage, 'success');
         if (loginUsernameInput) {
@@ -497,7 +497,7 @@ if (registerForm) {
     } catch (networkError) {
       console.error('Registration network error:', networkError);
       showAlert(
-        `Unable to reach Agri-Grid Gateway at ${API_BASE_URL}. Ensure the backend server is active.`,
+        `Unable to reach AgriGrid Gateway at ${API_BASE_URL}. Ensure the backend server is active.`,
         'error'
       );
     } finally {

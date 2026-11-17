@@ -1,5 +1,5 @@
-/**
- * Agri-Grid — B2B Wholesale Marketplace & Buyer Controller
+﻿/**
+ * AgriGrid — Marketplace & Buyer Controller
  * Increment 2, Phase 2 (Contracts Endpoints 1–4, 13)
  */
 
@@ -158,23 +158,23 @@ function initHeaderProfile() {
     if (farmerNavOrders) farmerNavOrders.classList.remove('hidden');
     if (farmerNavMarketplace) farmerNavMarketplace.classList.remove('hidden');
     if (headerCompanyNameDisplay) {
-      headerCompanyNameDisplay.textContent = currentUser.farm_name || currentUser.username || 'Farmer Terminal';
+      headerCompanyNameDisplay.textContent = currentUser.farm_name || currentUser.username || 'My Farm';
     }
-    if (headerLocationDisplay) headerLocationDisplay.textContent = 'Producer Node · Verified';
-    if (headerRoleBadge) headerRoleBadge.textContent = 'Farmer (Market View)';
+    if (headerLocationDisplay) headerLocationDisplay.textContent = '';
+    if (headerRoleBadge) headerRoleBadge.textContent = 'Farmer';
     if (headerWalletPill) {
       headerWalletPill.title = 'Marketplace read-only transparency mode';
-      headerWalletBalance.textContent = 'Transparency View';
+      headerWalletBalance.textContent = 'Farmer view';
     }
     if (buyerAvatar) buyerAvatar.textContent = (currentUser.username || 'F').charAt(0).toUpperCase();
   } else if (role === 'buyer') {
     // Buyer account
     if (buyerNavMarketplace) buyerNavMarketplace.classList.remove('hidden');
     if (buyerNavOrders) buyerNavOrders.classList.remove('hidden');
-    const company = currentUser.company_name || currentUser.username || 'B2B Wholesale Terminal';
+    const company = currentUser.company_name || currentUser.username || 'My Company';
     if (headerCompanyNameDisplay) headerCompanyNameDisplay.textContent = company;
-    if (headerLocationDisplay) headerLocationDisplay.textContent = 'Wholesale Terminal · Verified';
-    if (headerRoleBadge) headerRoleBadge.textContent = 'B2B Buyer';
+    if (headerLocationDisplay) headerLocationDisplay.textContent = '';
+    if (headerRoleBadge) headerRoleBadge.textContent = 'Buyer';
 
     // Balance rendered as Rs 500,000 (Rs + thousands separators - zero $)
     const rawBalance = currentUser.wallet_balance_pkr !== undefined ? currentUser.wallet_balance_pkr : 500000.0;
@@ -301,7 +301,7 @@ function renderCatalogCards(listings) {
     const listingId = listing.listing_id || listing.id;
     const cropName = listing.crop_name || 'Produce';
     const batchId = listing.batch_id || 'BATCH-PROV';
-    const farmName = listing.farm_name || 'Verified Farm Node';
+    const farmName = listing.farm_name || 'Unknown farm';
     const farmLoc = listing.farm_location || 'Pakistan';
     const quantityKg = parseFloat(listing.quantity_kg) || 0;
     const pricePerKg = parseFloat(listing.asking_price_per_kg) || 0;
@@ -418,7 +418,7 @@ window.openListingDetail = async function(listingId) {
     if (modalCropIcon) modalCropIcon.textContent = getCropEmoji(item.crop_name);
     if (modalCropNameHeading) modalCropNameHeading.textContent = item.crop_name || 'Produce';
     if (modalFarmOrigin) {
-      modalFarmOrigin.textContent = `${item.farm_name || 'Farm Node'} • ${item.farm_location || 'Pakistan'}`;
+      modalFarmOrigin.textContent = `${item.farm_name || 'Unknown farm'} • ${item.farm_location || 'Pakistan'}`;
     }
     if (modalBatchIdBadge) modalBatchIdBadge.textContent = item.batch_id || 'BATCH-PROV';
     if (modalAskingPriceVal) modalAskingPriceVal.textContent = `${formatPriceRs(item.asking_price_per_kg)} / kg`;
@@ -450,7 +450,7 @@ window.openListingDetail = async function(listingId) {
       if (currentUser && currentUser.role === 'farmer') {
         checkoutSection.innerHTML = `
           <div style="padding: 14px; background: var(--surface-2); border: 1px solid var(--line); border-radius: 12px; font-size: 13px; color: var(--ink-soft); text-align: center; margin-top: 16px;">
-            Marketplace Transparency Mode: Procurement ordering is reserved for verified B2B Buyer accounts.
+            You are browsing as a farmer. Only buyer accounts can place orders.
           </div>
         `;
       } else {
