@@ -58,6 +58,7 @@
 /* Default theme: Dark (product home look, always active unless data-theme="light") */
 :root:not([data-theme="light"]),
 [data-theme="dark"] {
+  color-scheme: dark;
   --paper: #1a110a;
   --bg: #130c06;
   --surface: #241810;
@@ -81,6 +82,7 @@
 
 /* Light Mode Palette (warm paper, clay, and ink) */
 [data-theme="light"] {
+  color-scheme: light;
   --paper: #faf5ec;
   --bg: #f4ecdc;
   --surface: #fffdf7;
@@ -180,8 +182,9 @@ input, select { font: inherit; }
 
 /* Right: Form panel */
 .login-side {
-  display: flex; align-items: center; justify-content: center;
-  padding: 46px 30px;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  padding: 38px 30px 14px;
+  gap: 10px;
   background: radial-gradient(560px 300px at 50% -60px, var(--clay-soft), transparent 70%);
 }
 
@@ -199,6 +202,11 @@ input, select { font: inherit; }
 .doorway::before {
   content: ""; position: absolute; inset: 8px;
   border: 1px solid var(--line); border-radius: var(--arch); pointer-events: none;
+}
+/* Light-theme defined doorway card (Fix 3) */
+[data-theme="light"] .doorway {
+  border: 2px solid var(--clay);
+  box-shadow: 0 20px 48px -14px rgba(112, 54, 25, 0.25), 0 8px 20px -8px rgba(74, 44, 18, 0.18);
 }
 
 /* Sun medallion / Keystone Theme Dial (PD-T3) */
@@ -310,6 +318,8 @@ input, select { font: inherit; }
 :root:not([data-theme="light"]) .tab-btn.active,
 [data-theme="dark"] .tab-btn.active { color: #26130a; }
 [data-theme="light"] .tab-btn.active { color: #fff8ec; }
+/* High-contrast inactive tab in light mode (Fix 4: 7.78:1 against #f1e7d2) */
+[data-theme="light"] .tab-btn:not(.active) { color: #544230; }
 
 /* ── Form Fields ── */
 .field { margin-bottom: 14px; }
@@ -333,6 +343,23 @@ input, select { font: inherit; }
 .field input.has-error {
   border-color: var(--danger);
   box-shadow: 0 0 0 3px var(--danger-soft);
+}
+
+/* Explicit Light-Theme Input Contrast (Fix 1) */
+[data-theme="light"] .field input,
+[data-theme="light"] .field select {
+  color: var(--ink);
+  background: var(--paper);
+}
+
+/* Autofill override: preserves theme palette in both themes (Fix 1) */
+.field input:-webkit-autofill,
+.field input:-webkit-autofill:hover,
+.field input:-webkit-autofill:focus {
+  -webkit-text-fill-color: var(--ink);
+  -webkit-box-shadow: 0 0 0 1000px var(--paper) inset;
+  caret-color: var(--ink);
+  transition: background-color 5000s ease-in-out 0s;
 }
 
 /* Password wrapper */
@@ -422,16 +449,16 @@ input, select { font: inherit; }
 
 /* ── Colonnade (5-role arch cards) ── */
 .colonnade-section {
-  padding: 16px 0 0;
-  border-top: 1px solid var(--line);
-  margin-top: 16px;
-  width: 100%;
+  padding: 0;
+  border-top: none;
+  margin-top: 0;
+  width: min(480px, 100%);
   box-sizing: border-box;
 }
 .colonnade-label {
   font-family: "IBM Plex Mono", monospace; font-size: 10.5px;
   letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink-soft);
-  font-weight: 600; margin-bottom: 12px; text-align: center;
+  font-weight: 600; margin-bottom: 8px; text-align: center;
 }
 .colonnade {
   display: grid;
@@ -523,6 +550,11 @@ input, select { font: inherit; }
   display: inline-block; color: var(--ink-soft); font-size: 12.5px;
   text-decoration: none; margin-top: 6px; position: relative;
   cursor: help; border-bottom: 1px dashed var(--line);
+}
+/* High-contrast forgot-password link in light mode (Fix 4: 9.39:1 against #fffdf7) */
+[data-theme="light"] .forgot-link {
+  color: #544230;
+  border-bottom-color: #544230;
 }
 .forgot-link .tooltip {
   display: none; position: absolute; bottom: 100%; left: 50%;

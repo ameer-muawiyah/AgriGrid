@@ -295,7 +295,7 @@ sequenceDiagram
     Note over RBAC: JWT is cryptographically valid.<br/>Extract role claim: role = 'buyer'
     RBAC->>RBAC: claims = decode(jwt)<br/>role = claims['role'] → 'buyer'
 
-    Note over RBAC: §6.1 Route Matrix:<br/>POST /api/crops: Farmer ✅ | B2B Buyer ❌<br/>§6.3: Role-level denial → HTTP 403<br/>(Not 404 — the route exists; the role is wrong)
+    Note over RBAC: §6.1 Route Matrix:<br/>POST /api/crops: Farmer ✅ | B2B Buyer ❌<br/>§6.3: Role-level denial → HTTP 403<br/>(Not 404 — the route exists&#59; the role is wrong)
     RBAC-->>FE: HTTP 403 Forbidden<br/>{ "error": "Access denied. You do not have permission to access this resource." }
     FE-->>Buyer: ❌ Access denied — request terminated at RBAC layer<br/>Backend and DB are never reached
 ```
@@ -681,6 +681,7 @@ sequenceDiagram
 |---|---|---|---|
 | 1.0 | 2026-10-11 | Iqra Fayaz | Initial release. Five diagrams covering Flows 1A, 1B, 1C, 2A, 2B (monolithic). |
 | 1.1 | 2026-10-11 | Iqra Fayaz | **Critical Fixes:** (1) All `alt...end` fall-through blocks replaced with `alt...else...end` proper branching — errors now visually terminate execution. (2) Login (1B) optimized to single LEFT JOIN query (eliminates redundant DB round-trip, supports NFR-PERF-001). (3) Added COUNT(*) companion query in 1C for pagination `total` field (FR-CRP-011). (4) Split monolithic 2B into three isolated sub-flows: 2B-1 (RBAC rejection), 2B-2 (validation cascade), 2B-3 (DB failure). (5) Moved Buyer actor declaration to diagram top (fixes Mermaid layout rendering bug). **New Diagrams:** Added Diagram 3 (READ paginated list), Diagram 4A/4B (READ single detail + unified 404), Diagram 5 (UPDATE with pre-fill + ownership check), Diagram 6 (WITHDRAW soft-delete with confirmation dialog + SQL). Traceability matrix updated. |
+| 1.1 | 2026-11-21 | Iqra Fayaz | **Rendering fix:** replaced a literal semicolon inside diagram text with the `&#59;` HTML entity. A literal `;` is a statement terminator in Mermaid and broke rendering of this diagram (Inc-1 Diagram 2B-1 note). Displayed text is unchanged; the entity renders as `;`. |
 
 ---
 

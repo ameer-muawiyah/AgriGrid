@@ -55,6 +55,7 @@
 /* Default theme: Dark (product home look, always active unless data-theme="light") */
 :root:not([data-theme="light"]),
 [data-theme="dark"] {
+  color-scheme: dark;
   --paper: #1a110a;
   --bg: #130c06;
   --surface: #241810;
@@ -78,6 +79,7 @@
 
 /* Light Mode Palette (warm paper, clay, and ink) */
 [data-theme="light"] {
+  color-scheme: light;
   --paper: #faf5ec;
   --bg: #f4ecdc;
   --surface: #fffdf7;
@@ -413,9 +415,11 @@ input, select, textarea { font: inherit; }
   text-align: left; font-family: "IBM Plex Mono", monospace; font-size: 11px;
   letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-soft); font-weight: 500;
   padding: 10px 10px; border-bottom: 2px solid var(--ink); background: var(--surface);
+  white-space: nowrap;
 }
 .crop-table td {
   padding: 12px 10px; border-bottom: 1px solid var(--line); vertical-align: middle;
+  white-space: nowrap;
 }
 .crop-table tr:last-child td { border-bottom: none; }
 
@@ -690,7 +694,8 @@ input, select, textarea { font: inherit; }
 .modal-card {
   background: var(--paper); border: 1px solid var(--line);
   border-radius: var(--radius); box-shadow: var(--shadow);
-  width: min(520px, 100%); max-height: 90vh; overflow-y: auto;
+  width: min(520px, 100%); max-height: 90vh;
+  display: flex; flex-direction: column; overflow: hidden;
   animation: modalIn 0.25s ease;
 }
 @keyframes modalIn {
@@ -701,6 +706,7 @@ input, select, textarea { font: inherit; }
 .modal-header {
   display: flex; align-items: center; justify-content: space-between;
   padding: 20px 24px 16px; border-bottom: 1px solid var(--line);
+  flex-shrink: 0;
 }
 .modal-header h3 {
   font-family: "Fraunces", serif; font-weight: 500; font-size: 22px; margin: 0;
@@ -712,10 +718,20 @@ input, select, textarea { font: inherit; }
 .modal-close:hover { color: var(--clay); }
 .modal-close svg { width: 20px; height: 20px; }
 
-.modal-body { padding: 20px 24px; }
+.modal-body {
+  padding: 20px 24px;
+  flex: 1 1 auto;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
 .modal-footer {
   display: flex; gap: 10px; justify-content: flex-end;
   padding: 16px 24px 20px; border-top: 1px solid var(--line);
+  flex-shrink: 0;
+  position: sticky;
+  bottom: 0;
+  z-index: 5;
+  background: var(--surface);
 }
 
 /* Modal alert */
@@ -744,6 +760,28 @@ input, select, textarea { font: inherit; }
   box-shadow: 0 0 0 3px var(--clay-soft);
 }
 .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+/* Explicit Light-Theme Input Contrast & Autofill override (Fix 1) */
+[data-theme="light"] .form-field input,
+[data-theme="light"] .form-field select {
+  color: var(--ink);
+  background: var(--paper);
+}
+
+.form-field input:-webkit-autofill,
+.form-field input:-webkit-autofill:hover,
+.form-field input:-webkit-autofill:focus,
+.form-field select:-webkit-autofill,
+.form-field select:-webkit-autofill:hover,
+.form-field select:-webkit-autofill:focus,
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus {
+  -webkit-text-fill-color: var(--ink);
+  -webkit-box-shadow: 0 0 0 1000px var(--paper) inset;
+  caret-color: var(--ink);
+  transition: background-color 5000s ease-in-out 0s;
+}
 
 /* Modal spinner */
 .modal-spinner {

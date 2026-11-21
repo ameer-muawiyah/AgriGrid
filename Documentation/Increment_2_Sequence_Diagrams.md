@@ -325,7 +325,7 @@ sequenceDiagram
             Note over SRV: FR-SET-004: Invoke release_escrow(8941, trigger='buyer_confirmation')
             SRV->>DB: UPDATE farmer_wallets SET balance_pkr = balance_pkr + 225000.00,<br/>updated_at = CURRENT_TIMESTAMP WHERE farmer_id = 7
             
-            SRV->>DB: UPDATE escrow_holdings SET escrow_status = 'RELEASED', released_at = CURRENT_TIMESTAMP,<br/>release_tx_ref = 'TRIGGER:buyer_confirmation;REF:TX-8941-SETTLE'<br/>WHERE order_id = 8941
+            SRV->>DB: UPDATE escrow_holdings SET escrow_status = 'RELEASED', released_at = CURRENT_TIMESTAMP,<br/>release_tx_ref = 'TRIGGER:buyer_confirmation&#59;REF:TX-8941-SETTLE'<br/>WHERE order_id = 8941
             
             SRV->>DB: COMMIT
             SRV-->>BE: Settlement success dict
@@ -869,6 +869,7 @@ sequenceDiagram
 | **v1.0** | 2026-11-14 | Iqra Fayaz (Architect) & Manahil Sohail (RE) | Initial release of Increment 2 System Sequence Diagrams (`AG-SSD-INC2-002`) depicting all 11 core architectural flows across Demand Side, Escrow Engine, Migration Infrastructure, Environmental Telemetry, Predictive Yield, and Commercial Pricing, grounded strictly in `AG-SRS-INC2-001 v1.2`. |
 | **v1.1** | 2026-11-14 | Iqra Fayaz (Architect) & Manahil Sohail (RE) | Fact-check fix release: moved precondition checks inside `BEGIN IMMEDIATE` transaction blocks in Diagrams 4, 5, 6 (F1); corrected worked formula arithmetic to 18,367.65 kg in Diagram 9 (F2); aligned telemetry source discriminator to `offline_fixture` and added cache write on API failure in Diagram 8 (F3); added explicit temperature validation branch (-25°C to +30°C) in Diagram 3 (F4); removed ungrounded 'Active' status assertion from Diagram 9 ownership note (F5); removed stray `FR-WLT-003` reference from Diagram 3 header (F6); preserved blank Scrum Master approval block pending spot-check. |
 | **v1.1 Erratum** | 2026-11-15 | Iqra Fayaz (Architect) & Manahil Sohail (RE) | Diagram 9's non-farmer 403 string aligned to the API Contracts Delta v1.2 Endpoint 12 catalogue — the uniform `"Access denied."` — per build package delta D-1. No other content changed. |
+| **v1.1 Erratum** | 2026-11-21 | Iqra Fayaz (Architect) & Manahil Sohail (RE) | **Rendering fix:** replaced a literal semicolon inside diagram text with the `&#59;` HTML entity. A literal `;` is a statement terminator in Mermaid and broke rendering of this diagram (Inc-2 Diagram 4 escrow message). Displayed text is unchanged; the entity renders as `;`. |
 
 ### 15.2 Verification & Validation Sign-Off
 

@@ -617,11 +617,18 @@ function syncLocationPicker(lat, lng, zoom = 13) {
   if (cropLocationMapInstance) {
     cropLocationMapInstance.setView([validLat, validLng], zoom);
     cropLocationMapInstance.invalidateSize();
+    requestAnimationFrame(() => {
+      if (cropLocationMapInstance) {
+        cropLocationMapInstance.invalidateSize();
+        cropLocationMapInstance.setView([validLat, validLng], zoom);
+      }
+    });
     setTimeout(() => {
       if (cropLocationMapInstance) {
         cropLocationMapInstance.invalidateSize();
+        cropLocationMapInstance.setView([validLat, validLng], zoom);
       }
-    }, 50);
+    }, 300);
   }
 }
 
